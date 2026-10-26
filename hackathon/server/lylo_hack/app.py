@@ -14,7 +14,7 @@ from werkzeug.exceptions import HTTPException
 from .validation import validate_live_payload
 from . import live
 from . import detective
-from . import muse, vision, voice
+from . import muse, vision, voice, helper
 from .safety import apply_floor, higher
 from . import security
 
@@ -47,7 +47,7 @@ def create_app():
     app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024  # photo (5 MB) + scan field; JSON route checks its own 256 KB cap
     limiter = security.Limiter()
     muse_routes = {"/api/v1/live/live": detective.enabled, "/api/v1/vision/dash": vision.enabled,
-                   "/api/v1/voice/ask": voice.enabled}
+                   "/api/v1/voice/ask": voice.enabled, "/api/v1/photo/helper": helper.enabled}
 
     @app.before_request
     def guard():
@@ -88,7 +88,8 @@ def create_app():
     def healthz():
         return jsonify({"ok": True, "external_handshake": "stubbed" if live.external_handshake_disabled() else "live",
                         "muse": "on" if detective.enabled() else "off",
-                        "vision": "on" if vision.enabled() else "off", "voice": "on" if voice.enabled() else "off"})
+                        "vision": "on" if vision.enabled() else "off", "voice": "on" if voice.enabled() else "off",
+                        "photo_helper": "on" if helper.enabled() else "off"})
 
     @app.post("/api/v1/live/live")
     def live_route():
@@ -173,6 +174,32 @@ def create_app():
         else:
             v["final_safety_level"] = v["photo_safety_floor"]
         return jsonify(v)
+
+    @app.get("/api/v1/photo/jobs")
+    def helper_jobs():
+        return jsonify({"jobs": helper.jobs_public(), "disclaimer": helper.DISCLAIMER})
+
+    @app.post("/api/v1/photo/helper")
+    def helper_route():
+        if not helper.enabled():
+            return jsonify({"error": "Photo Helper is off (LYLO_HACK_PHOTO_HELPER is not 1).", "errors": []}), 503
+        job = (request.form.get("job") or request.args.get("job") or "").strip()
+        ref = helper.refusal(job)
+        if ref:
+            return jsonify(ref), (200 if ref["helper_status"] == "refused" else 400)
+        f = request.files.get("photo")
+        raw = f.read(vision.max_bytes() + 1) if f else b""
+        try:
+            return jsonify(helper.analyze(job, raw))
+        except vision.PhotoError as e:
+            return jsonify({"error": str(e), "errors": []}), 400
+        except muse.MuseError as e:
+            return jsonify({"helper_status": f"error: {e.code}", "found": False, "marks": [], "steps": [],
+                            "message": helper.NOT_FOUND, "disclaimer": helper.DISCLAIMER}), 502
+        except Exception:
+            log.exception("photo helper failed")
+            return jsonify({"helper_status": "error: internal", "found": False, "marks": [], "steps": [],
+                            "message": helper.NOT_FOUND, "disclaimer": helper.DISCLAIMER}), 500
 
     @app.post("/api/v1/voice/ask")
     def voice_route():
