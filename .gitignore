@@ -11,3 +11,5 @@ __pycache__/
 .expo/
 .gradle/
 build/
+hackathon/.env
+hackathon/server/data/
