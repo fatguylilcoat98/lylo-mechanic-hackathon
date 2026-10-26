@@ -43,6 +43,8 @@ All of these live under `baseline/` at tag `baseline-pre-hackathon`, commit 867e
 | 2026-10-26 09:30 | 1cd4918 | hackathon/mobile-bridge/src/scanHook.js, test/scanHook.test.js | `afterScan` hook for the scan screen. Flag `EXPO_PUBLIC_LYLO_SERVER_URL`: unset/blank returns the same scan object with no network call (old on-phone behavior); set sends it to the server and attaches `scan.serverDiagnosis` (server or offline fallback). Never throws. 5 new tests (19 Node total) |
 | 2026-10-26 09:32 | 11bb8a4 | hackathon/server/deploy/lylo-hack.pm2.config.js | PM2 config for the Dell: gunicorn, 2 workers, 127.0.0.1:5088 only, handshake stub on, no secrets |
 | 2026-10-26 09:40 | (docs commit) | hackathon/mobile-bridge/package.json | Test script uses `test/*.test.js` (Node 22 on the Dell treated `test/` as a file and ran 0 tests) |
+| 2026-10-26 09:35 | b5bb53c | hackathon/server/lylo_hack/validation.py, tests/test_live.py | Empty-scan gate: no codes and no numeric readings gives 400 with a plain reason (flag `LYLO_HACK_REQUIRE_DATA`, default on, `0` disables). New test; the 500-path test now posts a valid scan. 13 Python tests |
+| 2026-10-26 09:35 | b5bb53c | hackathon/mobile-bridge/src/diagnosisView.js, ServerDiagnosisCard.js, test/diagnosisView.test.js | Results-screen card: safety level, source (LYLO server vs on-phone engine) and fallback reason. Renders nothing without `scan.serverDiagnosis`. 6 new tests (25 Node total), including every backend safety level mapped |
 
 ## Modified baseline files
 Every file under `baseline/` changed after the tag must have a row here. The full path must appear in this section, or `scripts/check-baseline-integrity.sh` fails.
@@ -51,3 +53,6 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 |---|---|---|---|
 | 2026-10-26 09:30 | 1cd4918 | baseline/mobile/src/screens/ScanScreen.js | 3 lines: import `afterScan` from hackathon/mobile-bridge and pass the finished scan through it before navigating. With `EXPO_PUBLIC_LYLO_SERVER_URL` unset it returns the identical object, so the app behaves exactly as before. Needed so a phone scan can reach the Dell pipeline. |
 | 2026-10-26 09:30 | 1cd4918 | baseline/mobile/metro.config.js | New file: stock Expo Metro config plus `watchFolders` for hackathon/mobile-bridge, so Metro can bundle the import above. No other settings. |
+| 2026-10-26 09:35 | b5bb53c | baseline/mobile/src/screens/UsedCarScreen.js | 3 lines: import `ServerDiagnosisCard` and render it under the demo banner. It returns null when the scan has no serverDiagnosis, so the screen is unchanged with the flag unset. |
+| 2026-10-26 09:35 | b5bb53c | baseline/mobile/src/screens/CodesScreen.js | Same 3-line change as UsedCarScreen. |
+| 2026-10-26 09:35 | b5bb53c | baseline/mobile/metro.config.js | Added `resolver.nodeModulesPaths` (the app's own node_modules) so files under hackathon/ can resolve react/react-native. |
