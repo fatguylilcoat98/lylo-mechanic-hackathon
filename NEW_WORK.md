@@ -32,7 +32,7 @@ All of these live under `baseline/` at tag `baseline-pre-hackathon`, commit 867e
 ## Built during the hackathon
 | Date/time (PT) | Commit | Files | What |
 |---|---|---|---|
-| 2026-10-26 06:2x | (setup commit) | NEW_WORK.md, docs/HACKATHON_LOG.md, scripts/*, hackathon/*/README.md, hackathon/.env.example, .gitignore | Repo setup and separation tooling (no feature code) |
+| 2026-10-26 06:15 | a9c55a5 | NEW_WORK.md, docs/HACKATHON_LOG.md, scripts/*, hackathon/*/README.md, hackathon/.env.example, .gitignore | Repo setup and separation tooling (no feature code) |
 
 ## Modified baseline files
 Every file under `baseline/` changed after the tag must have a row here. The full path must appear in this section, or `scripts/check-baseline-integrity.sh` fails.
