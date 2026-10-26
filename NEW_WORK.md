@@ -68,6 +68,11 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-26 10:45 | v0.4.0 | baseline/mobile/app.json | version 0.4.0, android.versionCode 3 -> 4 (installs over v0.3.0; package and signing unchanged). |
 | 2026-10-26 10:45 | v0.4.0 | baseline/mobile/package.json | version 0.4.0. |
 | 2026-10-26 10:45 | v0.4.0 | baseline/mobile/package-lock.json | version 0.4.0 (top-level fields only). |
+| 2026-10-26 11:50 | v0.4.1 | baseline/mobile/src/screens/UsedCarScreen.js | 2 lines: verdict passed through hackathon `reconcileVerdict`, so a stricter LYLO server level replaces "LOOKS GOOD" (one consistent verdict). Identity when there is no serverDiagnosis. |
+| 2026-10-26 11:50 | v0.4.1 | baseline/mobile/src/screens/CodesScreen.js | 3 lines: summary card accent follows the stricter server level and shows `CodesVerdictNote` ("No trouble codes, but the LYLO server flagged readings worth checking"). Renders nothing without serverDiagnosis. |
+| 2026-10-26 11:50 | v0.4.1 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.1; 2 tests for the verdict reconciliation (with/without serverDiagnosis). |
+| 2026-10-26 11:50 | v0.4.1 | baseline/mobile/src/screens/HomeScreen.js | Build label v0.4.1. |
+| 2026-10-26 11:50 | v0.4.1 | baseline/mobile/app.json | version 0.4.1, versionCode 5. package.json / package-lock.json: version 0.4.1. |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
@@ -84,3 +89,9 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - `baseline/mobile/android/` is gitignored (Expo native project, untracked); its build.gradle versionCode 4 / versionName 0.4.0 edit is local to the build box and mirrors app.json.
 - Deployed (Oct 26 ~10:40 PT): Dell lylo-hack restarted with key check on; tunnel ingress `lylo-api.thegoodneighborguard.com -> http://127.0.0.1:5088` added (backup `~/.cloudflared/config.yml.bak-lylo-api-20261026-173838`), CNAME routed, PM2 `tunnel` restarted. All 17 existing hostnames returned the same status before/after (splendor showed one 000 right after restart, then 200 x3).
 - APK v0.4.0 built natively on the box (Gradle assembleRelease, Metro cache cleared), signed with the v0.3.0 debug keystore (cert SHA-256 fac61745…3b9c, identical). Box: `/workspace/lylo-mechanic-export/lylo-mechanic-v0.4.0.apk`, sha256 a881d70d…d6bc.
+
+## v0.4.1 (Oct 26, after Chris's real-truck test)
+- Bug: used-car screen showed "LOOKS GOOD" under a server "Get it inspected soon". Fixed with `hackathon/mobile-bridge/src/verdictView.js` (+ `CodesVerdictNote.js`): the baseline card now shows the stricter server level and a plain note; never lowers a stricter baseline verdict; offline/no server = unchanged. Tests: `test/verdictView.test.js`, 2 jest UI tests.
+- Cold-engine cap (`detective.cap_for_cold_engine`): coolant < 150 °F and no DTCs -> the AI may raise at most to INSPECT_SOON, adds a "recheck when warm" note (`cold_engine_note`). Never below the rule level. `tests/test_cold_engine.py`.
+- Wording: "The detective raised the safety level from safe to drive using cited evidence" (read as if it raised it TO safe) -> 'The AI detective raised the safety level from "safe to drive" to "get it inspected soon", based on the readings it cites.'
+- Known, unchanged: the baseline Share report text still uses the on-phone verdict.

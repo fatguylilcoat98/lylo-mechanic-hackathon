@@ -96,3 +96,13 @@ test('DetectiveCard is wired into ServerDiagnosisCard and calls hooks unconditio
   const dc = fs.readFileSync(path.join(__dirname, '..', 'src', 'DetectiveCard.js'), 'utf8');
   assert.ok(dc.indexOf('useState') < dc.indexOf('if (!v) return null'));
 });
+
+test('raised note names both levels in plain words', () => {
+  const v = detectiveView(wrap({ detective: det({ safety_action: 'raised_by_detective', rule_safety_level: 'SAFE_TO_DRIVE', final_safety_level: 'INSPECT_SOON' }) }));
+  assert.strictEqual(v.safetyNote, 'The AI detective raised the safety level from "safe to drive" to "get it inspected soon", based on the readings it cites.');
+});
+
+test('cold engine note is shown', () => {
+  const v = detectiveView(wrap({ detective: det({ cold_engine_note: 'Engine was cold (79 °F). recheck when warm.' }) }));
+  assert.match(v.safetyNote, /recheck when warm/);
+});

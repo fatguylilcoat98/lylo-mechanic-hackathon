@@ -9,12 +9,13 @@ import { Button, Card, Badge, DemoBanner, LEVEL_COLORS, u } from '../components/
 import { C } from '../constants/colors';
 // Hackathon (Oct 26, 2026): renders nothing unless the scan has serverDiagnosis.
 import ServerDiagnosisCard from '../../../../hackathon/mobile-bridge/src/ServerDiagnosisCard';
+import { reconcileVerdict } from '../../../../hackathon/mobile-bridge/src/verdictView'; // v0.4.1: one consistent verdict
 
 const ICON = { red: '\u26A0\uFE0F', yellow: '\u2753', green: '\u2705', info: '\u2139\uFE0F' };
 
 export default function UsedCarScreen({ route, navigation }) {
   const scan = route.params?.scan;
-  const a = useMemo(() => assessUsedCar(scan), [scan]);
+  const a = useMemo(() => { const x = assessUsedCar(scan); return { ...x, verdict: reconcileVerdict(x.verdict, scan) }; }, [scan]);
   const vColor = LEVEL_COLORS[a.verdict.level];
   const veh = scan.vehicle || {};
   const c = a.counters;

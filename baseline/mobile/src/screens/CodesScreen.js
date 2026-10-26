@@ -10,6 +10,8 @@ import { Button, Card, Badge, DemoBanner, LEVEL_COLORS, u } from '../components/
 import { C } from '../constants/colors';
 // Hackathon (Oct 26, 2026): renders nothing unless the scan has serverDiagnosis.
 import ServerDiagnosisCard from '../../../../hackathon/mobile-bridge/src/ServerDiagnosisCard';
+import CodesVerdictNote, { NOTE_COLOR } from '../../../../hackathon/mobile-bridge/src/CodesVerdictNote'; // v0.4.1
+import { codesNote } from '../../../../hackathon/mobile-bridge/src/verdictView';
 
 const DIFF_COLOR = { Easy: C.green, Moderate: C.amber, Pro: C.red, Unknown: C.textDim };
 
@@ -62,9 +64,10 @@ export default function CodesScreen({ route, navigation }) {
     <ScrollView style={u.screen} contentContainerStyle={u.scroll}>
       <DemoBanner label={scan.demoLabel} />
       <ServerDiagnosisCard scan={scan} />
-      <Card accent={mil ? C.red : results.length ? C.amber : C.green}>
+      <Card accent={mil ? C.red : (codesNote(scan, results.length, mil) && NOTE_COLOR[codesNote(scan, results.length, mil).tone]) || (results.length ? C.amber : C.green)}>
         <Text style={u.h2}>{mil ? 'Check-engine light is ON' : mil === false ? 'Check-engine light is off' : 'Check-engine light status unknown'}</Text>
         <Text style={u.body}>{results.length ? results.length + ' code(s) found. Tap one for the full explanation, how hard it is to fix, and a fair price range.' : 'No trouble codes found.'}</Text>
+        <CodesVerdictNote scan={scan} count={results.length} mil={mil} />
       </Card>
 
       {results.map((r) => (

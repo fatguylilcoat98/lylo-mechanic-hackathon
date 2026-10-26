@@ -108,6 +108,38 @@ def merge_safety(rule_level, opinion):
     return rule_level, "agreed"
 
 
+COLD_ENGINE_F = 150.0
+
+
+def cold_engine_no_codes(items):
+    """(True, temp_F) when coolant is known, under ~150 F, and the ledger has no DTCs. Else (False, temp_F|None)."""
+    if any(i.get("type") == "dtc" for i in items):
+        return False, None
+    for i in items:
+        if i.get("name") == "ENGINE_COOLANT_TEMP":
+            try:
+                v = float(i.get("value"))
+            except (TypeError, ValueError):
+                return False, None
+            f = v if "F" in str(i.get("unit", "")).upper() else v * 9 / 5 + 32
+            return f < COLD_ENGINE_F, round(f)
+    return False, None
+
+
+def cap_for_cold_engine(rule_level, final, action, items):
+    """Cold engine + no codes: the AI may raise to INSPECT_SOON at most. Never below the rule level."""
+    cold, temp_f = cold_engine_no_codes(items)
+    if not cold:
+        return final, action, None
+    note = (f"Engine was cold ({temp_f} \u00b0F) and there are no trouble codes. Fuel trims and idle readings "
+            "are unreliable before warm-up; recheck when the engine is warm.")
+    cap = "INSPECT_SOON"
+    if action == "raised_by_detective" and L.SAFETY_ORDER.index(final) > L.SAFETY_ORDER.index(cap):
+        capped = cap if L.SAFETY_ORDER.index(cap) > L.SAFETY_ORDER.index(rule_level) else rule_level
+        return capped, ("raised_by_detective" if capped != rule_level else "kept_rule_level"), note
+    return final, action, note
+
+
 def _cited(verified):
     ids = set()
     for h in verified["hypotheses"]:
@@ -154,13 +186,14 @@ def run(data, result, call=None, extra_items=None):
     try:
         verified, unverified = verify(out, ids)
         final, action = merge_safety(rule_level, verified["safety_opinion"])
+        final, action, cold_note = cap_for_cold_engine(rule_level, final, action, items)
     except Exception as e:
         det["muse_status"] = f"error: BAD_SHAPE ({type(e).__name__}); deterministic result returned unchanged"
         return result
     det.update({"muse_status": "ok", "hypotheses": verified["hypotheses"], "explanation": verified["explanation"],
                 "cleared_codes_warning": verified["cleared_codes_warning"],
                 "safety_opinion": verified["safety_opinion"], "unverified_claims": unverified,
-                "final_safety_level": final, "safety_action": action})
+                "final_safety_level": final, "safety_action": action, "cold_engine_note": cold_note})
     receipt["cited_ledger_ids"] = _cited(verified)
     if action == "raised_by_detective":
         s = result["safety"]

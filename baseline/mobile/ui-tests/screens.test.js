@@ -41,7 +41,7 @@ const nav = { navigate: jest.fn(), replace: jest.fn(), popToTop: jest.fn() };
 test('Home renders and the Used-Car demo shows the recently-cleared warning', async () => {
   const ui = render(<App />);
   expect(ui.getByText('LYLO Mechanic')).toBeTruthy();
-  expect(ui.getByText(/TEST BUILD v0.4.0/)).toBeTruthy();
+  expect(ui.getByText(/TEST BUILD v0.4.1/)).toBeTruthy();
   expect(ui.getByText('Powered by Meta AI')).toBeTruthy();
   await act(async () => { fireEvent.press(ui.getByText('Demo: Used-Car Check')); });
   expect(await ui.findByText('CONCERNS FOUND')).toBeTruthy();
@@ -82,4 +82,32 @@ test('Code lookup works offline', async () => {
   const input = await ui.findByPlaceholderText(/Type a code/);
   fireEvent.changeText(input, 'gas cap');
   expect(ui.getAllByText(/EVAP/).length).toBeGreaterThan(0);
+});
+
+// v0.4.1: one consistent verdict when the LYLO server is stricter than the on-phone check.
+import UsedCarScreen from '../src/screens/UsedCarScreen';
+const cleanScan = () => {
+  const s = JSON.parse(JSON.stringify(DEMO_SCANS.checkengine));
+  s.stored = []; s.pending = []; s.permanent = [];
+  s.monitor.milOn = false; s.monitor.dtcCount = 0;
+  s.pids = { rpm: 984, coolant_temp_f: 79, stft_b1: 27.3, ltft_b1: 6.3, module_voltage: 14.1 };
+  delete s.demoLabel;
+  return s;
+};
+const withServer = (s, level) => ({ ...s, serverDiagnosis: { source: 'server', result: { safety: { level } } } });
+
+test('Used-car: no serverDiagnosis keeps the baseline verdict', () => {
+  const ui = render(<UsedCarScreen route={{ params: { scan: cleanScan() } }} navigation={nav} />);
+  expect(ui.getByText('LOOKS GOOD')).toBeTruthy();
+  expect(ui.queryByText('GET IT INSPECTED SOON')).toBeNull();
+});
+
+test('Used-car + Codes: stricter server level replaces LOOKS GOOD with one verdict', () => {
+  const s = withServer(cleanScan(), 'INSPECT_SOON');
+  const ui = render(<UsedCarScreen route={{ params: { scan: s } }} navigation={nav} />);
+  expect(ui.queryByText('LOOKS GOOD')).toBeNull();
+  expect(ui.getByText('GET IT INSPECTED SOON')).toBeTruthy();
+  expect(ui.getAllByText(/the LYLO server flagged readings worth checking/).length).toBeGreaterThan(0);
+  const c = render(<CodesScreen route={{ params: { scan: s } }} navigation={nav} />);
+  expect(c.getByText(/No trouble codes, but the LYLO server flagged readings worth checking/)).toBeTruthy();
 });

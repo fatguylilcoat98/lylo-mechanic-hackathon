@@ -79,10 +79,14 @@ function detectiveView(scan) {
 
   let safetyNote = null;
   if (d.safety_action === 'raised_by_detective') {
-    safetyNote = `The detective raised the safety level from ${str(d.rule_safety_level).replace(/_/g, ' ').toLowerCase()} using cited evidence.`;
+    const { LEVELS } = require('./diagnosisView');
+    const name = (lv) => (LEVELS[lv] ? LEVELS[lv].label : str(lv).replace(/_/g, ' ')).toLowerCase();
+    safetyNote = `The AI detective raised the safety level from "${name(d.rule_safety_level)}" to "${name(d.final_safety_level)}", based on the readings it cites.`;
   } else if (d.safety_action === 'detective_lower_ignored') {
     safetyNote = 'The detective suggested a lower level; ignored. AI can raise safety, never lower it.';
   }
+
+  if (d.cold_engine_note) safetyNote = (safetyNote ? safetyNote + ' ' : '') + str(d.cold_engine_note);
 
   const r = d.receipt || {};
   const parts = [];
