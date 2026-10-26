@@ -40,3 +40,9 @@ test('hook swallows unexpected errors', async () => {
   assert.strictEqual(out.serverDiagnosis.source, 'offline');
   assert.match(out.serverDiagnosis.error, /hook error/);
 });
+
+test('configuredKey reads EXPO_PUBLIC_LYLO_APP_KEY and trims', () => {
+  const { configuredKey } = require('../src/scanHook');
+  assert.strictEqual(configuredKey({ EXPO_PUBLIC_LYLO_APP_KEY: ' abc ' }), 'abc');
+  assert.strictEqual(configuredKey({}), null);
+});

@@ -49,3 +49,21 @@ test('reply without a safety level is not trusted', async () => {
   const r = await diagnoseScan(DEMO_SCANS.usedcar, { baseUrl: 'http://x', fetchImpl: okFetch({ hypotheses: [] }) });
   assert.strictEqual(r.source, 'offline');
 });
+
+test('app key is sent as X-LYLO-App-Key only when configured', async () => {
+  let seen;
+  const f = async (url, init) => { seen = init.headers; return { ok: true, status: 200, json: async () => ({ safety: { level: 'SAFE_TO_DRIVE' } }) }; };
+  await diagnoseScan(DEMO_SCANS.usedcar, { baseUrl: 'http://x', fetchImpl: f, appKey: 'k123' });
+  assert.strictEqual(seen['X-LYLO-App-Key'], 'k123');
+  await diagnoseScan(DEMO_SCANS.usedcar, { baseUrl: 'http://x', fetchImpl: f });
+  assert.ok(!('X-LYLO-App-Key' in seen));
+});
+
+for (const code of [401, 429, 503]) {
+  test(`${code} from server falls back offline`, async () => {
+    const r = await diagnoseScan(DEMO_SCANS.usedcar, { baseUrl: 'http://x', fetchImpl: okFetch({ error: 'nope', errors: [] }, code) });
+    assert.strictEqual(r.source, 'offline');
+    assert.strictEqual(r.status, code);
+    assert.ok(r.result);
+  });
+}

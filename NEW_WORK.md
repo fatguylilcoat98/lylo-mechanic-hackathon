@@ -63,6 +63,11 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/src/screens/UsedCarScreen.js | 3 lines: import `ServerDiagnosisCard` and render it under the demo banner. It returns null when the scan has no serverDiagnosis, so the screen is unchanged with the flag unset. |
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/src/screens/CodesScreen.js | Same 3-line change as UsedCarScreen. |
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/metro.config.js | Added `resolver.nodeModulesPaths` (the app's own node_modules) so files under hackathon/ can resolve react/react-native. |
+| 2026-10-26 10:45 | v0.4.0 | baseline/mobile/src/screens/HomeScreen.js | 2 lines + 1 style: "Powered by Meta AI" under the tagline (Chris asked), build label v0.3.0 -> v0.4.0. |
+| 2026-10-26 10:45 | v0.4.0 | baseline/mobile/ui-tests/screens.test.js | Build-label assertion v0.4.0 and a check for "Powered by Meta AI". |
+| 2026-10-26 10:45 | v0.4.0 | baseline/mobile/app.json | version 0.4.0, android.versionCode 3 -> 4 (installs over v0.3.0; package and signing unchanged). |
+| 2026-10-26 10:45 | v0.4.0 | baseline/mobile/package.json | version 0.4.0. |
+| 2026-10-26 10:45 | v0.4.0 | baseline/mobile/package-lock.json | version 0.4.0 (top-level fields only). |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
@@ -71,3 +76,9 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - `validation.py`: optional freeze_frame validation.
 - `scripts/live_detective_demo.py` and `evidence/` (VINs masked).
 - Modified baseline files: none in this step.
+
+## v0.4.0 public API (Oct 26)
+- `hackathon/server/lylo_hack/security.py` + guard in `app.py`: app-key header (SHA-256 digests server-side), per-IP/per-key/daily Muse limits shared via SQLite, 6 MB body cap, `CF-Connecting-IP` trusted only from loopback, no CORS. `tests/test_security.py`. Details: `docs/PUBLIC_API.md`.
+- PM2 config: gunicorn `--timeout 60`.
+- mobile-bridge: `X-LYLO-App-Key` from `EXPO_PUBLIC_LYLO_APP_KEY` (build time only); 401/429 fall back offline (tests).
+- `baseline/mobile/android/` is gitignored (Expo native project, untracked); its build.gradle versionCode 4 / versionName 0.4.0 edit is local to the build box and mirrors app.json.

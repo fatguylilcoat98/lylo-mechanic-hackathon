@@ -21,7 +21,8 @@ export default function HomeScreen({ navigation }) {
         <Image source={require('../../assets/app-icon.png')} style={s.logo} />
         <Text style={s.title}>LYLO Mechanic</Text>
         <Text style={s.tag}>Know what's wrong before you buy or walk into a shop.</Text>
-        <Text style={s.build}>TEST BUILD v0.3.0 · works offline · no login</Text>
+        <Text style={s.powered}>Powered by Meta AI</Text>
+        <Text style={s.build}>TEST BUILD v0.4.0 · works offline · no login</Text>
       </View>
 
       {device ? (
@@ -60,6 +61,7 @@ const s = StyleSheet.create({
   logo: { width: 110, height: 110, borderRadius: 24, marginBottom: 12 },
   title: { color: C.textBright, fontSize: 30, fontWeight: '800' },
   tag: { color: C.text, fontSize: 15, marginTop: 6, textAlign: 'center' },
+  powered: { color: C.textMuted, fontSize: 12, fontWeight: '600', marginTop: 6 },
   build: { color: C.gold, fontSize: 11, fontWeight: '800', marginTop: 10, letterSpacing: 0.5 },
   footer: { color: C.textMuted, fontSize: 12, textAlign: 'center', marginTop: 16 },
   footerSmall: { color: C.textMuted, fontSize: 11, textAlign: 'center', marginTop: 4 },

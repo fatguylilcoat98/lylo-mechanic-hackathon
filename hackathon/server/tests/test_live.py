@@ -9,6 +9,10 @@ from unittest import mock
 os.environ.setdefault("LYLO_HACK_DISABLE_EXTERNAL_HANDSHAKE", "1")
 os.environ["LYLO_HACK_MUSE"] = "0"  # never call Muse in tests
 os.environ["LYLO_HACK_ENV_FILE"] = "none"
+os.environ["LYLO_HACK_REQUIRE_APP_KEY"] = "0"  # auth/limits covered by test_security.py
+for _k in ("LYLO_HACK_RL_IP_PER_MIN", "LYLO_HACK_RL_IP_MUSE_PER_MIN", "LYLO_HACK_RL_KEY_MUSE_PER_MIN", "LYLO_HACK_RL_KEY_MUSE_PER_DAY", "LYLO_HACK_MUSE_DAILY_CAP"):
+    os.environ[_k] = "1000000"
+os.environ["LYLO_HACK_RATELIMIT_DB"] = "/tmp/lylo-hack-ratelimit-test.sqlite"
 os.environ["HTTPS_PROXY"] = os.environ["HTTP_PROXY"] = "http://127.0.0.1:9"  # no real egress in tests
 
 from lylo_hack.app import create_app  # noqa: E402

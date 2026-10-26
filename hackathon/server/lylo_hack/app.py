@@ -16,6 +16,7 @@ from . import live
 from . import detective
 from . import muse, vision, voice
 from .safety import apply_floor, higher
+from . import security
 
 log = logging.getLogger("lylo_hack")
 LIVE_MAX_BYTES = 256 * 1024
@@ -43,7 +44,43 @@ def load_env_file(path=None):
 def create_app():
     load_env_file()
     app = Flask(__name__)
-    app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024  # photo/audio routes; JSON route checks its own 256 KB cap
+    app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024  # photo (5 MB) + scan field; JSON route checks its own 256 KB cap
+    limiter = security.Limiter()
+    muse_routes = {"/api/v1/live/live": detective.enabled, "/api/v1/vision/dash": vision.enabled,
+                   "/api/v1/voice/ask": voice.enabled}
+
+    @app.before_request
+    def guard():
+        if not request.path.startswith("/api/"):
+            return None
+        if (request.content_length or 0) > app.config["MAX_CONTENT_LENGTH"]:
+            return jsonify({"error": "Request too large.", "errors": []}), 413
+        ip = security.client_ip(request.remote_addr, request.headers)
+        # Per-IP budget first, so bad-key spraying is throttled too.
+        hit = limiter.hit(security.rules_for(ip, None, False))
+        if hit:
+            return _limited(hit)
+        key_id, err = security.check_key(request.headers.get("X-LYLO-App-Key"))
+        if err:
+            return jsonify({"error": err[1], "errors": []}), err[0]
+        flag = muse_routes.get(request.path)
+        if flag and flag():
+            hit = limiter.hit(security.rules_for(ip, key_id, True)[1:])
+            if hit:
+                return _limited(hit)
+        return None
+
+    def _limited(hit):
+        bucket, retry = hit
+        scope = "daily server cap" if bucket.startswith("global") else ("per-day" if bucket.endswith(":day") else "per-minute")
+        resp = jsonify({"error": f"Rate limit reached ({scope}). Try again later; the app works offline meanwhile.", "errors": []})
+        resp.headers["Retry-After"] = str(retry)
+        return resp, 429
+
+    @app.after_request
+    def no_cache(resp):
+        resp.headers.setdefault("Cache-Control", "no-store")
+        return resp
     live.install_handshake_stub()
     live.install_shared_list_fix()
 

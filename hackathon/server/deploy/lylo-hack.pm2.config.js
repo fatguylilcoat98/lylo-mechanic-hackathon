@@ -3,7 +3,7 @@
 // Secrets/flags: hackathon/server/.env (gitignored, chmod 600) is read by the app
 // itself at startup (lylo_hack.app.load_env_file), so the key never enters the
 // PM2 env dump. Keys: META_MODEL_API_KEY, LYLO_HACK_MUSE, LYLO_HACK_MUSE_MODEL.
-// Loopback only; no tunnel route. Does not touch other PM2 apps.
+// Loopback only; public access is via the Cloudflare tunnel hostname (see docs/PUBLIC_API.md). Does not touch other PM2 apps.
 const path = require('path');
 const server = path.resolve(__dirname, '..');
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
     name: 'lylo-hack',
     cwd: server,
     script: path.join(server, '.venv/bin/gunicorn'),
-    args: "-b 127.0.0.1:5088 -w 2 --timeout 30 'lylo_hack.app:create_app()'",
+    args: "-b 127.0.0.1:5088 -w 2 --timeout 60 'lylo_hack.app:create_app()'",
     interpreter: 'none',
     autorestart: true,
     max_restarts: 10,

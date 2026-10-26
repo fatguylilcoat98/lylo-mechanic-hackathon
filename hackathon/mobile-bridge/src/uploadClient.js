@@ -18,6 +18,7 @@ function defaultOfflineEngine() {
 /**
  * @param scan runFullScan() output
  * @param opts.baseUrl e.g. "https://<dell-tunnel-host>" (no trailing slash)
+ * @param opts.appKey sent as X-LYLO-App-Key (build-time value; extractable from the APK, so it is a speed bump, not a secret)
  * @param opts.fetchImpl fetch implementation (global fetch by default)
  * @param opts.timeoutMs client timeout
  * @param opts.offlineEngine (scan) => result, defaults to baseline analyzeCodes
@@ -40,7 +41,7 @@ async function diagnoseScan(scan, opts = {}) {
     const res = await Promise.race([
       fetchImpl(opts.baseUrl.replace(/\/$/, '') + '/api/v1/live/live', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, opts.appKey ? { 'X-LYLO-App-Key': opts.appKey } : {}),
         body: JSON.stringify(payload),
         signal: ctrl ? ctrl.signal : undefined,
       }),
@@ -50,6 +51,7 @@ async function diagnoseScan(scan, opts = {}) {
     try { body = await res.json(); } catch (e) { body = null; }
     if (!res.ok) {
       const detail = body && body.errors && body.errors.length ? ': ' + body.errors.join(' ') : '';
+      // 401 (key), 413, 429 (rate limit), 5xx: all fall back to the on-phone engine.
       return fallback(`Server said ${res.status}${detail}`, res.status);
     }
     if (!body || !body.safety || !body.safety.level) return fallback('Server reply had no safety level.', res.status);
