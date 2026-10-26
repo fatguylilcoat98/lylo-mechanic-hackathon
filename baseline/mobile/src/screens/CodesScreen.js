@@ -11,6 +11,8 @@ import { C } from '../constants/colors';
 // Hackathon (Oct 26, 2026): renders nothing unless the scan has serverDiagnosis.
 import ServerDiagnosisCard from '../../../../hackathon/mobile-bridge/src/ServerDiagnosisCard';
 import CodesVerdictNote, { NOTE_COLOR } from '../../../../hackathon/mobile-bridge/src/CodesVerdictNote'; // v0.4.1
+import SimpleResults from '../../../../hackathon/mobile-bridge/src/SimpleResults'; // v0.4.1 redesign
+import { hasServerResult, buildResults, shareText } from '../../../../hackathon/mobile-bridge/src/resultsView';
 import { codesNote } from '../../../../hackathon/mobile-bridge/src/verdictView';
 
 const DIFF_COLOR = { Easy: C.green, Moderate: C.amber, Pro: C.red, Unknown: C.textDim };
@@ -60,6 +62,10 @@ export default function CodesScreen({ route, navigation }) {
       ]);
   };
 
+  if (hasServerResult(scan)) { // v0.4.1: server answered -> the one-verdict results screen
+    const opts = { codes: results, screen: 'codes' };
+    return <SimpleResults scan={scan} {...opts} footer={<><Button title="Share report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Clear codes (after a repair)" kind="danger" busy={clearing} onPress={confirmClear} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
+  }
   return (
     <ScrollView style={u.screen} contentContainerStyle={u.scroll}>
       <DemoBanner label={scan.demoLabel} />

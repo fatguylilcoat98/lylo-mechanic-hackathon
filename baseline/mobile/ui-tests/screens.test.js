@@ -102,12 +102,12 @@ test('Used-car: no serverDiagnosis keeps the baseline verdict', () => {
   expect(ui.queryByText('GET IT INSPECTED SOON')).toBeNull();
 });
 
-test('Used-car + Codes: stricter server level replaces LOOKS GOOD with one verdict', () => {
+test('Used-car + Codes: server answered -> one verdict, no LOOKS GOOD', () => {
   const s = withServer(cleanScan(), 'INSPECT_SOON');
   const ui = render(<UsedCarScreen route={{ params: { scan: s } }} navigation={nav} />);
   expect(ui.queryByText('LOOKS GOOD')).toBeNull();
-  expect(ui.getByText('GET IT INSPECTED SOON')).toBeTruthy();
-  expect(ui.getAllByText(/the LYLO server flagged readings worth checking/).length).toBeGreaterThan(0);
+  expect(ui.getAllByText(/Get it checked soon/).length).toBe(1);
   const c = render(<CodesScreen route={{ params: { scan: s } }} navigation={nav} />);
-  expect(c.getByText(/No trouble codes, but the LYLO server flagged readings worth checking/)).toBeTruthy();
+  expect(c.getAllByText(/Get it checked soon/).length).toBe(1);
+  expect(c.queryByText('No trouble codes found.')).toBeNull();
 });

@@ -81,7 +81,7 @@ function detectiveView(scan) {
   if (d.safety_action === 'raised_by_detective') {
     const { LEVELS } = require('./diagnosisView');
     const name = (lv) => (LEVELS[lv] ? LEVELS[lv].label : str(lv).replace(/_/g, ' ')).toLowerCase();
-    safetyNote = `The AI detective raised the safety level from "${name(d.rule_safety_level)}" to "${name(d.final_safety_level)}", based on the readings it cites.`;
+    safetyNote = `Meta AI raised the safety level from "${name(d.rule_safety_level)}" to "${name(d.final_safety_level)}", based on the readings it cites.`;
   } else if (d.safety_action === 'detective_lower_ignored') {
     safetyNote = 'The detective suggested a lower level; ignored. AI can raise safety, never lower it.';
   }

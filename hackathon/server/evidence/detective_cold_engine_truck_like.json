@@ -1,0 +1,415 @@
+{
+ "request": {
+  "adapter_id": "DEMO (no adapter)",
+  "protocol": "ELM protocol 6",
+  "connection_quality": "stable",
+  "read_complete": true,
+  "vehicle_profile": {
+   "vin": "1HG**************",
+   "year": 2003,
+   "make": "Honda"
+  },
+  "raw_dtcs": [],
+  "raw_pids": [
+   {
+    "name": "DIST_SINCE_CODES_CLEARED",
+    "pid_code": "31",
+    "raw_value": 6400,
+    "unit": "km"
+   },
+   {
+    "name": "WARMUPS_SINCE_CLEAR",
+    "pid_code": "30",
+    "raw_value": 255,
+    "unit": ""
+   },
+   {
+    "name": "TIME_SINCE_CODES_CLEARED",
+    "pid_code": "4E",
+    "raw_value": 9800,
+    "unit": "min"
+   },
+   {
+    "name": "BATTERY_VOLTAGE",
+    "pid_code": "42",
+    "raw_value": 14.3,
+    "unit": "V"
+   },
+   {
+    "name": "ENGINE_RPM",
+    "pid_code": "0C",
+    "raw_value": 984,
+    "unit": "rpm"
+   },
+   {
+    "name": "ENGINE_COOLANT_TEMP",
+    "pid_code": "05",
+    "raw_value": 79,
+    "unit": "\u00b0F"
+   },
+   {
+    "name": "LONG_TERM_FUEL_TRIM_B1",
+    "pid_code": "07",
+    "raw_value": 6.3,
+    "unit": "%"
+   },
+   {
+    "name": "SHORT_TERM_FUEL_TRIM_B1",
+    "pid_code": "06",
+    "raw_value": 27.3,
+    "unit": "%"
+   }
+  ],
+  "readiness_monitors": [
+   {
+    "name": "Misfire",
+    "status": "complete"
+   },
+   {
+    "name": "Fuel system",
+    "status": "complete"
+   },
+   {
+    "name": "Comprehensive components",
+    "status": "complete"
+   },
+   {
+    "name": "Catalyst",
+    "status": "complete"
+   },
+   {
+    "name": "Evaporative system (EVAP)",
+    "status": "complete"
+   },
+   {
+    "name": "Oxygen sensor",
+    "status": "complete"
+   },
+   {
+    "name": "Oxygen sensor heater",
+    "status": "complete"
+   }
+  ],
+  "codes_cleared_before_scan": false,
+  "codes_cleared_evidence": []
+ },
+ "response": {
+  "confidence": {
+   "blocked_outputs": [],
+   "codes_possibly_cleared": false,
+   "connection_valid": true,
+   "limit_reason": null,
+   "manufacturer_specific_unknowns": false,
+   "monitors_incomplete": false,
+   "overall": 1.0,
+   "pid_coverage": "full",
+   "read_complete": true,
+   "symptom_alignment": "no_symptoms",
+   "unstable_session": false
+  },
+  "cost_estimates": [],
+  "detective": {
+   "cleared_codes_warning": {
+    "cites": [
+     "pid:DIST_SINCE_CODES_CLEARED",
+     "pid:WARMUPS_SINCE_CLEAR",
+     "pid:TIME_SINCE_CODES_CLEARED"
+    ],
+    "text": "For a used-car buyer, recently cleared codes are a red flag because clearing can hide problems until the car finishes its self-checks and the codes come back. Here the counters show 6400 km, 255 warm-ups, and 9800 minutes since codes were cleared, which suggests codes were NOT cleared very recently, so this hiding trick looks unlikely here."
+   },
+   "cold_engine_note": "Engine was cold (79 \u00b0F) and there are no trouble codes. Fuel trims and idle readings are unreliable before warm-up; recheck when the engine is warm.",
+   "explanation": {
+    "cites": [
+     "pid:ENGINE_COOLANT_TEMP",
+     "pid:ENGINE_RPM",
+     "pid:SHORT_TERM_FUEL_TRIM_B1",
+     "pid:LONG_TERM_FUEL_TRIM_B1",
+     "mon:misfire",
+     "mon:fuel_system",
+     "mon:catalyst"
+    ],
+    "text": "This 2003 Honda shows no failed self-checks, with misfire, fuel system and catalyst checks all complete. The engine looks cold at 79 degrees with a slightly fast idle around 984 rpm, which can make short-term fuel use read high. Short-term fuel trim means how much extra fuel the engine is adding right now, and at 27.3% it is adding a lot, with long-term trim at 6.3%, so it deserves a recheck when fully warm."
+   },
+   "final_safety_level": "SAFE_TO_DRIVE",
+   "hypotheses": [
+    {
+     "cause": "Engine was still cold / just started",
+     "cites": [
+      "pid:ENGINE_COOLANT_TEMP",
+      "pid:ENGINE_RPM",
+      "pid:SHORT_TERM_FUEL_TRIM_B1"
+     ],
+     "confidence": "medium",
+     "next_check": "Let engine fully warm up to normal temperature, then re-scan idle rpm and fuel trims",
+     "rank": 1,
+     "reasoning": "79F coolant is cold and 984 rpm is a fast cold idle, which can explain high short-term trim at 27.3% during warm-up enrichment."
+    },
+    {
+     "cause": "Early lean-running tendency such as small air leak or weak fuel delivery",
+     "cites": [
+      "pid:SHORT_TERM_FUEL_TRIM_B1",
+      "pid:LONG_TERM_FUEL_TRIM_B1"
+     ],
+     "confidence": "low",
+     "next_check": "Ask a mechanic to check for vacuum / air-intake leaks and look at live fuel trims when warm at idle and at 2500 rpm",
+     "rank": 2,
+     "reasoning": "Short-term trim 27.3% plus long-term trim 6.3% means engine is adding extra fuel, which can happen if extra air is getting in or not enough fuel is getting in."
+    },
+    {
+     "cause": "No current fault - healthy system at time of scan",
+     "cites": [
+      "mon:misfire",
+      "mon:fuel_system",
+      "mon:comprehensive_components",
+      "mon:catalyst",
+      "mon:evaporative_system_evap",
+      "mon:oxygen_sensor",
+      "mon:oxygen_sensor_heater",
+      "rule:safety"
+     ],
+     "confidence": "medium",
+     "next_check": "Confirm no check-engine light and no pending codes on a second scan after a test drive",
+     "rank": 3,
+     "reasoning": "All readiness monitors are complete and rule engine reports no safety-critical faults, no active codes, and no drivability symptoms reported."
+    }
+   ],
+   "ledger": [
+    {
+     "id": "pid:DIST_SINCE_CODES_CLEARED",
+     "name": "DIST_SINCE_CODES_CLEARED",
+     "type": "codes_cleared_counter",
+     "unit": "km",
+     "value": 6400
+    },
+    {
+     "id": "pid:WARMUPS_SINCE_CLEAR",
+     "name": "WARMUPS_SINCE_CLEAR",
+     "type": "codes_cleared_counter",
+     "unit": "",
+     "value": 255
+    },
+    {
+     "id": "pid:TIME_SINCE_CODES_CLEARED",
+     "name": "TIME_SINCE_CODES_CLEARED",
+     "type": "codes_cleared_counter",
+     "unit": "min",
+     "value": 9800
+    },
+    {
+     "id": "pid:BATTERY_VOLTAGE",
+     "name": "BATTERY_VOLTAGE",
+     "type": "pid",
+     "unit": "V",
+     "value": 14.3
+    },
+    {
+     "id": "pid:ENGINE_RPM",
+     "name": "ENGINE_RPM",
+     "type": "pid",
+     "unit": "rpm",
+     "value": 984
+    },
+    {
+     "id": "pid:ENGINE_COOLANT_TEMP",
+     "name": "ENGINE_COOLANT_TEMP",
+     "type": "pid",
+     "unit": "\u00b0F",
+     "value": 79
+    },
+    {
+     "id": "pid:LONG_TERM_FUEL_TRIM_B1",
+     "name": "LONG_TERM_FUEL_TRIM_B1",
+     "type": "pid",
+     "unit": "%",
+     "value": 6.3
+    },
+    {
+     "id": "pid:SHORT_TERM_FUEL_TRIM_B1",
+     "name": "SHORT_TERM_FUEL_TRIM_B1",
+     "type": "pid",
+     "unit": "%",
+     "value": 27.3
+    },
+    {
+     "id": "mon:misfire",
+     "name": "Misfire",
+     "status": "complete",
+     "type": "readiness_monitor"
+    },
+    {
+     "id": "mon:fuel_system",
+     "name": "Fuel system",
+     "status": "complete",
+     "type": "readiness_monitor"
+    },
+    {
+     "id": "mon:comprehensive_components",
+     "name": "Comprehensive components",
+     "status": "complete",
+     "type": "readiness_monitor"
+    },
+    {
+     "id": "mon:catalyst",
+     "name": "Catalyst",
+     "status": "complete",
+     "type": "readiness_monitor"
+    },
+    {
+     "id": "mon:evaporative_system_evap",
+     "name": "Evaporative system (EVAP)",
+     "status": "complete",
+     "type": "readiness_monitor"
+    },
+    {
+     "id": "mon:oxygen_sensor",
+     "name": "Oxygen sensor",
+     "status": "complete",
+     "type": "readiness_monitor"
+    },
+    {
+     "id": "mon:oxygen_sensor_heater",
+     "name": "Oxygen sensor heater",
+     "status": "complete",
+     "type": "readiness_monitor"
+    },
+    {
+     "id": "veh:year",
+     "name": "year",
+     "type": "vehicle",
+     "value": 2003
+    },
+    {
+     "id": "veh:make",
+     "name": "make",
+     "type": "vehicle",
+     "value": "Honda"
+    },
+    {
+     "id": "veh:vin_masked",
+     "name": "vin_masked",
+     "type": "vehicle",
+     "value": "1HG**************"
+    },
+    {
+     "id": "rule:safety",
+     "level": "SAFE_TO_DRIVE",
+     "triggers": [
+      "No safety-critical fault codes detected",
+      "No active diagnostic trouble codes",
+      "No drivability symptoms reported"
+     ],
+     "type": "rule_safety"
+    }
+   ],
+   "muse_status": "ok",
+   "receipt": {
+    "cited_ledger_ids": [
+     "mon:catalyst",
+     "mon:comprehensive_components",
+     "mon:evaporative_system_evap",
+     "mon:fuel_system",
+     "mon:misfire",
+     "mon:oxygen_sensor",
+     "mon:oxygen_sensor_heater",
+     "pid:DIST_SINCE_CODES_CLEARED",
+     "pid:ENGINE_COOLANT_TEMP",
+     "pid:ENGINE_RPM",
+     "pid:LONG_TERM_FUEL_TRIM_B1",
+     "pid:SHORT_TERM_FUEL_TRIM_B1",
+     "pid:TIME_SINCE_CODES_CLEARED",
+     "pid:WARMUPS_SINCE_CLEAR",
+     "rule:safety"
+    ],
+    "finish_reason": "stop",
+    "latency_ms": 7429,
+    "ledger_size": 19,
+    "model": "muse-spark-1.3",
+    "prompt_sha256_16": "d809f64365bd77e9",
+    "usage": {
+     "completion_tokens": 1925,
+     "completion_tokens_details": {
+      "reasoning_tokens": 1140
+     },
+     "prompt_tokens": 1437,
+     "prompt_tokens_details": {
+      "cached_tokens": 0
+     },
+     "total_tokens": 3362
+    }
+   },
+   "recently_cleared": false,
+   "rule_safety_level": "SAFE_TO_DRIVE",
+   "safety_action": "agreed",
+   "safety_opinion": {
+    "cites": [
+     "rule:safety",
+     "mon:misfire",
+     "mon:fuel_system",
+     "mon:comprehensive_components"
+    ],
+    "level": "SAFE_TO_DRIVE",
+    "reason": "Matches rule engine: no safety-critical faults, no active codes, and core misfire, fuel system and comprehensive checks are complete."
+   },
+   "unverified_claims": []
+  },
+  "diy_eligibility": null,
+  "hackathon": {
+   "build": "lylo-mechanic-hackathon",
+   "codes_cleared_evidence": [],
+   "conversion_notes": [],
+   "external_handshake": "stubbed",
+   "vehicle_received": {
+    "model": null,
+    "odometer": null,
+    "vin": "1HG**************"
+   }
+  },
+  "handshake_api": null,
+  "handshake_reason": null,
+  "handshake_required": false,
+  "hypotheses": [],
+  "professional_help_triggers": [
+   "If symptoms worsen or a new warning light appears, stop driving and seek professional inspection"
+  ],
+  "safety": {
+   "level": "SAFE_TO_DRIVE",
+   "reasoning": "No safety-critical conditions detected. Monitor for changes and schedule routine service as needed.",
+   "symptom_overrides_sensor": false,
+   "triggering_conditions": [
+    "No safety-critical fault codes detected",
+    "No active diagnostic trouble codes",
+    "No drivability symptoms reported"
+   ],
+   "user_must_acknowledge": false
+  },
+  "session_flags": [],
+  "session_id": "432DD3E0",
+  "tutorial_available": false,
+  "tutorial_blocked_reason": "No DIY assessment available.",
+  "vehicle": {
+   "drive_type": null,
+   "engine": null,
+   "engine_type": null,
+   "enhanced_protocol": false,
+   "is_ev": false,
+   "is_hybrid": false,
+   "make": "Honda",
+   "model": null,
+   "odometer": null,
+   "supported_pids": [],
+   "transmission": null,
+   "trim": null,
+   "vin": "1HG**************",
+   "year": 2003
+  },
+  "veracore_flags": [],
+  "what_this_might_mean": "No diagnostic data is available to form a conclusion. A physical inspection is recommended.",
+  "what_to_check_first": [],
+  "what_we_know": [
+   "Fuel trim Bank 1: +6.3% \u2014 within normal range",
+   "Coolant temperature: 79\u00b0F \u2014 below normal",
+   "Battery/charging voltage: 14.3V \u2014 normal",
+   "No active or pending fault codes detected"
+  ]
+ }
+}

@@ -99,7 +99,7 @@ test('DetectiveCard is wired into ServerDiagnosisCard and calls hooks unconditio
 
 test('raised note names both levels in plain words', () => {
   const v = detectiveView(wrap({ detective: det({ safety_action: 'raised_by_detective', rule_safety_level: 'SAFE_TO_DRIVE', final_safety_level: 'INSPECT_SOON' }) }));
-  assert.strictEqual(v.safetyNote, 'The AI detective raised the safety level from "safe to drive" to "get it inspected soon", based on the readings it cites.');
+  assert.strictEqual(v.safetyNote, 'Meta AI raised the safety level from "safe to drive" to "get it inspected soon", based on the readings it cites.');
 });
 
 test('cold engine note is shown', () => {

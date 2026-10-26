@@ -73,6 +73,11 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-26 11:50 | v0.4.1 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.1; 2 tests for the verdict reconciliation (with/without serverDiagnosis). |
 | 2026-10-26 11:50 | v0.4.1 | baseline/mobile/src/screens/HomeScreen.js | Build label v0.4.1. |
 | 2026-10-26 11:50 | v0.4.1 | baseline/mobile/app.json | version 0.4.1, versionCode 5. package.json / package-lock.json: version 0.4.1. |
+| 2026-10-26 12:30 | v0.4.1 | baseline/mobile/src/screens/UsedCarScreen.js | Early return (about 12 lines, after all hooks): when `hasServerResult(scan)`, render hackathon `SimpleResults` (one verdict, Simple view / Mechanic view) with Share + Home buttons. Without a server result the baseline screen renders unchanged. |
+| 2026-10-26 12:30 | v0.4.1 | baseline/mobile/src/screens/CodesScreen.js | Same early return as UsedCarScreen, with Share, Clear codes, Home buttons. Baseline unchanged without a server result. |
+| 2026-10-26 12:30 | v0.4.1 | baseline/mobile/package.json | Added dependency `@react-native-async-storage/async-storage` ^1.23.1 (stores only the new key `lylo.viewMode`; the app had no AsyncStorage keys before). package-lock.json updated by npm. |
+| 2026-10-26 12:30 | v0.4.1 | baseline/mobile/package-lock.json | npm lockfile for the async-storage dependency. |
+| 2026-10-26 12:30 | v0.4.1 | baseline/mobile/ui-tests/results.test.js | New: render tests for each verdict color, the one-verdict rule, Simple/Mechanic views, `lylo.viewMode` persistence. screens.test.js verdict test updated to the new screen. |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
@@ -95,3 +100,11 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - Cold-engine cap (`detective.cap_for_cold_engine`): coolant < 150 °F and no DTCs -> the AI may raise at most to INSPECT_SOON, adds a "recheck when warm" note (`cold_engine_note`). Never below the rule level. `tests/test_cold_engine.py`.
 - Wording: "The detective raised the safety level from safe to drive using cited evidence" (read as if it raised it TO safe) -> 'The AI detective raised the safety level from "safe to drive" to "get it inspected soon", based on the readings it cites.'
 - Known, unchanged: the baseline Share report text still uses the on-phone verdict.
+
+### v0.4.1 results redesign (Chris, 11:45 steering)
+- When the LYLO server answered, Used-car and Codes screens show `hackathon/mobile-bridge/src/SimpleResults.js`: one traffic-light verdict (Good to drive / Get it checked soon / Drive only short trips / Don't drive it), plain why, 1-3 actions (costs only from baseline repair-cost data), erased-codes warning, collapsed "See why" with friendly labels, receipt + "Powered by Meta AI" at the bottom.
+- Toggle "Simple view | Mechanic view" (Simple default), saved under new AsyncStorage key `lylo.viewMode`. Mechanic view: hypotheses with confidence, raw PIDs, evidence, codes, monitors, freeze frame (not read by this app: said so), server/adapter, receipt.
+- Modules: `friendlyLabels.js`, `viewMode.js`, `resultsView.js`, tests `test/resultsView.test.js`, fixtures `test/fixtures/` (truck fixture is synthetic truck-like data).
+- Offline / no server result: baseline screens unchanged (plus the reconcileVerdict note).
+- Safety note wording now "Meta AI raised the safety level from ... to ...".
+- Mockups: `/workspace/lylo-mechanic-export/mockups/*.png` (HTML twin rendered from the real `buildResults`).
