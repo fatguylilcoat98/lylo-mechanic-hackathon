@@ -40,9 +40,14 @@ All of these live under `baseline/` at tag `baseline-pre-hackathon`, commit 867e
 | 2026-10-26 09:07 | bbc4a88 | hackathon/server/lylo_hack/app.py, baseline_path.py, __init__.py | Hackathon Flask app (POST /api/v1/live/live, GET /healthz); 4xx stay 4xx; pipeline errors are 500 without leaking exception text; doesn't load baseline app.py, billing or auth |
 | 2026-10-26 09:07 | bbc4a88 | hackathon/server/tests/test_live.py, hackathon/mobile-bridge/test/*.test.js | 12 Python + 14 Node tests, including the wrong-PID-name safety-downgrade guard (JS names checked against the Python PID_RANGES; server rejects `coolant_temp`, while `ENGINE_COOLANT_TEMP` 260 °F gives EMERGENCY_STOP_IMMEDIATELY), end-to-end JS converter to server on both demo scans, malformed-input matrix, no external call, determinism |
 | 2026-10-26 09:07 | bbc4a88 | hackathon/server/README.md, requirements.txt, hackathon/mobile-bridge/README.md, package.json | Docs and run instructions |
+| 2026-10-26 09:30 | 1cd4918 | hackathon/mobile-bridge/src/scanHook.js, test/scanHook.test.js | `afterScan` hook for the scan screen. Flag `EXPO_PUBLIC_LYLO_SERVER_URL`: unset/blank returns the same scan object with no network call (old on-phone behavior); set sends it to the server and attaches `scan.serverDiagnosis` (server or offline fallback). Never throws. 5 new tests (19 Node total) |
+| 2026-10-26 09:32 | 11bb8a4 | hackathon/server/deploy/lylo-hack.pm2.config.js | PM2 config for the Dell: gunicorn, 2 workers, 127.0.0.1:5088 only, handshake stub on, no secrets |
+| 2026-10-26 09:40 | (docs commit) | hackathon/mobile-bridge/package.json | Test script uses `test/*.test.js` (Node 22 on the Dell treated `test/` as a file and ran 0 tests) |
 
 ## Modified baseline files
 Every file under `baseline/` changed after the tag must have a row here. The full path must appear in this section, or `scripts/check-baseline-integrity.sh` fails.
 
 | Date/time (PT) | Commit | File | Reason |
 |---|---|---|---|
+| 2026-10-26 09:30 | 1cd4918 | baseline/mobile/src/screens/ScanScreen.js | 3 lines: import `afterScan` from hackathon/mobile-bridge and pass the finished scan through it before navigating. With `EXPO_PUBLIC_LYLO_SERVER_URL` unset it returns the identical object, so the app behaves exactly as before. Needed so a phone scan can reach the Dell pipeline. |
+| 2026-10-26 09:30 | 1cd4918 | baseline/mobile/metro.config.js | New file: stock Expo Metro config plus `watchFolders` for hackathon/mobile-bridge, so Metro can bundle the import above. No other settings. |
