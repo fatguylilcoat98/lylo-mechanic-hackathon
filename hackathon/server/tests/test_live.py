@@ -7,6 +7,8 @@ import unittest
 from unittest import mock
 
 os.environ.setdefault("LYLO_HACK_DISABLE_EXTERNAL_HANDSHAKE", "1")
+os.environ["LYLO_HACK_MUSE"] = "0"  # never call Muse in tests
+os.environ["LYLO_HACK_ENV_FILE"] = "none"
 os.environ["HTTPS_PROXY"] = os.environ["HTTP_PROXY"] = "http://127.0.0.1:9"  # no real egress in tests
 
 from lylo_hack.app import create_app  # noqa: E402
@@ -139,6 +141,14 @@ class LiveRouteTests(unittest.TestCase):
         self.assertEqual(self.post({"raw_pids": [{"name": "ENGINE_RPM", "pid_code": "0C", "raw_value": 800, "unit": "rpm"}]}).status_code, 200)
         with mock.patch.dict(os.environ, {"LYLO_HACK_REQUIRE_DATA": "0"}):
             self.assertEqual(self.post({}).status_code, 200)
+
+    def test_repeated_calls_do_not_grow_shared_rule_lists(self):
+        body = {"raw_dtcs": [{"code": "P0171", "status": "active"}],
+                "raw_pids": [{"name": "LONG_TERM_FUEL_TRIM_B1", "pid_code": "07", "raw_value": 14.8, "unit": "%"}],
+                "readiness_monitors": [{"name": "Catalyst", "status": "incomplete"}], "read_complete": False}
+        runs = [self.post(body).get_json()["hypotheses"] for _ in range(3)]
+        self.assertEqual(runs[0], runs[1])
+        self.assertEqual(runs[1], runs[2])
 
     def test_healthz(self):
         self.assertTrue(self.c.get("/healthz").get_json()["ok"])

@@ -1,4 +1,3 @@
-import os
 """Strict validation for POST /api/v1/live/live (hackathon build).
 
 The baseline route accepted anything and turned bad input into HTTP 500.
@@ -7,6 +6,8 @@ plain-language errors. Unknown PID names are rejected on purpose: the
 baseline safety classifier looks PIDs up by exact name, so a misspelled
 name (e.g. "coolant_temp") silently hides an overheating engine.
 """
+import os
+
 from . import baseline_path
 
 baseline_path.ensure()
@@ -28,6 +29,10 @@ MAX_LIST = 200
 
 VEHICLE_STR_FIELDS = ("vin", "make", "model", "trim", "engine", "engine_type",
                       "transmission", "drive_type")
+
+
+def _is_dtc(code):
+    return isinstance(code, str) and len(code) == 5 and code[0].upper() in "PCBU" and all(c in "0123456789ABCDEFabcdef" for c in code[1:])
 
 
 def _is_num(v):
@@ -116,6 +121,19 @@ def validate_live_payload(data):
             for f in ("primary_category", "severity", "frequency"):
                 if f in sym and not isinstance(sym[f], str):
                     errs.append(f"symptoms.{f} must be a string.")
+
+    ff = data.get("freeze_frame")
+    if ff is not None:
+        if not isinstance(ff, dict):
+            errs.append("freeze_frame must be an object.")
+        else:
+            if ff.get("dtc") is not None and not _is_dtc(ff["dtc"]):
+                errs.append("freeze_frame.dtc must look like P0301.")
+            for k, v in (ff.get("values") or {}).items() if isinstance(ff.get("values", {}), dict) else []:
+                if k not in KNOWN_PID_NAMES or not (_is_num(v) or v is None):
+                    errs.append(f"freeze_frame.values.{k} must be a known PID name with a number.")
+            if "values" in ff and not isinstance(ff["values"], dict):
+                errs.append("freeze_frame.values must be an object.")
 
     ev = data.get("codes_cleared_evidence")
     if ev is not None and not (isinstance(ev, list) and all(isinstance(x, str) for x in ev)):

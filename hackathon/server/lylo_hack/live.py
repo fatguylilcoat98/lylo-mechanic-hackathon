@@ -39,6 +39,29 @@ def install_handshake_stub():
     return False
 
 
+def install_shared_list_fix():
+    """Baseline bug (found Oct 26): _build_hypothesis hands the rule table's own
+    `what_could_be_wrong` list to each hypothesis, and _apply_confidence_cap then
+    appends to it, so the shared rule data grows on every request and later
+    replies repeat the "Confidence capped" line. Copy the list per hypothesis.
+    Flag LYLO_HACK_FIX_SHARED_LIST (default on; "0" disables). Baseline unedited."""
+    if os.environ.get("LYLO_HACK_FIX_SHARED_LIST", "1") == "0":
+        return False
+    import diagnosis.hypothesis_engine as he  # baseline, read-only
+    if getattr(he._build_hypothesis, "_lylo_hack_fixed", False):
+        return True
+    orig = he._build_hypothesis
+
+    def fixed(*a, **k):
+        h = orig(*a, **k)
+        if h is not None:
+            h.what_could_make_this_wrong = list(h.what_could_make_this_wrong or [])
+        return h
+    fixed._lylo_hack_fixed = True
+    he._build_hypothesis = fixed
+    return True
+
+
 def build_session(data):
     """Validated payload -> (OBDSessionInput, SymptomIntake|None, notes)."""
     notes = []
@@ -99,4 +122,5 @@ def diagnose(data):
         "codes_cleared_evidence": data.get("codes_cleared_evidence", []),
         "vehicle_received": {k: getattr(session.vehicle_profile, k) for k in ("vin", "model", "odometer")},
     }
-    return result
+    from . import detective
+    return detective.run(data, result)
