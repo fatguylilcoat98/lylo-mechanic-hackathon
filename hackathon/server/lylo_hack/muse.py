@@ -38,7 +38,7 @@ def configured():
     return bool(_key())
 
 
-def chat_json(messages, schema, *, model=None, timeout=45, max_tokens=4000, effort="low"):
+def chat_json(messages, schema, *, model=None, timeout=25, max_tokens=4000, effort="low", name="detective"):
     """Returns (parsed_json, meta). Raises MuseError on any failure."""
     key = _key()
     if not key:
@@ -47,7 +47,7 @@ def chat_json(messages, schema, *, model=None, timeout=45, max_tokens=4000, effo
     body = {
         "model": model,
         "messages": messages,
-        "response_format": {"type": "json_schema", "json_schema": {"name": "detective", "schema": schema, "strict": True}},
+        "response_format": {"type": "json_schema", "json_schema": {"name": name, "schema": schema, "strict": True}},
         "max_completion_tokens": max_tokens,
         "reasoning_effort": effort,
         "store": False,
@@ -79,3 +79,46 @@ def chat_json(messages, schema, *, model=None, timeout=45, max_tokens=4000, effo
         e = MuseError("BAD_JSON", f"Model output was not valid JSON (finish_reason={finish}).")
         e.meta = meta
         raise e
+
+
+TRANSCRIBE_MODEL = "muse-voice-transcribe-1.0"
+
+
+def transcribe_wav(wav_bytes, *, timeout=12, keywords=None):
+    """POST /v1/asr/transcribe (multipart: request JSON + audio WAV). Returns (text, meta)."""
+    key = _key()
+    if not key:
+        raise MuseError("NO_KEY", "No Meta Model API key configured.")
+    import uuid
+    boundary = "lylo" + uuid.uuid4().hex
+    settings = {"mode": "PUSH_TO_TALK", "model": TRANSCRIBE_MODEL, "audioEncoding": "WAV",
+                "languageBias": ["English"]}
+    if keywords:
+        settings["keywords"] = list(keywords)[:20]
+    parts = [
+        (f'--{boundary}\r\nContent-Disposition: form-data; name="request"\r\n'
+         'Content-Type: application/json\r\n\r\n').encode() + json.dumps(settings).encode() + b"\r\n",
+        (f'--{boundary}\r\nContent-Disposition: form-data; name="audio"; filename="q.wav"\r\n'
+         'Content-Type: audio/wav\r\n\r\n').encode() + wav_bytes + b"\r\n",
+        f"--{boundary}--\r\n".encode(),
+    ]
+    req = urllib.request.Request(BASE_URL + "/asr/transcribe", data=b"".join(parts),
+                                 headers={"Authorization": "Bearer " + key, "Accept": "application/json",
+                                          "Content-Type": "multipart/form-data; boundary=" + boundary})
+    t0 = time.monotonic()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            raw = r.read().decode("utf8", "replace")
+    except urllib.error.HTTPError as e:
+        txt = e.read()[:300].decode("utf8", "replace").replace(key, "[redacted]")
+        raise MuseError("RATE_LIMIT" if e.code == 429 else f"HTTP_{e.code}", txt)
+    except Exception as e:
+        name = "TIMEOUT" if "timed out" in str(e).lower() or isinstance(e, TimeoutError) else "NETWORK"
+        raise MuseError(name, str(e).replace(key, "[redacted]")[:200])
+    try:
+        d = json.loads(raw)
+        text = str(d["transcript"])
+    except Exception:
+        raise MuseError("BAD_ENVELOPE", "Response was not a transcript.")
+    return text, {"model": TRANSCRIBE_MODEL, "latency_ms": int((time.monotonic() - t0) * 1000),
+                  "audio_duration_ms": d.get("audioDurationMs")}

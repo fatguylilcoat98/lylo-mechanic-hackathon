@@ -112,7 +112,7 @@ def build_session(data):
     return session, symptoms, notes
 
 
-def diagnose(data):
+def diagnose(data, muse=True, extra_items=None):
     session, symptoms, notes = build_session(data)
     result = orchestrator.run_diagnosis(session, symptoms).to_dict()
     result["hackathon"] = {
@@ -123,4 +123,17 @@ def diagnose(data):
         "vehicle_received": {k: getattr(session.vehicle_profile, k) for k in ("vin", "model", "odometer")},
     }
     from . import detective
-    return detective.run(data, result)
+    if muse:
+        return detective.run(data, result, extra_items=extra_items)
+    return _det_off(data, result, extra_items)
+
+
+def _det_off(data, result, extra_items):
+    """Deterministic ledger only (no Muse call), used by vision/voice to rebuild the scan."""
+    from . import ledger as L
+    items = L.build_ledger(data, result) + list(extra_items or [])
+    level = (result.get("safety") or {}).get("level")
+    result["detective"] = {"muse_status": "skipped (deterministic rebuild)", "ledger": items,
+                           "rule_safety_level": level, "final_safety_level": level,
+                           "safety_action": "kept_rule_level", "recently_cleared": L.recently_cleared(items)}
+    return result
