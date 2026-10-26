@@ -1,0 +1,731 @@
+{
+  "scenario": "usedcar",
+  "http_status": 200,
+  "estimated_cost_usd": 0.01082,
+  "request": {
+    "adapter_id": "DEMO (no adapter)",
+    "protocol": "ELM protocol 6",
+    "connection_quality": "stable",
+    "read_complete": true,
+    "vehicle_profile": {
+      "vin": "1HG**************",
+      "year": 2003,
+      "make": "Honda"
+    },
+    "raw_dtcs": [
+      {
+        "code": "P0420",
+        "status": "pending"
+      },
+      {
+        "code": "P0171",
+        "status": "permanent"
+      }
+    ],
+    "raw_pids": [
+      {
+        "name": "DIST_SINCE_CODES_CLEARED",
+        "pid_code": "31",
+        "raw_value": 19,
+        "unit": "km"
+      },
+      {
+        "name": "WARMUPS_SINCE_CLEAR",
+        "pid_code": "30",
+        "raw_value": 3,
+        "unit": ""
+      },
+      {
+        "name": "TIME_SINCE_CODES_CLEARED",
+        "pid_code": "4E",
+        "raw_value": 41,
+        "unit": "min"
+      },
+      {
+        "name": "DIST_MIL_ON",
+        "pid_code": "21",
+        "raw_value": 0,
+        "unit": "km"
+      },
+      {
+        "name": "TIME_MIL_ON",
+        "pid_code": "4D",
+        "raw_value": 0,
+        "unit": "min"
+      },
+      {
+        "name": "BATTERY_VOLTAGE",
+        "pid_code": "42",
+        "raw_value": 14.1,
+        "unit": "V"
+      },
+      {
+        "name": "ENGINE_RPM",
+        "pid_code": "0C",
+        "raw_value": 720,
+        "unit": "rpm"
+      },
+      {
+        "name": "ENGINE_COOLANT_TEMP",
+        "pid_code": "05",
+        "raw_value": 192,
+        "unit": "°F"
+      },
+      {
+        "name": "LONG_TERM_FUEL_TRIM_B1",
+        "pid_code": "07",
+        "raw_value": 14.8,
+        "unit": "%"
+      },
+      {
+        "name": "SHORT_TERM_FUEL_TRIM_B1",
+        "pid_code": "06",
+        "raw_value": 3.1,
+        "unit": "%"
+      }
+    ],
+    "readiness_monitors": [
+      {
+        "name": "Misfire",
+        "status": "complete"
+      },
+      {
+        "name": "Fuel system",
+        "status": "complete"
+      },
+      {
+        "name": "Comprehensive components",
+        "status": "complete"
+      },
+      {
+        "name": "Catalyst",
+        "status": "incomplete"
+      },
+      {
+        "name": "Evaporative system (EVAP)",
+        "status": "incomplete"
+      },
+      {
+        "name": "Oxygen sensor",
+        "status": "incomplete"
+      },
+      {
+        "name": "Oxygen sensor heater",
+        "status": "complete"
+      },
+      {
+        "name": "EGR / VVT system",
+        "status": "complete"
+      }
+    ],
+    "codes_cleared_before_scan": true,
+    "codes_cleared_evidence": [
+      "Only 19 km driven since codes were cleared (under 80).",
+      "Only 3 warm-ups since codes were cleared (under 10).",
+      "Only 41 engine minutes since codes were cleared (under 60).",
+      "Permanent code(s) P0171 present with no matching stored code, which usually means the stored codes were erased."
+    ]
+  },
+  "response": {
+    "confidence": {
+      "blocked_outputs": [],
+      "codes_possibly_cleared": true,
+      "connection_valid": true,
+      "limit_reason": "Fault codes may have been cleared before scan — active faults could be missing; One or more readiness monitors have not completed — system self-tests are pending",
+      "manufacturer_specific_unknowns": false,
+      "monitors_incomplete": true,
+      "overall": 0.65,
+      "pid_coverage": "full",
+      "read_complete": true,
+      "symptom_alignment": "no_symptoms",
+      "unstable_session": false
+    },
+    "cost_estimates": [
+      {
+        "cause_id": "vacuum_leak",
+        "dealership": {
+          "label": "Dealership",
+          "labor_high": 0,
+          "labor_low": 0,
+          "note": "Dealer labor rates make vacuum leak diagnosis expensive if location is not immediately obvious",
+          "parts_high": 0,
+          "parts_low": 0,
+          "total_high": 500,
+          "total_low": 150
+        },
+        "diy": {
+          "label": "DIY",
+          "labor_high": 0,
+          "labor_low": 0,
+          "note": null,
+          "parts_high": 40,
+          "parts_low": 0,
+          "total_high": 50,
+          "total_low": 10
+        },
+        "labor_hours_high": 2.5,
+        "labor_hours_low": 0.5,
+        "parts_list": [
+          {
+            "aftermarket_note": "Match ID/OD exactly",
+            "cost_high": 20,
+            "cost_low": 5,
+            "oem_part_number": null,
+            "part_name": "Vacuum hose material",
+            "qty": 1
+          },
+          {
+            "aftermarket_note": "Only if leak is at manifold seating surface",
+            "cost_high": 60,
+            "cost_low": 15,
+            "oem_part_number": null,
+            "part_name": "Intake manifold gasket (if needed)",
+            "qty": 1
+          }
+        ],
+        "pricing_data_date": "2026-01-01",
+        "shop": {
+          "label": "Independent Shop",
+          "labor_high": 250,
+          "labor_low": 80,
+          "note": null,
+          "parts_high": 40,
+          "parts_low": 0,
+          "total_high": 290,
+          "total_low": 80
+        },
+        "stale_warning": true,
+        "time_to_complete_diy": "30 min – several hours (finding the leak is the hard part)",
+        "uncertainty_factors": [
+          "Location of leak dramatically affects repair cost",
+          "Smoke machine rental speeds up diagnosis significantly",
+          "Some leaks are at intake manifold gasket — repair cost jumps to $200-400",
+          "⚠ Pricing data is 298 days old — verify current prices before purchasing parts"
+        ],
+        "volatility": "HIGH",
+        "what_could_make_estimate_wrong": [
+          "If leak is at intake manifold gasket, cost is substantially higher",
+          "Some vacuum leaks are only present cold or under load — intermittent leaks are harder to find"
+        ]
+      }
+    ],
+    "detective": {
+      "cleared_codes_warning": {
+        "cites": [
+          "clr:flag",
+          "clr:e1",
+          "clr:e2",
+          "clr:e3",
+          "clr:e4",
+          "pid:DIST_SINCE_CODES_CLEARED",
+          "pid:WARMUPS_SINCE_CLEAR",
+          "pid:TIME_SINCE_CODES_CLEARED",
+          "dtc:P0171:permanent",
+          "mon:catalyst",
+          "mon:oxygen_sensor",
+          "mon:evaporative_system_evap"
+        ],
+        "text": "Red flag for a buyer: someone cleared the codes just 19 km, 3 warm-ups and 41 minutes ago. Clearing erases stored codes, and 3 self-checks are still incomplete, so hidden problems have not had time to reappear yet. A permanent P0171 code was left behind, which usually means stored codes were erased to hide a check-engine light - do not trust this as a clean scan until it is driven more and re-scanned."
+      },
+      "explanation": {
+        "cites": [
+          "veh:year",
+          "veh:make",
+          "dtc:P0171:permanent",
+          "dtc:P0420:pending",
+          "pid:LONG_TERM_FUEL_TRIM_B1",
+          "pid:SHORT_TERM_FUEL_TRIM_B1",
+          "pid:DIST_SINCE_CODES_CLEARED",
+          "mon:catalyst",
+          "mon:oxygen_sensor"
+        ],
+        "text": "This 2003 Honda has a permanent lean-engine code P0171, meaning too much air or too little fuel, and a pending catalyst code P0420. The engine computer is adding about 18% extra fuel, long-term trim 14.8% plus short-term trim 3.1%, to compensate. Codes were cleared only 19 km ago and the catalyst and oxygen-sensor self-checks are still incomplete, so this scan is not the full story yet."
+      },
+      "final_safety_level": "DRIVE_SHORT_DISTANCE_ONLY",
+      "hypotheses": [
+        {
+          "cause": "Vacuum Leak",
+          "cites": [
+            "dtc:P0171:permanent",
+            "pid:LONG_TERM_FUEL_TRIM_B1",
+            "pid:SHORT_TERM_FUEL_TRIM_B1",
+            "pid:ENGINE_RPM",
+            "rule:hyp:vacuum_leak"
+          ],
+          "confidence": "high",
+          "next_check": "Have a mechanic do a smoke test or visually listen for hissing and check cracked vacuum hoses and intake gaskets.",
+          "rank": 1,
+          "reasoning": "Permanent lean code P0171 with high long-term fuel trim 14.8% at idle 720 rpm suggests extra unmeasured air entering, classic for a vacuum leak."
+        },
+        {
+          "cause": "Dirty or Failing MAF Sensor",
+          "cites": [
+            "dtc:P0171:permanent",
+            "pid:LONG_TERM_FUEL_TRIM_B1",
+            "pid:SHORT_TERM_FUEL_TRIM_B1",
+            "rule:hyp:dirty_maf_sensor"
+          ],
+          "confidence": "medium",
+          "next_check": "Ask mechanic to inspect and clean the MAF sensor, which measures incoming air, and check its live reading.",
+          "rank": 2,
+          "reasoning": "If the air-measurement sensor misreads low, the computer under-fuels and then must add 14.8% long-term trim, triggering P0171."
+        },
+        {
+          "cause": "Weak Fuel Pump / Low Fuel Pressure",
+          "cites": [
+            "dtc:P0171:permanent",
+            "pid:LONG_TERM_FUEL_TRIM_B1",
+            "pid:SHORT_TERM_FUEL_TRIM_B1",
+            "rule:hyp:weak_fuel_pump"
+          ],
+          "confidence": "low",
+          "next_check": "Have a shop do a fuel-pressure test and check fuel filter history.",
+          "rank": 3,
+          "reasoning": "Too little fuel delivery would also force high fuel trims 14.8% and 3.1% and set permanent lean code P0171."
+        },
+        {
+          "cause": "Catalytic converter efficiency low or false reading from lean running",
+          "cites": [
+            "dtc:P0420:pending",
+            "mon:catalyst",
+            "mon:oxygen_sensor",
+            "dtc:P0171:permanent"
+          ],
+          "confidence": "low",
+          "next_check": "Drive more to let catalyst monitor complete, then re-scan; have mechanic compare oxygen sensor readings.",
+          "rank": 4,
+          "reasoning": "Pending P0420 with catalyst and oxygen-sensor monitors still incomplete may reflect a weak converter, or just the lean condition skewing the test."
+        }
+      ],
+      "ledger": [
+        {
+          "code": "P0420",
+          "id": "dtc:P0420:pending",
+          "status": "pending",
+          "type": "dtc"
+        },
+        {
+          "code": "P0171",
+          "id": "dtc:P0171:permanent",
+          "status": "permanent",
+          "type": "dtc"
+        },
+        {
+          "id": "pid:DIST_SINCE_CODES_CLEARED",
+          "name": "DIST_SINCE_CODES_CLEARED",
+          "type": "codes_cleared_counter",
+          "unit": "km",
+          "value": 19
+        },
+        {
+          "id": "pid:WARMUPS_SINCE_CLEAR",
+          "name": "WARMUPS_SINCE_CLEAR",
+          "type": "codes_cleared_counter",
+          "unit": "",
+          "value": 3
+        },
+        {
+          "id": "pid:TIME_SINCE_CODES_CLEARED",
+          "name": "TIME_SINCE_CODES_CLEARED",
+          "type": "codes_cleared_counter",
+          "unit": "min",
+          "value": 41
+        },
+        {
+          "id": "pid:DIST_MIL_ON",
+          "name": "DIST_MIL_ON",
+          "type": "pid",
+          "unit": "km",
+          "value": 0
+        },
+        {
+          "id": "pid:TIME_MIL_ON",
+          "name": "TIME_MIL_ON",
+          "type": "pid",
+          "unit": "min",
+          "value": 0
+        },
+        {
+          "id": "pid:BATTERY_VOLTAGE",
+          "name": "BATTERY_VOLTAGE",
+          "type": "pid",
+          "unit": "V",
+          "value": 14.1
+        },
+        {
+          "id": "pid:ENGINE_RPM",
+          "name": "ENGINE_RPM",
+          "type": "pid",
+          "unit": "rpm",
+          "value": 720
+        },
+        {
+          "id": "pid:ENGINE_COOLANT_TEMP",
+          "name": "ENGINE_COOLANT_TEMP",
+          "type": "pid",
+          "unit": "°F",
+          "value": 192
+        },
+        {
+          "id": "pid:LONG_TERM_FUEL_TRIM_B1",
+          "name": "LONG_TERM_FUEL_TRIM_B1",
+          "type": "pid",
+          "unit": "%",
+          "value": 14.8
+        },
+        {
+          "id": "pid:SHORT_TERM_FUEL_TRIM_B1",
+          "name": "SHORT_TERM_FUEL_TRIM_B1",
+          "type": "pid",
+          "unit": "%",
+          "value": 3.1
+        },
+        {
+          "id": "mon:misfire",
+          "name": "Misfire",
+          "status": "complete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:fuel_system",
+          "name": "Fuel system",
+          "status": "complete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:comprehensive_components",
+          "name": "Comprehensive components",
+          "status": "complete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:catalyst",
+          "name": "Catalyst",
+          "status": "incomplete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:evaporative_system_evap",
+          "name": "Evaporative system (EVAP)",
+          "status": "incomplete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:oxygen_sensor",
+          "name": "Oxygen sensor",
+          "status": "incomplete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:oxygen_sensor_heater",
+          "name": "Oxygen sensor heater",
+          "status": "complete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:egr_vvt_system",
+          "name": "EGR / VVT system",
+          "status": "complete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "clr:flag",
+          "type": "codes_cleared",
+          "value": true
+        },
+        {
+          "id": "clr:e1",
+          "text": "Only 19 km driven since codes were cleared (under 80).",
+          "type": "codes_cleared_evidence"
+        },
+        {
+          "id": "clr:e2",
+          "text": "Only 3 warm-ups since codes were cleared (under 10).",
+          "type": "codes_cleared_evidence"
+        },
+        {
+          "id": "clr:e3",
+          "text": "Only 41 engine minutes since codes were cleared (under 60).",
+          "type": "codes_cleared_evidence"
+        },
+        {
+          "id": "clr:e4",
+          "text": "Permanent code(s) P0171 present with no matching stored code, which usually means the stored codes were erased.",
+          "type": "codes_cleared_evidence"
+        },
+        {
+          "id": "veh:year",
+          "name": "year",
+          "type": "vehicle",
+          "value": 2003
+        },
+        {
+          "id": "veh:make",
+          "name": "make",
+          "type": "vehicle",
+          "value": "Honda"
+        },
+        {
+          "id": "veh:vin_masked",
+          "name": "vin_masked",
+          "type": "vehicle",
+          "value": "1HG**************"
+        },
+        {
+          "id": "rule:safety",
+          "level": "DRIVE_SHORT_DISTANCE_ONLY",
+          "triggers": [
+            "Codes were recently cleared — readiness monitors need more drive cycles to complete"
+          ],
+          "type": "rule_safety"
+        },
+        {
+          "cause": "Vacuum Leak",
+          "confidence": 75,
+          "id": "rule:hyp:vacuum_leak",
+          "rank": 1,
+          "type": "rule_hypothesis"
+        },
+        {
+          "cause": "Dirty or Failing MAF Sensor",
+          "confidence": 50,
+          "id": "rule:hyp:dirty_maf_sensor",
+          "rank": 2,
+          "type": "rule_hypothesis"
+        },
+        {
+          "cause": "Weak Fuel Pump / Low Fuel Pressure",
+          "confidence": 30,
+          "id": "rule:hyp:weak_fuel_pump",
+          "rank": 3,
+          "type": "rule_hypothesis"
+        }
+      ],
+      "muse_status": "ok",
+      "receipt": {
+        "cited_ledger_ids": [
+          "clr:e1",
+          "clr:e2",
+          "clr:e3",
+          "clr:e4",
+          "clr:flag",
+          "dtc:P0171:permanent",
+          "dtc:P0420:pending",
+          "mon:catalyst",
+          "mon:evaporative_system_evap",
+          "mon:oxygen_sensor",
+          "pid:DIST_SINCE_CODES_CLEARED",
+          "pid:ENGINE_RPM",
+          "pid:LONG_TERM_FUEL_TRIM_B1",
+          "pid:SHORT_TERM_FUEL_TRIM_B1",
+          "pid:TIME_SINCE_CODES_CLEARED",
+          "pid:WARMUPS_SINCE_CLEAR",
+          "rule:hyp:dirty_maf_sensor",
+          "rule:hyp:vacuum_leak",
+          "rule:hyp:weak_fuel_pump",
+          "rule:safety",
+          "veh:make",
+          "veh:year"
+        ],
+        "finish_reason": "stop",
+        "latency_ms": 6526,
+        "ledger_size": 32,
+        "model": "muse-spark-1.3",
+        "prompt_sha256_16": "fa436749d268fe39",
+        "usage": {
+          "completion_tokens": 1994,
+          "completion_tokens_details": {
+            "reasoning_tokens": 954
+          },
+          "prompt_tokens": 1880,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 3874
+        }
+      },
+      "recently_cleared": true,
+      "rule_safety_level": "DRIVE_SHORT_DISTANCE_ONLY",
+      "safety_action": "agreed",
+      "safety_opinion": {
+        "cites": [
+          "rule:safety",
+          "clr:flag",
+          "clr:e1",
+          "dtc:P0171:permanent",
+          "dtc:P0420:pending",
+          "mon:catalyst"
+        ],
+        "level": "DRIVE_SHORT_DISTANCE_ONLY",
+        "reason": "Permanent lean code plus pending catalyst code with very recent clearing means diagnosis is incomplete; keep to short test drives to a shop and re-scan after monitors complete."
+      },
+      "unverified_claims": []
+    },
+    "diy_eligibility": {
+      "failure_mode_catastrophic": false,
+      "hard_stop": false,
+      "hard_stop_reason": null,
+      "required_tools": [
+        "Smoke machine (rental) OR carb cleaner spray",
+        "Flashlight",
+        "Inspection mirror"
+      ],
+      "requires_programming": false,
+      "requires_recalibration": false,
+      "risk_level": "low",
+      "skill_level_required": "intermediate",
+      "special_equipment": [
+        "Smoke machine (strongly recommended)"
+      ],
+      "verdict": "DIY_WITH_CAUTION"
+    },
+    "hackathon": {
+      "build": "lylo-mechanic-hackathon",
+      "codes_cleared_evidence": [
+        "Only 19 km driven since codes were cleared (under 80).",
+        "Only 3 warm-ups since codes were cleared (under 10).",
+        "Only 41 engine minutes since codes were cleared (under 60).",
+        "Permanent code(s) P0171 present with no matching stored code, which usually means the stored codes were erased."
+      ],
+      "conversion_notes": [
+        "P0171: permanent code treated as active."
+      ],
+      "external_handshake": "stubbed",
+      "vehicle_received": {
+        "model": null,
+        "odometer": null,
+        "vin": "1HG**************"
+      }
+    },
+    "handshake_api": {
+      "blocked": false,
+      "cooling_period_minutes": 0,
+      "handshake_active": true,
+      "message": "External handshake service is disabled in the hackathon build; the local safety acknowledgment still applies.",
+      "mode": "SOFT_WARNING",
+      "next_step_type": null,
+      "requires_acknowledgment": true,
+      "risk_factors": [],
+      "risk_score": 0
+    },
+    "handshake_reason": "This repair has caution steps that require your acknowledgment before proceeding.",
+    "handshake_required": true,
+    "hypotheses": [
+      {
+        "cause_description": "Unmetered air entering after the MAF sensor causes a lean condition. This is the most common cause of P0171 and is often free or cheap to fix.",
+        "cause_id": "vacuum_leak",
+        "cause_name": "Vacuum Leak",
+        "cause_rank": 1,
+        "confidence_basis": "OBD_confirmed",
+        "confidence_score": 75,
+        "is_downstream": false,
+        "probable_root_cause_id": null,
+        "requires_physical_inspection": true,
+        "supporting_evidence": [
+          "P0171 with elevated LTFT strongly suggests vacuum leak",
+          "Rough idle further supports air leak diagnosis",
+          "Boosted by: high ltft over 10",
+          "Long-term fuel trim is +14.8% — elevated, indicating lean/rich condition"
+        ],
+        "what_could_make_this_wrong": [
+          "If LTFT is only slightly elevated, the cause may be a weak O2 sensor not a real lean condition",
+          "Confidence capped at 75% due to incomplete scan data — physical inspection needed to confirm"
+        ]
+      },
+      {
+        "cause_description": "A contaminated MAF sensor under-reports airflow, causing the ECU to run lean. MAF sensors are wear items on high-mileage vehicles.",
+        "cause_id": "dirty_maf_sensor",
+        "cause_name": "Dirty or Failing MAF Sensor",
+        "cause_rank": 2,
+        "confidence_basis": "plausible",
+        "confidence_score": 50,
+        "is_downstream": false,
+        "probable_root_cause_id": null,
+        "requires_physical_inspection": true,
+        "supporting_evidence": [
+          "Dirty MAF is a leading lean-code cause",
+          "MAF value below expected range for RPM supports this",
+          "Long-term fuel trim is +14.8% — elevated, indicating lean/rich condition"
+        ],
+        "what_could_make_this_wrong": [
+          "MAF cleaning with sensor-safe spray is a $5 first step — try this before replacement"
+        ]
+      },
+      {
+        "cause_description": "Insufficient fuel pressure causes lean conditions, especially under load or at highway speeds.",
+        "cause_id": "weak_fuel_pump",
+        "cause_name": "Weak Fuel Pump / Low Fuel Pressure",
+        "cause_rank": 3,
+        "confidence_basis": "low_confidence",
+        "confidence_score": 30,
+        "is_downstream": false,
+        "probable_root_cause_id": null,
+        "requires_physical_inspection": true,
+        "supporting_evidence": [
+          "Lean codes with load-based symptoms suggest fuel pressure issue",
+          "Long-term fuel trim is +14.8% — elevated, indicating lean/rich condition"
+        ],
+        "what_could_make_this_wrong": [
+          "Requires fuel pressure gauge test to confirm — cannot be confirmed from OBD-II data alone"
+        ]
+      }
+    ],
+    "professional_help_triggers": [
+      "If symptoms worsen or a new warning light appears, stop driving and seek professional inspection"
+    ],
+    "safety": {
+      "level": "DRIVE_SHORT_DISTANCE_ONLY",
+      "reasoning": "Vehicle is operable but has active faults. Limit driving and schedule service soon.",
+      "symptom_overrides_sensor": false,
+      "triggering_conditions": [
+        "Codes were recently cleared — readiness monitors need more drive cycles to complete"
+      ],
+      "user_must_acknowledge": false
+    },
+    "session_flags": [
+      "CODES_POSSIBLY_CLEARED",
+      "MONITORS_INCOMPLETE"
+    ],
+    "session_id": "0157DF12",
+    "tutorial_available": true,
+    "tutorial_blocked_reason": null,
+    "vehicle": {
+      "drive_type": null,
+      "engine": null,
+      "engine_type": null,
+      "enhanced_protocol": false,
+      "is_ev": false,
+      "is_hybrid": false,
+      "make": "Honda",
+      "model": null,
+      "odometer": null,
+      "supported_pids": [],
+      "transmission": null,
+      "trim": null,
+      "vin": "1HG**************",
+      "year": 2003
+    },
+    "veracore_flags": [
+      {
+        "flag_type": "stale_pricing",
+        "message": "Cost estimate for 'vacuum_leak' uses pricing data that is approaching expiration. Verify current parts pricing before purchasing.",
+        "severity": "caution",
+        "target": "vacuum_leak"
+      }
+    ],
+    "what_this_might_mean": "Based on moderate confidence scan data, the most likely cause is 'Vacuum Leak' (75% confidence). Note: codes may have been recently cleared — the fault that triggered this code may not yet have re-appeared.",
+    "what_to_check_first": [
+      "Check LTFT — if over +15%, start with vacuum leak inspection",
+      "MAF cleaning is free and quick — rule it out first"
+    ],
+    "what_we_know": [
+      "Active fault: P0171 — System Too Lean (Bank 1)",
+      "Pending fault (not yet confirmed): P0420 — Catalyst System Efficiency Below Threshold (Bank 1)",
+      "Long-term fuel trim Bank 1: +14.8% — significantly lean",
+      "Coolant temperature: 192°F — normal",
+      "Battery/charging voltage: 14.1V — normal",
+      "Readiness monitors not yet complete: Catalyst, Evaporative system (EVAP), Oxygen sensor",
+      "⚠ Codes may have been cleared before this scan — some faults may not yet have re-triggered"
+    ]
+  }
+}

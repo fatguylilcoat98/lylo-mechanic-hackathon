@@ -1,0 +1,424 @@
+{
+  "scenario": "cleared_clean",
+  "http_status": 200,
+  "estimated_cost_usd": 0.0099,
+  "request": {
+    "vehicle_profile": {
+      "year": 2016,
+      "make": "Mazda",
+      "model": "CX-5",
+      "odometer": 87000
+    },
+    "raw_dtcs": [],
+    "raw_pids": [
+      {
+        "name": "DIST_SINCE_CODES_CLEARED",
+        "pid_code": "31",
+        "raw_value": 6,
+        "unit": "km"
+      },
+      {
+        "name": "WARMUPS_SINCE_CLEAR",
+        "pid_code": "30",
+        "raw_value": 1,
+        "unit": ""
+      },
+      {
+        "name": "TIME_SINCE_CODES_CLEARED",
+        "pid_code": "4E",
+        "raw_value": 12,
+        "unit": "min"
+      },
+      {
+        "name": "ENGINE_COOLANT_TEMP",
+        "pid_code": "05",
+        "raw_value": 195,
+        "unit": "°F"
+      },
+      {
+        "name": "ENGINE_RPM",
+        "pid_code": "0C",
+        "raw_value": 700,
+        "unit": "rpm"
+      },
+      {
+        "name": "BATTERY_VOLTAGE",
+        "pid_code": "42",
+        "raw_value": 14.2,
+        "unit": "V"
+      }
+    ],
+    "readiness_monitors": [
+      {
+        "name": "Catalyst",
+        "status": "incomplete"
+      },
+      {
+        "name": "Evaporative system (EVAP)",
+        "status": "incomplete"
+      },
+      {
+        "name": "Oxygen sensor",
+        "status": "incomplete"
+      },
+      {
+        "name": "Misfire",
+        "status": "complete"
+      }
+    ],
+    "codes_cleared_before_scan": true,
+    "codes_cleared_evidence": [
+      "Only 6 km driven since codes were cleared (under 80).",
+      "Only 1 warm-up since codes were cleared (under 10).",
+      "Only 12 engine minutes since codes were cleared (under 60)."
+    ]
+  },
+  "response": {
+    "confidence": {
+      "blocked_outputs": [],
+      "codes_possibly_cleared": true,
+      "connection_valid": true,
+      "limit_reason": "Fault codes may have been cleared before scan — active faults could be missing; One or more readiness monitors have not completed — system self-tests are pending",
+      "manufacturer_specific_unknowns": false,
+      "monitors_incomplete": true,
+      "overall": 0.65,
+      "pid_coverage": "full",
+      "read_complete": true,
+      "symptom_alignment": "no_symptoms",
+      "unstable_session": false
+    },
+    "cost_estimates": [],
+    "detective": {
+      "cleared_codes_warning": {
+        "cites": [
+          "clr:flag",
+          "clr:e1",
+          "clr:e2",
+          "clr:e3",
+          "pid:DIST_SINCE_CODES_CLEARED",
+          "pid:WARMUPS_SINCE_CLEAR",
+          "pid:TIME_SINCE_CODES_CLEARED"
+        ],
+        "text": "Warning for a buyer: the car's trouble codes were cleared just 6 km / 1 warm-up / 12 minutes ago, so any check-engine problems could be temporarily hidden. The car has not been driven enough yet for its self-checks to finish and bring the codes back if a problem is still there, so do not trust this clean scan alone."
+      },
+      "explanation": {
+        "cites": [
+          "veh:year",
+          "veh:make",
+          "veh:model",
+          "veh:odometer",
+          "clr:flag",
+          "pid:DIST_SINCE_CODES_CLEARED",
+          "pid:WARMUPS_SINCE_CLEAR",
+          "mon:catalyst",
+          "mon:oxygen_sensor",
+          "mon:evaporative_system_evap",
+          "mon:misfire"
+        ],
+        "text": "This 2016 Mazda CX-5 with 87,000 miles had its trouble codes cleared just 6 km and 1 warm-up ago. Three emissions self-checks for the catalytic converter (the part that cleans exhaust), oxygen sensors (sensors that measure exhaust), and EVAP system (system that traps fuel vapors) are still incomplete, so problems could still be hiding. The misfire check is complete, but this scan alone cannot prove the car is healthy."
+      },
+      "final_safety_level": "DRIVE_SHORT_DISTANCE_ONLY",
+      "hypotheses": [
+        {
+          "cause": "Codes were cleared very recently to hide a check-engine problem for sale",
+          "cites": [
+            "clr:flag",
+            "clr:e1",
+            "clr:e2",
+            "clr:e3",
+            "pid:DIST_SINCE_CODES_CLEARED",
+            "pid:WARMUPS_SINCE_CLEAR",
+            "pid:TIME_SINCE_CODES_CLEARED",
+            "mon:catalyst",
+            "mon:oxygen_sensor",
+            "mon:evaporative_system_evap"
+          ],
+          "confidence": "medium",
+          "next_check": "Ask seller in writing why codes were cleared, then drive 80+ km with mixed city/highway and rescan to see if codes return and monitors become complete.",
+          "rank": 1,
+          "reasoning": "Clear was 6 km, 1 warm-up, and 12 minutes ago with 3 monitors still incomplete, which is the classic pattern when a light is reset just before showing a car."
+        },
+        {
+          "cause": "Catalytic converter or oxygen sensor problem not yet re-detected because monitors are incomplete",
+          "cites": [
+            "mon:catalyst",
+            "mon:oxygen_sensor",
+            "pid:DIST_SINCE_CODES_CLEARED",
+            "pid:WARMUPS_SINCE_CLEAR"
+          ],
+          "confidence": "medium",
+          "next_check": "Do a 20-30 minute mixed drive then rescan monitors; if catalyst or oxygen sensor stay incomplete or set codes, have a mechanic check exhaust and sensors.",
+          "rank": 2,
+          "reasoning": "Both catalyst and oxygen sensor self-checks are incomplete after the recent clear, so those expensive emissions parts have not yet proven they pass."
+        },
+        {
+          "cause": "Evaporative system leak or fault not yet re-detected",
+          "cites": [
+            "mon:evaporative_system_evap",
+            "pid:DIST_SINCE_CODES_CLEARED",
+            "pid:WARMUPS_SINCE_CLEAR"
+          ],
+          "confidence": "low",
+          "next_check": "After more driving and cold starts, rescan; a mechanic can do a cheap smoke test for vapor leaks if EVAP stays incomplete or sets a code.",
+          "rank": 3,
+          "reasoning": "EVAP self-check is incomplete after the recent clear, so a fuel-vapor leak or valve issue could still show up after more drives."
+        },
+        {
+          "cause": "Recent legitimate reset such as repair or battery disconnect, with no current fault",
+          "cites": [
+            "clr:flag",
+            "pid:BATTERY_VOLTAGE",
+            "pid:ENGINE_COOLANT_TEMP",
+            "pid:ENGINE_RPM",
+            "mon:misfire"
+          ],
+          "confidence": "low",
+          "next_check": "Ask for repair receipts and battery history, then verify monitors go complete with no new codes after extended driving.",
+          "rank": 4,
+          "reasoning": "Engine is idling at 700 rpm, 195F, and 14.2V with misfire check complete, so it is possible the clear was from recent work rather than hiding a fault, but the ledger does not prove this."
+        }
+      ],
+      "ledger": [
+        {
+          "id": "pid:DIST_SINCE_CODES_CLEARED",
+          "name": "DIST_SINCE_CODES_CLEARED",
+          "type": "codes_cleared_counter",
+          "unit": "km",
+          "value": 6
+        },
+        {
+          "id": "pid:WARMUPS_SINCE_CLEAR",
+          "name": "WARMUPS_SINCE_CLEAR",
+          "type": "codes_cleared_counter",
+          "unit": "",
+          "value": 1
+        },
+        {
+          "id": "pid:TIME_SINCE_CODES_CLEARED",
+          "name": "TIME_SINCE_CODES_CLEARED",
+          "type": "codes_cleared_counter",
+          "unit": "min",
+          "value": 12
+        },
+        {
+          "id": "pid:ENGINE_COOLANT_TEMP",
+          "name": "ENGINE_COOLANT_TEMP",
+          "type": "pid",
+          "unit": "°F",
+          "value": 195
+        },
+        {
+          "id": "pid:ENGINE_RPM",
+          "name": "ENGINE_RPM",
+          "type": "pid",
+          "unit": "rpm",
+          "value": 700
+        },
+        {
+          "id": "pid:BATTERY_VOLTAGE",
+          "name": "BATTERY_VOLTAGE",
+          "type": "pid",
+          "unit": "V",
+          "value": 14.2
+        },
+        {
+          "id": "mon:catalyst",
+          "name": "Catalyst",
+          "status": "incomplete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:evaporative_system_evap",
+          "name": "Evaporative system (EVAP)",
+          "status": "incomplete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:oxygen_sensor",
+          "name": "Oxygen sensor",
+          "status": "incomplete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "mon:misfire",
+          "name": "Misfire",
+          "status": "complete",
+          "type": "readiness_monitor"
+        },
+        {
+          "id": "clr:flag",
+          "type": "codes_cleared",
+          "value": true
+        },
+        {
+          "id": "clr:e1",
+          "text": "Only 6 km driven since codes were cleared (under 80).",
+          "type": "codes_cleared_evidence"
+        },
+        {
+          "id": "clr:e2",
+          "text": "Only 1 warm-up since codes were cleared (under 10).",
+          "type": "codes_cleared_evidence"
+        },
+        {
+          "id": "clr:e3",
+          "text": "Only 12 engine minutes since codes were cleared (under 60).",
+          "type": "codes_cleared_evidence"
+        },
+        {
+          "id": "veh:year",
+          "name": "year",
+          "type": "vehicle",
+          "value": 2016
+        },
+        {
+          "id": "veh:make",
+          "name": "make",
+          "type": "vehicle",
+          "value": "Mazda"
+        },
+        {
+          "id": "veh:model",
+          "name": "model",
+          "type": "vehicle",
+          "value": "CX-5"
+        },
+        {
+          "id": "veh:odometer",
+          "name": "odometer",
+          "type": "vehicle",
+          "value": 87000
+        },
+        {
+          "id": "rule:safety",
+          "level": "DRIVE_SHORT_DISTANCE_ONLY",
+          "triggers": [
+            "Codes were recently cleared — readiness monitors need more drive cycles to complete"
+          ],
+          "type": "rule_safety"
+        }
+      ],
+      "muse_status": "ok",
+      "receipt": {
+        "cited_ledger_ids": [
+          "clr:e1",
+          "clr:e2",
+          "clr:e3",
+          "clr:flag",
+          "mon:catalyst",
+          "mon:evaporative_system_evap",
+          "mon:misfire",
+          "mon:oxygen_sensor",
+          "pid:BATTERY_VOLTAGE",
+          "pid:DIST_SINCE_CODES_CLEARED",
+          "pid:ENGINE_COOLANT_TEMP",
+          "pid:ENGINE_RPM",
+          "pid:TIME_SINCE_CODES_CLEARED",
+          "pid:WARMUPS_SINCE_CLEAR",
+          "rule:safety",
+          "veh:make",
+          "veh:model",
+          "veh:odometer",
+          "veh:year"
+        ],
+        "finish_reason": "stop",
+        "latency_ms": 6170,
+        "ledger_size": 19,
+        "model": "muse-spark-1.3",
+        "prompt_sha256_16": "d28f80471fd036bb",
+        "usage": {
+          "completion_tokens": 1933,
+          "completion_tokens_details": {
+            "reasoning_tokens": 882
+          },
+          "prompt_tokens": 1350,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 3283
+        }
+      },
+      "recently_cleared": true,
+      "rule_safety_level": "DRIVE_SHORT_DISTANCE_ONLY",
+      "safety_action": "agreed",
+      "safety_opinion": {
+        "cites": [
+          "rule:safety",
+          "clr:flag",
+          "clr:e1",
+          "mon:catalyst",
+          "mon:oxygen_sensor",
+          "mon:evaporative_system_evap"
+        ],
+        "level": "DRIVE_SHORT_DISTANCE_ONLY",
+        "reason": "Rule engine says short-distance only because codes were just cleared and key readiness checks need more drive cycles to confirm no hidden problem."
+      },
+      "unverified_claims": []
+    },
+    "diy_eligibility": null,
+    "hackathon": {
+      "build": "lylo-mechanic-hackathon",
+      "codes_cleared_evidence": [
+        "Only 6 km driven since codes were cleared (under 80).",
+        "Only 1 warm-up since codes were cleared (under 10).",
+        "Only 12 engine minutes since codes were cleared (under 60)."
+      ],
+      "conversion_notes": [],
+      "external_handshake": "stubbed",
+      "vehicle_received": {
+        "model": "CX-5",
+        "odometer": 87000,
+        "vin": null
+      }
+    },
+    "handshake_api": null,
+    "handshake_reason": null,
+    "handshake_required": false,
+    "hypotheses": [],
+    "professional_help_triggers": [
+      "If symptoms worsen or a new warning light appears, stop driving and seek professional inspection"
+    ],
+    "safety": {
+      "level": "DRIVE_SHORT_DISTANCE_ONLY",
+      "reasoning": "Vehicle is operable but has active faults. Limit driving and schedule service soon.",
+      "symptom_overrides_sensor": false,
+      "triggering_conditions": [
+        "Codes were recently cleared — readiness monitors need more drive cycles to complete"
+      ],
+      "user_must_acknowledge": false
+    },
+    "session_flags": [
+      "CODES_POSSIBLY_CLEARED",
+      "MONITORS_INCOMPLETE"
+    ],
+    "session_id": "BE5A3C0E",
+    "tutorial_available": false,
+    "tutorial_blocked_reason": "No DIY assessment available.",
+    "vehicle": {
+      "drive_type": null,
+      "engine": null,
+      "engine_type": null,
+      "enhanced_protocol": false,
+      "is_ev": false,
+      "is_hybrid": false,
+      "make": "Mazda",
+      "model": "CX-5",
+      "odometer": 87000,
+      "supported_pids": [],
+      "transmission": null,
+      "trim": null,
+      "vin": null,
+      "year": 2016
+    },
+    "veracore_flags": [],
+    "what_this_might_mean": "No diagnostic data is available to form a conclusion. A physical inspection is recommended.",
+    "what_to_check_first": [],
+    "what_we_know": [
+      "Coolant temperature: 195°F — normal",
+      "Battery/charging voltage: 14.2V — normal",
+      "Readiness monitors not yet complete: Catalyst, Evaporative system (EVAP), Oxygen sensor",
+      "⚠ Codes may have been cleared before this scan — some faults may not yet have re-triggered",
+      "No active or pending fault codes detected"
+    ]
+  }
+}

@@ -67,9 +67,9 @@ def main():
         vp = payload.get("vehicle_profile", {})
         if vp.get("vin"):
             vp["vin"] = mask_vin(vp["vin"])
-        hv = (j.get("hackathon") or {}).get("vehicle_received") or {}
-        if hv.get("vin"):
-            hv["vin"] = mask_vin(hv["vin"])
+        for hv in ((j.get("hackathon") or {}).get("vehicle_received") or {}, j.get("vehicle") or {}):
+            if hv.get("vin"):
+                hv["vin"] = mask_vin(hv["vin"])
         rec = {"scenario": name, "http_status": r.status_code, "estimated_cost_usd": round(cost, 5),
                "request": payload, "response": j}
         with open(os.path.join(out_dir, f"detective_{name}.json"), "w") as f:
