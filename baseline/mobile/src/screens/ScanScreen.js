@@ -7,6 +7,8 @@ import OBDService from '../services/OBDService';
 import * as BT from '../services/BluetoothService';
 import { Button, Card, u } from '../components/ui';
 import { C } from '../constants/colors';
+// Hackathon hook (Oct 26, 2026): no-op unless EXPO_PUBLIC_LYLO_SERVER_URL is set.
+import { afterScan } from '../../../../hackathon/mobile-bridge/src/scanHook';
 
 export default function ScanScreen({ route, navigation }) {
   const mode = route.params?.mode || 'usedcar';
@@ -21,7 +23,8 @@ export default function ScanScreen({ route, navigation }) {
     setError(null);
     setProgress({ i: 0, n: 8, msg: 'Starting...' });
     try {
-      const scan = await OBDService.fullScan((i, n, msg) => setProgress({ i, n, msg }));
+      const raw = await OBDService.fullScan((i, n, msg) => setProgress({ i, n, msg }));
+      const scan = await afterScan(raw);
       navigation.replace(mode === 'usedcar' ? 'UsedCar' : 'Codes', { scan });
     } catch (e) {
       BT.log('scan failed: ' + (e.message || e));
