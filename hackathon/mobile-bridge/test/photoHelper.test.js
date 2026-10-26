@@ -15,8 +15,24 @@ test('six simple jobs with plain photo instructions; risky jobs grouped to a pro
 test('layoutMarks clamps and scales', () => {
   const l = P.layoutMarks([{ n: 1, text: '1. Battery', x: 2, y: -1, radius: 5 }, { n: 2, text: '2. x', x: 'bad', y: 0.5 }], 400, 300);
   assert.strictEqual(l.length, 1);
-  assert.deepStrictEqual([l[0].cx, l[0].cy, l[0].r], [400, 0, 120]);
+  assert.deepStrictEqual([l[0].cx, l[0].cy, l[0].r], [400, 0, 60]); // radius capped at 0.15 of width
   assert.ok(l[0].badgeX <= 384 && l[0].badgeY >= 16);
+});
+
+test('layoutMarks: overlapping circles shrink apart, badges never overlap each other', () => {
+  const marks = [
+    { n: 1, text: '1. Battery', x: 0.5, y: 0.5, radius: 0.15 },
+    { n: 2, text: '2. Positive (+) terminal', x: 0.56, y: 0.5, radius: 0.1 },
+    { n: 3, text: '3. Negative (\u2212) terminal', x: 0.5, y: 0.56, radius: 0.1 },
+  ];
+  const l = P.layoutMarks(marks, 1000, 750);
+  for (let i = 0; i < l.length; i++) for (let j = i + 1; j < l.length; j++) {
+    const a = l[i]; const b = l[j];
+    const d = Math.hypot(a.cx - b.cx, a.cy - b.cy);
+    assert.ok(d + 0.01 >= a.r + b.r || a.r === 20 || b.r === 20, 'circles shrink to not overlap (or hit the minimum)');
+    assert.ok(Math.hypot(a.badgeX - b.badgeX, a.badgeY - b.badgeY) >= 34, 'badges apart');
+  }
+  for (const m of l) assert.ok(m.badgeX >= 16 && m.badgeX <= 984 && m.badgeY >= 16 && m.badgeY <= 734);
 });
 
 test('live results (synthetic photos) -> view model; disclaimer always', () => {

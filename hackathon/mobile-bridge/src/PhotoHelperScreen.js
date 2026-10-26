@@ -11,6 +11,9 @@ import { Toggle } from './SimpleResults';
 import { loadViewMode, saveViewMode } from './viewMode';
 import { JOBS, PRO_JOBS, GET_A_PRO, layoutMarks, viewModel, requestHelper } from './photoHelper';
 import { configuredUrl, configuredKey } from './scanHook';
+import { loadVehicle } from './vin';
+import { forJob } from './priceLinks';
+import { PriceButtons, VehicleLine } from './PriceButtons';
 
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
@@ -44,11 +47,13 @@ export function Overlay({ photo, marks }) {
   );
 }
 
-export function HelperResult({ vm, photo, mode, onMode }) {
+export function HelperResult({ vm, photo, mode, onMode, jobId, vehicle }) {
+  const price = vm.found && !vm.refused && jobId ? forJob(jobId, vehicle) : null;
   return (
     <>
       <Toggle mode={mode} onChange={onMode} />
       <Text style={s.h}>{vm.title}</Text>
+      {vehicle ? <Text style={s.small}>{'\uD83D\uDE97  '}{vehicle.name} ({vehicle.caveat})</Text> : null}
       {photo ? <Overlay photo={photo} marks={vm.marks} /> : null}
       {vm.message ? <View style={vm.refused ? s.pro : s.miss}><Text style={s.missText}>{vm.message}</Text></View> : null}
       {vm.warnings.map((w) => <View key={w} style={s.warn}><Text style={s.warnText}>{'\u26A0\uFE0F  '}{w}</Text></View>)}
@@ -67,6 +72,7 @@ export function HelperResult({ vm, photo, mode, onMode }) {
           {vm.steps.map((st, i) => <Text key={st} style={s.bullet}>{`${i + 1}.  ${st}`}</Text>)}
         </View>
       )}
+      {price ? <PriceButtons p={price} /> : null}
       <Text style={s.disc}>{vm.disclaimer}</Text>
       <View style={s.receipt}>
         <Text style={s.powered}>{vm.poweredBy}</Text>
@@ -85,7 +91,8 @@ export default function PhotoHelperScreen({ navigation, storage, picker, fetchIm
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState(null);
   const [note, setNote] = useState(null);
-  useEffect(() => { let live = true; loadViewMode(store).then((m) => { if (live) setMode(m); }); return () => { live = false; }; }, [store]);
+  const [vehicle, setVehicle] = useState(null);
+  useEffect(() => { let live = true; loadViewMode(store).then((m) => { if (live) setMode(m); }); loadVehicle(store).then((v) => { if (live) setVehicle(v); }); return () => { live = false; }; }, [store]);
   const changeMode = (m) => { setMode(m); saveViewMode(store, m); };
 
   async function getPhoto(camera) {
@@ -100,7 +107,7 @@ export default function PhotoHelperScreen({ navigation, storage, picker, fetchIm
       const a = r.assets[0];
       const p = { uri: a.uri, width: a.width, height: a.height, type: a.mimeType || 'image/jpeg', name: a.fileName || 'photo.jpg' };
       setPhoto(p); setBusy(true); setRes(null);
-      const out = await requestHelper({ baseUrl: baseUrl === undefined ? configuredUrl() : baseUrl, appKey: appKey === undefined ? configuredKey() : appKey, fetchImpl, job: job.id, photo: p });
+      const out = await requestHelper({ baseUrl: baseUrl === undefined ? configuredUrl() : baseUrl, appKey: appKey === undefined ? configuredKey() : appKey, fetchImpl, job: job.id, photo: p, vin: vehicle && vehicle.vin });
       setRes(out);
     } catch (e) {
       setNote('Something went wrong getting the photo. Please try again.');
@@ -114,6 +121,11 @@ export default function PhotoHelperScreen({ navigation, storage, picker, fetchIm
       <ScrollView style={s.screen} contentContainerStyle={s.scroll}>
         <Text style={s.h}>What do you want to do?</Text>
         <Text style={s.body}>Pick a job. You take one picture, and Meta AI shows you where to look on your own car.</Text>
+        {vehicle ? <VehicleLine v={{ name: vehicle.name, caveat: `Based on your VIN (${vehicle.caveat}).` }} /> : (
+          <Pressable onPress={() => navigation && navigation.navigate('Vin')} style={s.job} accessibilityRole="button">
+            <Text style={s.jobText}>{'\uD83D\uDE97  '}Add your car (VIN) for better help</Text>
+          </Pressable>
+        )}
         {JOBS.map((j) => (
           <Pressable key={j.id} onPress={() => setJob(j)} style={s.job} accessibilityRole="button">
             <Text style={s.jobText}>{j.icon}  {j.title}</Text>
@@ -160,7 +172,7 @@ export default function PhotoHelperScreen({ navigation, storage, picker, fetchIm
         </>
       ) : (
         <>
-          <HelperResult vm={vm} photo={photo} mode={mode} onMode={changeMode} />
+          <HelperResult vm={vm} photo={photo} mode={mode} onMode={changeMode} jobId={job.id} vehicle={vehicle} />
           <Big title="Try another picture" onPress={() => { setRes(null); setPhoto(null); }} />
           <Big title="Pick another job" onPress={reset} kind="secondary" />
         </>

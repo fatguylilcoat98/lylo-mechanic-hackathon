@@ -13,6 +13,7 @@ import os
 
 from . import ledger as L
 from . import muse, wiring
+from . import vin as V
 
 CLAIM = {"type": "object", "additionalProperties": False,
          "required": ["text", "cites"],
@@ -47,7 +48,8 @@ You get an EVIDENCE LEDGER: a JSON list of facts, each with an "id". Rules:
 5. "safety_opinion": the rule engine's level is in item rule:safety. You may agree or argue for a HIGHER level from this order: SAFE_TO_DRIVE < INSPECT_SOON < DRIVE_SHORT_DISTANCE_ONLY < DO_NOT_DRIVE < TOW_RECOMMENDED < EMERGENCY_STOP_IMMEDIATELY. A lower level will be ignored.
 6. Items with "source": "photo" come from a camera photo read by a vision model. They are LESS reliable than sensor data: say "the photo suggests", and never let a photo item override a sensor reading that contradicts it.
 7. If the ledger has rule:wiring_first, those are sensor/circuit codes: for them, the first next check must be the connector and wiring (corrosion, loose plug, chafed wire) before replacing the sensor; say plainly "often it's the wire or plug, not the sensor" and cite rule:wiring_first.
-8. Do not claim certainty; this is a scan, not an inspection. Output only the JSON object."""
+8. An item with "source": "vin_decode" is the factory build decoded from the VIN by NHTSA. It assumes the factory engine (engines can be swapped): when you use it, say "for a <year> <make> <model> with the factory engine" and cite vin:decoded. If a sensor fact contradicts it, trust the sensor and say so.
+9. Do not claim certainty; this is a scan, not an inspection. Output only the JSON object."""
 
 
 def enabled():
@@ -155,6 +157,7 @@ def run(data, result, call=None, extra_items=None):
     """Adds result['detective'] and may raise result['safety']['level'].
     extra_items: already-typed ledger items from other sources (e.g. photo)."""
     items = L.build_ledger(data, result) + [i for i in (extra_items or []) if isinstance(i, dict) and i.get("id")]
+    items += V.ledger_items(data)
     _w = wiring.hint_item(items)
     if _w:
         items.append(_w)

@@ -22,7 +22,7 @@ export default function HomeScreen({ navigation }) {
         <Text style={s.title}>LYLO Mechanic</Text>
         <Text style={s.tag}>Know what's wrong before you buy or walk into a shop.</Text>
         <Text style={s.powered}>Powered by Meta AI</Text>
-        <Text style={s.build}>TEST BUILD v0.4.2 · works offline · no login</Text>
+        <Text style={s.build}>TEST BUILD v0.4.3 · works offline · no login</Text>
       </View>
 
       {device ? (
@@ -47,6 +47,7 @@ export default function HomeScreen({ navigation }) {
 
       <Card title="Tools">
         <Button title="Photo Helper: find a part on your car" onPress={() => navigation.navigate('PhotoHelper')} />
+        <Button title="Your car: add your VIN" onPress={() => navigation.navigate('Vin')} />
         <Button title="Look up a trouble code" kind="secondary" onPress={() => navigation.navigate('Lookup')} />
         <Button title="Debug log (for testing)" kind="secondary" onPress={() => navigation.navigate('Log')} />
       </Card>

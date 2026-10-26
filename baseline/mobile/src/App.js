@@ -19,6 +19,7 @@ import CodeDetailScreen from './screens/CodeDetailScreen';
 import LookupScreen from './screens/LookupScreen';
 import LogScreen from './screens/LogScreen';
 import PhotoHelperScreen from '../../../hackathon/mobile-bridge/src/PhotoHelperScreen'; // hackathon v0.4.2
+import VinScreen from '../../../hackathon/mobile-bridge/src/VinScreen'; // hackathon v0.4.3
 import { C } from './constants/colors';
 
 const Stack = createNativeStackNavigator();
@@ -51,6 +52,7 @@ export default function App() {
           <Stack.Screen name="Lookup" component={LookupScreen} options={{ title: 'Look up a code' }} />
           <Stack.Screen name="Log" component={LogScreen} options={{ title: 'Debug log' }} />
           <Stack.Screen name="PhotoHelper" component={PhotoHelperScreen} options={{ title: 'Photo Helper' }} />
+          <Stack.Screen name="Vin" component={VinScreen} options={{ title: 'Your car' }} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

@@ -136,12 +136,16 @@ class Route(unittest.TestCase):
         self.assertEqual(self.post("juggling").status_code, 400)
         self.assertEqual(self.post("bulb", b"not an image").status_code, 400)
 
-    def test_muse_error_502_not_found_message(self):
+    def test_muse_error_structured_424_and_logged(self):
         def boom(*a, **k):
-            raise muse.MuseError("TIMEOUT", "t")
-        r = self.post("tires", jpeg_with_exif(), call=boom)
-        self.assertEqual(r.status_code, 502)
-        self.assertFalse(r.get_json()["found"])
+            raise muse.MuseError("HTTP_400", "Invalid schema for response_format")
+        with self.assertLogs("lylo_hack", "WARNING") as logs:
+            r = self.post("tires", jpeg_with_exif(), call=boom)
+        self.assertEqual(r.status_code, 424)  # not 502: Cloudflare can mask origin 502 bodies
+        j = r.get_json()
+        self.assertFalse(j["found"])
+        self.assertEqual(j["upstream_error"], "HTTP_400")
+        self.assertIn("code=HTTP_400", logs.output[0])
 
     def test_jobs_list(self):
         j = self.c.get("/api/v1/photo/jobs").get_json()

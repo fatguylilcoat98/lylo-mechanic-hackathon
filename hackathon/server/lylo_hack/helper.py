@@ -97,7 +97,7 @@ HAZARD_TEXT = {
 ALL_LABELS = sorted({l for j in JOBS.values() for l in j["labels"]} | set(COVER_LABELS))
 SCHEMA = {
     "type": "object", "additionalProperties": False,
-    "required": ["shows_requested_area", "image_quality", "hazards", "marks"],
+    "required": ["shows_requested_area", "image_quality", "hazards", "engine_cover_hides_area", "marks"],
     "properties": {
         "shows_requested_area": {"type": "boolean"},
         "image_quality": {"type": "string", "enum": ["good", "poor", "unusable"]},
@@ -214,12 +214,15 @@ def build(job, out, meta=None, info=None, prompt_hash=None, image_hash=None):
     return res
 
 
-def analyze(job, raw, call=None):
+def analyze(job, raw, call=None, vehicle=None):
     jpeg, info = sanitize(raw)
     j = JOBS[job]
     url = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode()
     labels = j["labels"] + (COVER_LABELS if job in COVER_JOBS else [])
     system = INSTRUCTIONS.format(title=j["title"], labels=", ".join(labels), photo=j["photo"], cover=", ".join(COVER_LABELS))
+    if vehicle and vehicle.get("status") == "ok":  # decoded fields only; the raw VIN is never sent
+        from .vin import prompt_line
+        system += "\n" + prompt_line(vehicle) + " Use it only to know the layout to expect; still mark only what you can see."
     messages = [{"role": "system", "content": system},
                 {"role": "user", "content": [{"type": "text", "text": "Photo from the user's car:"},
                                              {"type": "image_url", "image_url": {"url": url}}]}]
@@ -227,4 +230,7 @@ def analyze(job, raw, call=None):
     ph = hashlib.sha256(json.dumps([system, "image:" + ih]).encode()).hexdigest()[:16]
     out, meta = (call or muse.chat_json)(messages, SCHEMA, name="photo_helper", max_tokens=2500,
                                          timeout=float(os.environ.get("LYLO_HACK_VISION_TIMEOUT_S", "25")))
-    return build(job, out, meta, info, ph, ih)
+    res = build(job, out, meta, info, ph, ih)
+    if vehicle and vehicle.get("status") == "ok":
+        res["vehicle"] = {k: vehicle[k] for k in ("name", "year", "make", "model", "engine", "caveat", "source")}
+    return res

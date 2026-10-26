@@ -10,6 +10,7 @@
 const { friendly, labelFor, formatValue, monitorLabel, plainProblem, stripCodes, isCircuitCode, WIRING_ACTION } = require('./friendlyLabels');
 const hasCode = (t) => /\b[PBCU][0-9A-F]{4}\b/i.test(String(t || ''));
 const { detectiveView } = require('./detectiveView');
+const { forCode, priceLinks, partFromCause } = require('./priceLinks');
 
 const ORDER = ['SAFE_TO_DRIVE', 'INSPECT_SOON', 'DRIVE_SHORT_DISTANCE_ONLY', 'DO_NOT_DRIVE', 'TOW_RECOMMENDED', 'EMERGENCY_STOP_IMMEDIATELY'];
 const VERDICTS = {
@@ -47,6 +48,7 @@ function tempF(item) {
  * @param opts.codes analyzeCodes(scan) results (baseline, has plain text + grounded shop prices)
  * @param opts.screen 'usedcar' | 'codes'
  * @param opts.baselineCleared baseline assessUsedCar(scan).recentlyCleared ('likely'|'possible'|'no')
+ * @param opts.vehicle saved VIN-decoded vehicle (vin.js vehicleSummary) or null
  */
 function buildResults(scan, opts = {}) {
   const r = serverResult(scan);
@@ -129,7 +131,19 @@ function buildResults(scan, opts = {}) {
     server: 'LYLO server (lylo-api) · session ' + (r.session_id || '?'),
   };
 
+  // VIN-decoded car (NHTSA) and "Check the price" buttons. Part names never carry codes.
+  const vehicle = opts.vehicle && opts.vehicle.name ? opts.vehicle : null;
+  const seen = new Set();
+  const uniq = (p) => p && !seen.has(p.query) && seen.add(p.query);
+  const prices = codes.slice(0, 2).map((c) => forCode(c, vehicle)).filter(uniq)
+    .map((p) => ({ ...p, title: stripCodes(p.title) }));
+  mechanic.prices = prices.concat((Array.isArray(det.hypotheses) ? det.hypotheses : []).slice(0, 4)
+    .map((h) => priceLinks(partFromCause(h.cause), vehicle, null)).filter(uniq));
+  mechanic.vehicle = vehicle ? { name: vehicle.name, engine: vehicle.engine, caveat: vehicle.caveat, source: vehicle.source } : null;
+
   return {
+    vehicle: vehicle ? { name: vehicle.name, caveat: `Based on your VIN (${vehicle.caveat}).`, recalls: vehicle.recalls || null } : null,
+    prices,
     tone, levelCode: level,
     verdict: { ...VERDICTS[tone], why },
     actions: actions.slice(0, 3),

@@ -24,16 +24,45 @@ const BATTERY_WARNING = 'Battery safety: take off the negative (\u2212, black) c
 const clamp = (v, lo, hi) => { const n = Number(v); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : null; };
 
 /** Re-validate server marks and convert to pixel circles for a photo shown at w x h. */
-function layoutMarks(marks, w, h) {
+const MAX_R = 0.15; // fraction of width: circles hug the part, never a big halo
+const ANGLES = [225, 315, 135, 45, 270, 90, 180, 0];
+
+/** Normalized marks -> pixel circles + number badges with no overlaps.
+ * Circles shrink so neighbours don't overlap (down to a small minimum); each badge sits just
+ * outside its circle at the first angle that clears every other badge and circle center. */
+function layoutMarks(marks, w, h, badgeR = 16) {
+  const minR = Math.max(10, w * 0.02);
   const out = [];
   for (const m of Array.isArray(marks) ? marks : []) {
     const x = clamp(m && m.x, 0, 1); const y = clamp(m && m.y, 0, 1);
     if (x === null || y === null || !m.text) continue;
-    const r = Math.max(14, (clamp(m.radius, 0.02, 0.3) || 0.06) * w);
-    out.push({ n: m.n, text: String(m.text), cx: x * w, cy: y * h, r,
-      badgeX: Math.min(Math.max(16, x * w - r * 0.72), w - 16), badgeY: Math.min(Math.max(16, y * h - r * 0.72), h - 16) });
+    out.push({ n: m.n, text: String(m.text), cx: x * w, cy: y * h, r: Math.max(minR, (clamp(m.radius, 0.02, MAX_R) || 0.06) * w) });
+    if (out.length === 6) break;
   }
-  return out.slice(0, 6);
+  const gap = 4;
+  for (let i = 0; i < out.length; i++) for (let j = i + 1; j < out.length; j++) {
+    const a = out[i]; const b = out[j];
+    const d = Math.hypot(a.cx - b.cx, a.cy - b.cy);
+    if (d < a.r + b.r + gap) {
+      const k = Math.max(0, d - gap) / (a.r + b.r);
+      a.r = Math.max(minR, a.r * k); b.r = Math.max(minR, b.r * k);
+    }
+  }
+  const placed = [];
+  for (const m of out) {
+    let best = null;
+    for (const deg of ANGLES) {
+      const t = (deg * Math.PI) / 180; const dist = m.r + badgeR + 2;
+      const bx = Math.min(Math.max(badgeR, m.cx + Math.cos(t) * dist), w - badgeR);
+      const by = Math.min(Math.max(badgeR, m.cy - Math.sin(t) * dist), h - badgeR);
+      const clash = placed.some((p) => Math.hypot(p.x - bx, p.y - by) < 2 * badgeR + 2)
+        || out.some((o) => o !== m && Math.hypot(o.cx - bx, o.cy - by) < o.r + badgeR * 0.5);
+      if (!best) best = { x: bx, y: by };
+      if (!clash) { best = { x: bx, y: by }; break; }
+    }
+    m.badgeX = best.x; m.badgeY = best.y; placed.push(best);
+  }
+  return out;
 }
 
 /** Server JSON (or error) -> what each view shows. Always carries the disclaimer. */
@@ -66,11 +95,12 @@ function viewModel(res, jobId) {
 }
 
 /** POST the photo. Never throws; returns server JSON or {helper_status:'error...'}. */
-async function requestHelper({ baseUrl, appKey, fetchImpl, job, photo, timeoutMs = 45000 }) {
+async function requestHelper({ baseUrl, appKey, fetchImpl, job, photo, vin, timeoutMs = 45000 }) {
   const f = fetchImpl || (typeof fetch === 'function' ? fetch : null);
   if (!baseUrl || !f) return { helper_status: 'error: offline', offline: true };
   const form = new FormData();
   form.append('job', job);
+  if (vin) form.append('vin', vin); // server decodes it; Meta AI only gets year/make/model/engine
   form.append('photo', { uri: photo.uri, type: photo.type || 'image/jpeg', name: photo.name || 'photo.jpg' });
   const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
   const t = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;

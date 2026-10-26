@@ -9,6 +9,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { C } from '../../../baseline/mobile/src/constants/colors';
 import { buildResults, formatValue } from './resultsView';
 import { MODE_LABELS, loadViewMode, saveViewMode } from './viewMode';
+import { loadVehicle } from './vin';
+import { PriceButtons, VehicleLine } from './PriceButtons';
 
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
@@ -54,6 +56,7 @@ function SimpleView({ m }) {
       ) : null}
       <Text style={s.h}>What to do next</Text>
       {m.actions.map((a) => <Text key={a} style={s.bullet}>{'\u2022  '}{a}</Text>)}
+      {m.prices.map((p) => <PriceButtons key={p.query} p={p} />)}
       <Pressable onPress={() => setOpen(!open)} style={s.seeWhy} accessibilityRole="button">
         <Text style={s.seeWhyText}>{open ? 'Hide why  \u25B2' : 'See why  \u25BC'}</Text>
       </Pressable>
@@ -104,6 +107,11 @@ function MechanicView({ m }) {
         </View>
       ))}
       {x.unverified.map((u) => <Text key={u.key} style={[s.small, { color: '#ffb020' }]}>Unverified {u.kind}: {u.text}</Text>)}
+      {x.vehicle ? <><Text style={s.h2}>Vehicle (VIN decode)</Text><Row label="Vehicle" value={x.vehicle.name} />
+        {x.vehicle.engine ? <Row label="Engine (factory)" value={x.vehicle.engine} /> : null}
+        <Text style={s.small}>{x.vehicle.source}; {x.vehicle.caveat}</Text></> : null}
+      {x.prices.length ? <Text style={s.h2}>Check the price</Text> : null}
+      {x.prices.map((p) => <PriceButtons key={p.query} p={p} />)}
       <Text style={s.h2}>Trouble codes</Text>
       <Text style={s.body}>{x.dtcs.length ? x.dtcs.join(', ') : 'None'}</Text>
       <Text style={s.h2}>Live data</Text>
@@ -124,6 +132,7 @@ export function ResultsBody({ m, mode, onMode }) {
   return (
     <>
       <Toggle mode={mode} onChange={onMode} />
+      {mode !== 'mechanic' ? <VehicleLine v={m.vehicle} /> : null}
       <Verdict v={m.verdict} tone={m.tone} />
       {mode === 'mechanic' ? <MechanicView m={m} /> : <SimpleView m={m} />}
       {m.receipt ? (
@@ -139,8 +148,9 @@ export function ResultsBody({ m, mode, onMode }) {
 export default function SimpleResults({ scan, codes, screen, baselineCleared, footer, storage }) {
   const store = storage === undefined ? defaultStorage : storage;
   const [mode, setMode] = useState('simple');
-  useEffect(() => { let live = true; loadViewMode(store).then((m) => { if (live) setMode(m); }); return () => { live = false; }; }, [store]);
-  const m = buildResults(scan, { codes, screen, baselineCleared });
+  const [vehicle, setVehicle] = useState(null);
+  useEffect(() => { let live = true; loadViewMode(store).then((m) => { if (live) setMode(m); }); loadVehicle(store).then((v) => { if (live) setVehicle(v); }); return () => { live = false; }; }, [store]);
+  const m = buildResults(scan, { codes, screen, baselineCleared, vehicle });
   if (!m) return null;
   const change = (next) => { setMode(next); saveViewMode(store, next); };
   return (

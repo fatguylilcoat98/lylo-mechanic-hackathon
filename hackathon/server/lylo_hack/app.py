@@ -15,10 +15,22 @@ from .validation import validate_live_payload
 from . import live
 from . import detective
 from . import muse, vision, voice, helper
+from . import vin as vinmod
 from .safety import apply_floor, higher
 from . import security
 
 log = logging.getLogger("lylo_hack")
+
+# Upstream (Meta model API) failures. 424 Failed Dependency, not 502: Cloudflare can replace an
+# origin 502 body with its own "error code: 502" page, which hid the real cause (v0.4.2 incident).
+UPSTREAM_STATUS = 424
+
+
+def _upstream_fail(route, e, payload):
+    """Log the upstream failure code (never the key or the photo) and return a structured error."""
+    log.warning("muse upstream failure route=%s code=%s detail=%s", route, e.code, str(e)[:160].replace("\n", " "))
+    payload.update({"error": "Meta AI could not answer this request.", "upstream_error": e.code, "errors": []})
+    return jsonify(payload), UPSTREAM_STATUS
 LIVE_MAX_BYTES = 256 * 1024
 DEFAULT_ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 
@@ -46,7 +58,7 @@ def create_app():
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024  # photo (5 MB) + scan field; JSON route checks its own 256 KB cap
     limiter = security.Limiter()
-    muse_routes = {"/api/v1/live/live": detective.enabled, "/api/v1/vision/dash": vision.enabled,
+    muse_routes = {"/api/v1/live/live": detective.enabled, "/api/v1/vision/dash": vision.enabled, "/api/v1/vin/photo": vinmod.enabled,
                    "/api/v1/voice/ask": voice.enabled, "/api/v1/photo/helper": helper.enabled}
 
     @app.before_request
@@ -89,7 +101,8 @@ def create_app():
         return jsonify({"ok": True, "external_handshake": "stubbed" if live.external_handshake_disabled() else "live",
                         "muse": "on" if detective.enabled() else "off",
                         "vision": "on" if vision.enabled() else "off", "voice": "on" if voice.enabled() else "off",
-                        "photo_helper": "on" if helper.enabled() else "off"})
+                        "photo_helper": "on" if helper.enabled() else "off",
+                        "vin": "on" if vinmod.enabled() else "off"})
 
     @app.post("/api/v1/live/live")
     def live_route():
@@ -155,8 +168,8 @@ def create_app():
         except vision.PhotoError as e:
             return jsonify({"error": str(e), "errors": []}), 400
         except muse.MuseError as e:
-            return jsonify({"vision_status": f"error: {e.code}; no photo evidence added, safety unchanged",
-                            "photo_evidence": [], "photo_safety_floor": None}), 502
+            return _upstream_fail("vision", e, {"vision_status": f"error: {e.code}; no photo evidence added, safety unchanged",
+                                                "photo_evidence": [], "photo_safety_floor": None})
         except Exception:
             log.exception("vision failed")
             return jsonify({"vision_status": "error: internal; no photo evidence added, safety unchanged",
@@ -175,6 +188,35 @@ def create_app():
             v["final_safety_level"] = v["photo_safety_floor"]
         return jsonify(v)
 
+    @app.post("/api/v1/vin/decode")
+    def vin_decode_route():
+        if not vinmod.enabled():
+            return jsonify({"error": "VIN lookup is off (LYLO_HACK_VIN is not 1).", "errors": []}), 503
+        body = request.get_json(silent=True) or {}
+        dec = vinmod.decode(body.get("vin") or request.form.get("vin"))
+        if dec["status"] == "invalid":
+            return jsonify({"vin_status": "invalid", "message": dec["reason"], "errors": []}), 400
+        out = {"vin_status": dec["status"], "vehicle": dec}
+        if dec["status"] == "ok":
+            out["recalls"] = vinmod.recalls(dec)
+        return jsonify(out)
+
+    @app.post("/api/v1/vin/photo")
+    def vin_photo_route():
+        if not vinmod.enabled():
+            return jsonify({"error": "VIN lookup is off (LYLO_HACK_VIN is not 1).", "errors": []}), 503
+        f = request.files.get("photo")
+        raw = f.read(vision.max_bytes() + 1) if f else b""
+        try:
+            return jsonify(vinmod.read_photo(raw))
+        except vision.PhotoError as e:
+            return jsonify({"error": str(e), "errors": []}), 400
+        except muse.MuseError as e:
+            return _upstream_fail("vin_photo", e, {"vin_status": f"error: {e.code}", "message": vinmod.CANT_READ})
+        except Exception:
+            log.exception("vin photo failed")
+            return jsonify({"vin_status": "error: internal", "message": vinmod.CANT_READ, "errors": []}), 500
+
     @app.get("/api/v1/photo/jobs")
     def helper_jobs():
         return jsonify({"jobs": helper.jobs_public(), "disclaimer": helper.DISCLAIMER})
@@ -189,13 +231,16 @@ def create_app():
             return jsonify(ref), (200 if ref["helper_status"] == "refused" else 400)
         f = request.files.get("photo")
         raw = f.read(vision.max_bytes() + 1) if f else b""
+        vehicle = None
+        if vinmod.enabled() and request.form.get("vin"):
+            vehicle = vinmod.decode(request.form.get("vin"))
         try:
-            return jsonify(helper.analyze(job, raw))
+            return jsonify(helper.analyze(job, raw, vehicle=vehicle))
         except vision.PhotoError as e:
             return jsonify({"error": str(e), "errors": []}), 400
         except muse.MuseError as e:
-            return jsonify({"helper_status": f"error: {e.code}", "found": False, "marks": [], "steps": [],
-                            "message": helper.NOT_FOUND, "disclaimer": helper.DISCLAIMER}), 502
+            return _upstream_fail("photo_helper", e, {"helper_status": f"error: {e.code}", "found": False, "marks": [], "steps": [],
+                                                      "message": helper.NOT_FOUND, "disclaimer": helper.DISCLAIMER})
         except Exception:
             log.exception("photo helper failed")
             return jsonify({"helper_status": "error: internal", "found": False, "marks": [], "steps": [],
@@ -221,7 +266,7 @@ def create_app():
             except voice.AudioError as e:
                 return jsonify({"error": str(e), "errors": []}), 400
             except muse.MuseError as e:
-                return jsonify({"voice_status": f"error: {e.code}; no transcript, nothing answered"}), 502
+                return _upstream_fail("voice", e, {"voice_status": f"error: {e.code}; no transcript, nothing answered"})
             question = text.strip()
             out["transcript"] = question
             out["transcribe_receipt"] = {**meta, "audio_seconds": round(secs, 2), "audio_stored": False}

@@ -1,0 +1,29 @@
+{
+ "vehicle": {
+  "status": "ok",
+  "year": 2003,
+  "make": "Honda",
+  "model": "Accord",
+  "trim": "EX-V6",
+  "engine": "3.0L 6-cyl Gasoline",
+  "electrification": "",
+  "name": "2003 Honda Accord",
+  "caveat": "assumes the factory engine (not swapped)",
+  "source": "NHTSA vPIC VIN decoder",
+  "vin_masked": "1HG**************"
+ },
+ "recalls": {
+  "status": "ok",
+  "count": 24,
+  "components": [
+   "Air Bags",
+   "Electrical System",
+   "Exterior Lighting",
+   "Power Train",
+   "Steering",
+   "Vehicle Speed Control"
+  ],
+  "source": "NHTSA recalls by year/make/model (not checked against this exact VIN)",
+  "check_url": "https://www.nhtsa.gov/recalls"
+ }
+}

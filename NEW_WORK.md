@@ -83,6 +83,10 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-26 12:20 | v0.4.2 | baseline/mobile/package.json | Dependency `expo-image-picker` ~15.0.7 (camera/gallery for Photo Helper); version 0.4.2. package-lock.json updated by npm. |
 | 2026-10-26 12:20 | v0.4.2 | baseline/mobile/app.json | version 0.4.2, versionCode 6; `android.permission.CAMERA` (the expo-image-picker library manifest also merges CAMERA + media read); iOS NSCameraUsageDescription. RECORD_AUDIO stays blocked. |
 | 2026-10-26 12:20 | v0.4.2 | baseline/mobile/ui-tests/photoHelper.test.js | New: Photo Helper render tests (job list, pro refusal, found, not found, engine cover, Mechanic view). screens.test.js label v0.4.2. |
+| 2026-10-26 13:00 | v0.4.3 | baseline/mobile/src/App.js | 2 lines: import hackathon `VinScreen`, register route `Vin` ("Your car"). |
+| 2026-10-26 13:00 | v0.4.3 | baseline/mobile/src/screens/HomeScreen.js | 1 line: Tools button "Your car: add your VIN"; build label v0.4.3. |
+| 2026-10-26 13:00 | v0.4.3 | baseline/mobile/package.json, app.json | version 0.4.3, versionCode 7. No new dependencies or permissions. |
+| 2026-10-26 13:00 | v0.4.3 | baseline/mobile/ui-tests/vinPrice.test.js | New: VIN screen + price button render tests. screens.test.js label v0.4.3. |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
@@ -122,3 +126,10 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - App: `hackathon/mobile-bridge/src/photoHelper.js` + `PhotoHelperScreen.js` (Simple view | Mechanic view via `lylo.viewMode`).
 - Evidence: `hackathon/server/evidence/photo_helper/` (AI-generated synthetic photos, no plates/people; live outputs).
 - NOT done yet (next): VIN-first (NHTSA vPIC decode, Type VIN / Photo of VIN with check digit, recalls).
+
+## v0.4.3 VIN-first, Check the price, Photo Helper fixes (Oct 26)
+- 502 fix: the covered-engine live call failed because the Photo Helper strict json_schema listed `engine_cover_hides_area` in properties but not in `required`; the Meta API rejects that before reading the photo (HTTP 400 -> our 502 -> Cloudflare showed its own "error code: 502" page, hiding the JSON). Fixed the schema; `tests/test_schemas.py` now checks every strict schema; upstream failures on Muse routes return 424 with `upstream_error` and are logged (code + short detail, never the key or photo).
+- VIN-first (`lylo_hack/vin.py`, flag `LYLO_HACK_VIN`, default off): ISO 3779 check digit (never guesses), NHTSA vPIC decode with 7-day in-memory cache, 6 s timeout, fail-open to "unknown"; NHTSA recalls by year/make/model, labeled as not VIN-specific. Routes `POST /api/v1/vin/decode` and `POST /api/v1/vin/photo` (Muse vision reads the VIN; accepted only if the check digit passes). Ledger item `vin:decoded` (source vin_decode, caveat "assumes the factory engine (not swapped)") + Detective rule 8; the Photo Helper prompt gets year/make/model/engine. The raw VIN is never sent to Meta AI (ledger keeps the 3-char masked VIN).
+- App: `VinScreen` (Type VIN / Photo of VIN, stored under the new key `lylo.vehicle`), the vehicle name in Simple view and Photo Helper.
+- "Check the price" (`mobile-bridge/src/priceLinks.js`, `PriceButtons.js`): AutoZone, O'Reilly, Advance Auto Parts, NAPA (local) and RockAuto (online catalog). These are public search URLs only (no scraping, APIs or affiliate tags) and open in the browser. The estimate comes from LYLO price data (baseline repair_costs.json / dtcCodes) and is labeled "Estimate". URL checks: `hackathon/server/evidence/price_links.md`.
+- Photo Helper marks: radius capped at 0.15 of the width; overlapping circles shrink apart; number badges are placed so they don't collide (same algorithm in app and mockup renderer).

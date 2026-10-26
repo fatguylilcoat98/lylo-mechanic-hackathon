@@ -147,7 +147,7 @@ class VisionRouteTests(unittest.TestCase):
 
     def test_muse_failure_adds_nothing(self):
         r = self.post(exc=muse.MuseError("RATE_LIMIT", "429"), scan=SCAN)
-        self.assertEqual(r.status_code, 502)
+        self.assertEqual(r.status_code, 424)
         self.assertEqual(r.get_json()["photo_evidence"], [])
 
     def test_bad_scan_and_non_image(self):
@@ -214,7 +214,7 @@ class VoiceTests(unittest.TestCase):
         j = self.ask({"question": "q", "scan": json.dumps(HOT)}, out="garbage").get_json()
         self.assertEqual(j["final_safety_level"], "EMERGENCY_STOP_IMMEDIATELY")
         r = self.ask({"audio": (io.BytesIO(wav()), "q.wav"), "scan": json.dumps(SCAN)}, asr_exc=muse.MuseError("HTTP_400", "x"))
-        self.assertEqual(r.status_code, 502)
+        self.assertEqual(r.status_code, 424)
 
     def test_photo_evidence_merged_and_floor_applied(self):
         pe = [{"id": "photo:oil_pressure:red", "name": "oil_pressure", "color": "red", "confidence": "high", "source": "sensor"}]
