@@ -7,6 +7,8 @@ import { assessUsedCar } from '../engine/usedCarCheck';
 import { buildReport } from '../engine/report';
 import { Button, Card, Badge, DemoBanner, LEVEL_COLORS, u } from '../components/ui';
 import { C } from '../constants/colors';
+// Hackathon (Oct 26, 2026): renders nothing unless the scan has serverDiagnosis.
+import ServerDiagnosisCard from '../../../../hackathon/mobile-bridge/src/ServerDiagnosisCard';
 
 const ICON = { red: '\u26A0\uFE0F', yellow: '\u2753', green: '\u2705', info: '\u2139\uFE0F' };
 
@@ -20,6 +22,7 @@ export default function UsedCarScreen({ route, navigation }) {
   return (
     <ScrollView style={u.screen} contentContainerStyle={u.scroll}>
       <DemoBanner label={scan.demoLabel} />
+      <ServerDiagnosisCard scan={scan} />
 
       <Card accent={vColor}>
         <Text style={[s.verdict, { color: vColor }]}>{a.verdict.label}</Text>

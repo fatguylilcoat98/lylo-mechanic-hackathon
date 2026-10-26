@@ -118,7 +118,7 @@ class LiveRouteTests(unittest.TestCase):
 
     def test_pipeline_bug_is_500_without_leaking_exception(self):
         with mock.patch("lylo_hack.live.diagnose", side_effect=RuntimeError("secret detail")):
-            r = self.post({})
+            r = self.post({"raw_dtcs": [{"code": "P0300"}]})
         self.assertEqual(r.status_code, 500)
         self.assertNotIn("secret detail", r.get_data(as_text=True))
 
@@ -129,6 +129,16 @@ class LiveRouteTests(unittest.TestCase):
             j = self.post(body).get_json(); j.pop("session_id", None)
             outs.add(json.dumps(j, sort_keys=True))
         self.assertEqual(len(outs), 1)
+
+    def test_empty_scan_rejected(self):
+        for body in ({}, {"raw_dtcs": [], "raw_pids": []},
+                     {"raw_pids": [{"name": "ENGINE_RPM", "pid_code": "0C", "raw_value": None, "unit": "rpm"}]}):
+            r = self.post(body)
+            self.assertEqual(r.status_code, 400, body)
+            self.assertIn("no trouble codes and no sensor readings", " ".join(r.get_json()["errors"]))
+        self.assertEqual(self.post({"raw_pids": [{"name": "ENGINE_RPM", "pid_code": "0C", "raw_value": 800, "unit": "rpm"}]}).status_code, 200)
+        with mock.patch.dict(os.environ, {"LYLO_HACK_REQUIRE_DATA": "0"}):
+            self.assertEqual(self.post({}).status_code, 200)
 
     def test_healthz(self):
         self.assertTrue(self.c.get("/healthz").get_json()["ok"])

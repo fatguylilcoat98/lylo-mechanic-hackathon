@@ -8,6 +8,8 @@ import { buildReport } from '../engine/report';
 import OBDService from '../services/OBDService';
 import { Button, Card, Badge, DemoBanner, LEVEL_COLORS, u } from '../components/ui';
 import { C } from '../constants/colors';
+// Hackathon (Oct 26, 2026): renders nothing unless the scan has serverDiagnosis.
+import ServerDiagnosisCard from '../../../../hackathon/mobile-bridge/src/ServerDiagnosisCard';
 
 const DIFF_COLOR = { Easy: C.green, Moderate: C.amber, Pro: C.red, Unknown: C.textDim };
 
@@ -59,6 +61,7 @@ export default function CodesScreen({ route, navigation }) {
   return (
     <ScrollView style={u.screen} contentContainerStyle={u.scroll}>
       <DemoBanner label={scan.demoLabel} />
+      <ServerDiagnosisCard scan={scan} />
       <Card accent={mil ? C.red : results.length ? C.amber : C.green}>
         <Text style={u.h2}>{mil ? 'Check-engine light is ON' : mil === false ? 'Check-engine light is off' : 'Check-engine light status unknown'}</Text>
         <Text style={u.body}>{results.length ? results.length + ' code(s) found. Tap one for the full explanation, how hard it is to fix, and a fair price range.' : 'No trouble codes found.'}</Text>

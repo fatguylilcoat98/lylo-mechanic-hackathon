@@ -1,3 +1,4 @@
+import os
 """Strict validation for POST /api/v1/live/live (hackathon build).
 
 The baseline route accepted anything and turned bad input into HTTP 500.
@@ -119,4 +120,15 @@ def validate_live_payload(data):
     ev = data.get("codes_cleared_evidence")
     if ev is not None and not (isinstance(ev, list) and all(isinstance(x, str) for x in ev)):
         errs.append("codes_cleared_evidence must be a list of strings.")
+
+    # Empty-scan gate (flag LYLO_HACK_REQUIRE_DATA, default on; "0" disables).
+    # A scan with no codes and no readings would otherwise come back as a
+    # confident-looking result built from nothing.
+    if not errs and os.environ.get("LYLO_HACK_REQUIRE_DATA", "1") != "0":
+        dtcs = data.get("raw_dtcs") or []
+        pids = data.get("raw_pids") or []
+        has_reading = any(isinstance(p, dict) and _is_num(p.get("raw_value")) for p in pids)
+        if not dtcs and not has_reading:
+            errs.append("Scan has no trouble codes and no sensor readings, so there is nothing to diagnose. "
+                        "Check the adapter connection and run the scan again.")
     return errs
