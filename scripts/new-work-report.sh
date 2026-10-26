@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 BASE=baseline-pre-hackathon
-echo "Baseline: $BASE ($(git rev-parse --short "$BASE")) .. HEAD ($(git rev-parse --short HEAD))"
+echo "Baseline: $BASE ($(git rev-parse --short "$BASE^{commit}")) .. HEAD ($(git rev-parse --short HEAD))"
 echo
 echo "== New / changed files outside baseline/ (hackathon work) =="
 git diff --name-status "$BASE"..HEAD -- . ':(exclude)baseline/' || true
