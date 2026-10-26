@@ -56,3 +56,11 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/src/screens/UsedCarScreen.js | 3 lines: import `ServerDiagnosisCard` and render it under the demo banner. It returns null when the scan has no serverDiagnosis, so the screen is unchanged with the flag unset. |
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/src/screens/CodesScreen.js | Same 3-line change as UsedCarScreen. |
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/metro.config.js | Added `resolver.nodeModulesPaths` (the app's own node_modules) so files under hackathon/ can resolve react/react-native. |
+
+## Muse Detective (b53890c, 6137584, docs commit)
+- `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
+- `live.py`: adds a `detective` block to `/api/v1/live/live`, plus `install_shared_list_fix()` (`LYLO_HACK_FIX_SHARED_LIST`, default 1). This works around a baseline bug where `_build_hypothesis` mutated the shared rule-table list. The fix lives in the hackathon layer and no baseline file was edited.
+- `app.py`: loads the gitignored `hackathon/server/.env` (mode 600 on the Dell). `/healthz` reports muse on/off.
+- `validation.py`: optional freeze_frame validation.
+- `scripts/live_detective_demo.py` and `evidence/` (VINs masked).
+- Modified baseline files: none in this step.
