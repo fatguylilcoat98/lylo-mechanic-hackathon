@@ -7,7 +7,8 @@
  */
 'use strict';
 
-const { friendly, labelFor, formatValue, monitorLabel } = require('./friendlyLabels');
+const { friendly, labelFor, formatValue, monitorLabel, plainProblem, stripCodes, isCircuitCode, WIRING_ACTION } = require('./friendlyLabels');
+const hasCode = (t) => /\b[PBCU][0-9A-F]{4}\b/i.test(String(t || ''));
 const { detectiveView } = require('./detectiveView');
 
 const ORDER = ['SAFE_TO_DRIVE', 'INSPECT_SOON', 'DRIVE_SHORT_DISTANCE_ONLY', 'DO_NOT_DRIVE', 'TOW_RECOMMENDED', 'EMERGENCY_STOP_IMMEDIATELY'];
@@ -64,7 +65,10 @@ function buildResults(scan, opts = {}) {
 
   // One plain sentence: why.
   let why;
-  if (codes.length && codes[0].plain) why = String(codes[0].plain).split(/(?<=\.)\s/)[0];
+  if (codes.length) {
+    const first = codes[0].plain ? String(codes[0].plain).split(/(?<=\.)\s/)[0] : '';
+    why = first && !hasCode(first) && !(codes[0].title && first.includes(codes[0].title)) ? first : `The car's computer reported ${plainProblem(codes[0].code)}.`;
+  }
   else if (cleared && opts.screen === 'usedcar') why = 'Someone recently erased the warning codes, so problems may be hidden right now.';
   else if (lean && cold) why = "The engine is adding extra fuel. That's normal while it's still cold, or it can mean a hose is leaking air.";
   else if (lean) why = 'The engine is getting more air than it expects, a common and usually cheap fix like a cracked hose.';
@@ -77,9 +81,10 @@ function buildResults(scan, opts = {}) {
   if (tone === 'red') actions.push('Leave it parked. Have it towed or call a mobile mechanic.');
   if (tone === 'orange') actions.push('Only drive it a short distance, straight to a repair shop.');
   if (cleared && opts.screen === 'usedcar') actions.push('Ask the seller why the codes were erased, or pay for a pre-purchase inspection.');
+  if (codes.some((c) => isCircuitCode(c.code, c.title))) actions.push(WIRING_ACTION);
   for (const c of codes.slice(0, 2)) {
     const price = c.priceText && c.priceText.shop && !/Unknown/i.test(c.priceText.shop) ? `, usually ${c.priceText.shop} at a shop` : '';
-    actions.push(`Ask a shop about "${c.title}"${price}.`);
+    actions.push(`Ask a shop about ${plainProblem(c.code)}${price}.`);
   }
   if (cold) actions.push(COLD_ACTION);
   if (lean && !codes.length) actions.push('Ask a shop to check for an air leak, like a cracked or loose hose.');
@@ -91,7 +96,7 @@ function buildResults(scan, opts = {}) {
   const toEvidence = (cites) => (Array.isArray(cites) ? cites : []).map((id) => friendly(byId[id])).filter(Boolean)
     .map((f) => (f.value ? `${f.label}: ${f.value}` : f.label));
   const causes = (Array.isArray(det.hypotheses) ? det.hypotheses : []).map((h) => ({
-    title: String(h.cause || ''), likely: { high: 'Most likely', medium: 'Possible', low: 'Less likely' }[h.confidence] || 'Possible',
+    title: stripCodes(h.cause), likely: { high: 'Most likely', medium: 'Possible', low: 'Less likely' }[h.confidence] || 'Possible',
     evidence: [...new Set(toEvidence(h.cites))],
   }));
   const readings = Object.values(pids).filter((i) => !/CLEAR|MIL_ON/.test(i.name)).map((i) => friendly(i));

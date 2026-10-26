@@ -2,7 +2,7 @@
   "expo": {
     "name": "LYLO Mechanic",
     "slug": "lylo-mechanic",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "dark",
@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.stangman1998.lylomechanic",
-      "versionCode": 5,
+      "versionCode": 6,
       "icon": "./assets/app-icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-fg.png",
@@ -28,7 +28,8 @@
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_SCAN",
         "android.permission.BLUETOOTH_CONNECT",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
@@ -38,7 +39,8 @@
     "ios": {
       "bundleIdentifier": "com.stangman1998.lylomechanic",
       "infoPlist": {
-        "NSBluetoothAlwaysUsageDescription": "LYLO Mechanic uses Bluetooth to talk to your OBDLink adapter."
+        "NSBluetoothAlwaysUsageDescription": "LYLO Mechanic uses Bluetooth to talk to your OBDLink adapter.",
+        "NSCameraUsageDescription": "LYLO Mechanic uses the camera for Photo Helper, to show where parts are on your car."
       }
     },
     "plugins": [

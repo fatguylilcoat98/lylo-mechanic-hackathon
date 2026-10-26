@@ -78,6 +78,11 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-26 12:30 | v0.4.1 | baseline/mobile/package.json | Added dependency `@react-native-async-storage/async-storage` ^1.23.1 (stores only the new key `lylo.viewMode`; the app had no AsyncStorage keys before). package-lock.json updated by npm. |
 | 2026-10-26 12:30 | v0.4.1 | baseline/mobile/package-lock.json | npm lockfile for the async-storage dependency. |
 | 2026-10-26 12:30 | v0.4.1 | baseline/mobile/ui-tests/results.test.js | New: render tests for each verdict color, the one-verdict rule, Simple/Mechanic views, `lylo.viewMode` persistence. screens.test.js verdict test updated to the new screen. |
+| 2026-10-26 12:20 | v0.4.2 | baseline/mobile/src/App.js | 2 lines: import hackathon `PhotoHelperScreen` and register route `PhotoHelper`. |
+| 2026-10-26 12:20 | v0.4.2 | baseline/mobile/src/screens/HomeScreen.js | 1 line: Tools card button "Photo Helper: find a part on your car"; build label v0.4.2. |
+| 2026-10-26 12:20 | v0.4.2 | baseline/mobile/package.json | Dependency `expo-image-picker` ~15.0.7 (camera/gallery for Photo Helper); version 0.4.2. package-lock.json updated by npm. |
+| 2026-10-26 12:20 | v0.4.2 | baseline/mobile/app.json | version 0.4.2, versionCode 6; `android.permission.CAMERA` (the expo-image-picker library manifest also merges CAMERA + media read); iOS NSCameraUsageDescription. RECORD_AUDIO stays blocked. |
+| 2026-10-26 12:20 | v0.4.2 | baseline/mobile/ui-tests/photoHelper.test.js | New: Photo Helper render tests (job list, pro refusal, found, not found, engine cover, Mechanic view). screens.test.js label v0.4.2. |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
@@ -108,3 +113,12 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - Offline / no server result: baseline screens unchanged (plus the reconcileVerdict note).
 - Safety note wording now "Meta AI raised the safety level from ... to ...".
 - Mockups: `/workspace/lylo-mechanic-export/mockups/*.png` (HTML twin rendered from the real `buildResults`).
+
+## v0.4.2 Photo Helper (Oct 26)
+- Server `POST /api/v1/photo/helper` (flag `LYLO_HACK_PHOTO_HELPER`, default off; app key + Muse rate limits like the other Muse routes; EXIF stripped; photo never stored) and `GET /api/v1/photo/jobs`. `lylo_hack/helper.py`: 6 fixed jobs, strict JSON schema with per-job label enum, coordinates validated + clamped to 0..1, marks below confidence 0.6 dropped, max 6, numbered. Steps and safety text are FIXED curated text, never model-written. Not found -> "I can't see it in this photo. Try a closer picture or check your owner's manual." Risky jobs (brakes, fuel, airbags, hybrid/EV high voltage) -> "Get a pro for this one." without a model call; orange HV cables or smoke seen in a photo -> same. Battery always shows the negative-first / no metal tool warning. Always: "This is not a guarantee. It gives you an idea of where to look."
+- Plastic engine cover (mechanic friend): model flags `engine_cover_hides_area`; server then keeps only cover marks (Engine cover / Pull up here / Cover clip or bolt), never parts underneath, and says "There's a plastic cover over the engine. It usually pops off by pulling up, or has a few clips/bolts."
+- Wiring before parts (mechanic friend): `lylo_hack/wiring.py` adds ledger item `rule:wiring_first` for sensor/circuit codes; Detective prompt rule 7; Simple view action "Before buying a new sensor, check its plug and wiring ... Often it's the wire or plug, not the sensor."
+- Simple view never shows trouble codes or technical code titles (plain phrase, e.g. "a catalytic converter problem"); Mechanic view keeps raw codes.
+- App: `hackathon/mobile-bridge/src/photoHelper.js` + `PhotoHelperScreen.js` (Simple view | Mechanic view via `lylo.viewMode`).
+- Evidence: `hackathon/server/evidence/photo_helper/` (AI-generated synthetic photos, no plates/people; live outputs).
+- NOT done yet (next): VIN-first (NHTSA vPIC decode, Type VIN / Photo of VIN with check digit, recalls).

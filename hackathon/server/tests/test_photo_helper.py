@@ -150,3 +150,32 @@ class Route(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EngineCover(unittest.TestCase):
+    def test_cover_says_so_and_drops_parts_underneath(self):
+        o = out({"label": "Battery", "x": .5, "y": .5}, {"label": "Pull up here", "x": .4, "y": .3, "confidence": .8},
+                {"label": "Engine cover", "x": .5, "y": .4, "confidence": .95})
+        o["engine_cover_hides_area"] = True
+        r = helper.build("battery", o)
+        self.assertEqual(r["helper_status"], "engine_cover")
+        self.assertFalse(r["found"])
+        self.assertEqual(r["message"], "There's a plastic cover over the engine. It usually pops off by pulling up, or has a few clips/bolts.")
+        self.assertEqual([m["text"] for m in r["marks"]], ["1. Engine cover", "2. Pull up here"])
+        self.assertEqual(r["steps"], [])
+        self.assertIn("negative", r["warnings"][0])
+
+    def test_cover_without_visible_clips(self):
+        o = out(); o["engine_cover_hides_area"] = True
+        r = helper.build("engine_air_filter", o)
+        self.assertEqual((r["helper_status"], r["marks"]), ("engine_cover", []))
+
+    def test_cover_labels_not_allowed_for_tires(self):
+        marks, dropped = helper.clean_marks(out({"label": "Engine cover", "x": .5, "y": .5}), "tires")
+        self.assertEqual((marks, dropped), ([], 1))
+
+    def test_prompt_mentions_cover(self):
+        seen = []
+        helper.analyze("engine_air_filter", jpeg_with_exif(), call=fake(out(), seen))
+        self.assertIn("do NOT guess parts underneath", seen[0][0]["content"])
+        self.assertIn("Pull up here", seen[0][0]["content"])

@@ -105,3 +105,26 @@ test('view mode: default simple, persists under the new key only', async () => {
   assert.strictEqual(await loadViewMode({ getItem: async () => { throw new Error('x'); } }), 'simple');
   assert.strictEqual(await loadViewMode(null), 'simple');
 });
+
+test('Simple view never shows trouble codes or their technical titles (Mechanic view keeps them)', () => {
+  const { DEMO_SCANS } = require('../../../baseline/mobile/src/data/demoScans');
+  const { plainProblem } = require('../src/friendlyLabels');
+  const scans = [used(), truck()];
+  for (const d of Object.values(DEMO_SCANS)) {
+    const s = clone(d); s.serverDiagnosis = used().serverDiagnosis; scans.push(s);
+  }
+  for (const s of scans) {
+    const codes = analyzeCodes(s);
+    for (const screen of ['usedcar', 'codes']) {
+      const m = buildResults(s, { codes, screen, baselineCleared: true });
+      const simple = JSON.stringify({ v: m.verdict, a: m.actions, w: m.seeWhy, c: m.clearedWarning, x: m.coldNote, sh: shareText(m) });
+      assert.doesNotMatch(simple, /\b[PBCU][0-9A-F]{4}\b/i);
+      for (const c of codes) if (c.title) assert.ok(!simple.includes(c.title), c.title);
+    }
+  }
+  const m = buildResults(used(), { codes: analyzeCodes(used()), screen: 'usedcar' });
+  assert.ok(m.mechanic.dtcs.some((d) => /P0420/.test(d)));
+  assert.strictEqual(plainProblem('P0420'), 'a catalytic converter problem');
+  assert.strictEqual(plainProblem('U0100'), "a communication problem between the car's computers");
+  assert.strictEqual(plainProblem('P9999'), "a problem the car's computer flagged");
+});

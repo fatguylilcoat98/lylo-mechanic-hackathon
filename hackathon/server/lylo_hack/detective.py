@@ -12,7 +12,7 @@ import json
 import os
 
 from . import ledger as L
-from . import muse
+from . import muse, wiring
 
 CLAIM = {"type": "object", "additionalProperties": False,
          "required": ["text", "cites"],
@@ -46,7 +46,8 @@ You get an EVIDENCE LEDGER: a JSON list of facts, each with an "id". Rules:
 4. If the ledger has codes_cleared or codes_cleared_evidence items, "cleared_codes_warning" must explain plainly why recently cleared codes are a red flag for a used-car buyer (problems can be hidden until readiness monitors finish and codes return), citing the cleared-counter and evidence ids. Otherwise set its text to "" and cites to [].
 5. "safety_opinion": the rule engine's level is in item rule:safety. You may agree or argue for a HIGHER level from this order: SAFE_TO_DRIVE < INSPECT_SOON < DRIVE_SHORT_DISTANCE_ONLY < DO_NOT_DRIVE < TOW_RECOMMENDED < EMERGENCY_STOP_IMMEDIATELY. A lower level will be ignored.
 6. Items with "source": "photo" come from a camera photo read by a vision model. They are LESS reliable than sensor data: say "the photo suggests", and never let a photo item override a sensor reading that contradicts it.
-7. Do not claim certainty; this is a scan, not an inspection. Output only the JSON object."""
+7. If the ledger has rule:wiring_first, those are sensor/circuit codes: for them, the first next check must be the connector and wiring (corrosion, loose plug, chafed wire) before replacing the sensor; say plainly "often it's the wire or plug, not the sensor" and cite rule:wiring_first.
+8. Do not claim certainty; this is a scan, not an inspection. Output only the JSON object."""
 
 
 def enabled():
@@ -154,6 +155,9 @@ def run(data, result, call=None, extra_items=None):
     """Adds result['detective'] and may raise result['safety']['level'].
     extra_items: already-typed ledger items from other sources (e.g. photo)."""
     items = L.build_ledger(data, result) + [i for i in (extra_items or []) if isinstance(i, dict) and i.get("id")]
+    _w = wiring.hint_item(items)
+    if _w:
+        items.append(_w)
     ids = L.ledger_ids(items)
     rule_level = (result.get("safety") or {}).get("level")
     det = {"muse_status": "off", "ledger": items, "rule_safety_level": rule_level,
