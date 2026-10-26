@@ -1,0 +1,928 @@
+[
+  {
+    "signal_id": "accelerator_pedal_d",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "49",
+    "official_name": "Accelerator pedal position D",
+    "unit": "percent",
+    "formula": {
+      "op": "percent_255",
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 100
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "49"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:accelerator_pedal"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 2.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Pedal position is not throttle position."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 49"
+  },
+  {
+    "signal_id": "adapter_link",
+    "protocol": "TRANSPORT",
+    "service": "LINK",
+    "identifier": "LINK",
+    "official_name": "Adapter communication link",
+    "unit": "flag",
+    "formula": {
+      "op": "link_flag",
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 1
+    },
+    "support_detection": {
+      "type": "transport"
+    },
+    "source_kind": "UNKNOWN",
+    "dependencies": [],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 0.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "local_transport"
+    ],
+    "misinterpretations": [
+      "This is a transport liveness marker, not a vehicle sensor. 0 means the adapter link is down."
+    ],
+    "source_reference": "vicore transport"
+  },
+  {
+    "signal_id": "adapter_voltage",
+    "protocol": "STN",
+    "service": "AT",
+    "identifier": "RV",
+    "official_name": "Adapter supply voltage",
+    "unit": "V",
+    "formula": {
+      "op": "atrv",
+      "byte_length": 0
+    },
+    "range": {
+      "min": 0,
+      "max": 40
+    },
+    "support_detection": {
+      "type": "stn_command",
+      "command": "ATRV"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:adapter_voltage_pin"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 1.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "stn_atrv"
+    ],
+    "misinterpretations": [
+      "ATRV is the adapter's reading of pin 16. It can disagree with PID 42."
+    ],
+    "source_reference": "STN11xx/STN22xx ATRV"
+  },
+  {
+    "signal_id": "ambient_air_temp",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "46",
+    "official_name": "Ambient air temperature",
+    "unit": "degC",
+    "formula": {
+      "op": "u8_add",
+      "add": -40,
+      "byte_length": 1
+    },
+    "range": {
+      "min": -40,
+      "max": 215
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "46"
+    },
+    "source_kind": "UNKNOWN",
+    "dependencies": [],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 0.2,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Some ECUs report a dedicated ambient sensor. Others substitute a startup IAT. This registry does not treat it as an independent IAT witness."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 46"
+  },
+  {
+    "signal_id": "baro",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "33",
+    "official_name": "Barometric pressure",
+    "unit": "kPa",
+    "formula": {
+      "op": "u8_add",
+      "add": 0,
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 255
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "33"
+    },
+    "source_kind": "UNKNOWN",
+    "dependencies": [],
+    "nonindependent_signals": [
+      "map"
+    ],
+    "minimum_rate": {
+      "value": 0.2,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "PID 33 is not treated as an independent witness of MAP.",
+      "On many vehicles this value is MAP stored at key-on, not a second pressure sensor."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 33"
+  },
+  {
+    "signal_id": "control_module_voltage",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "42",
+    "official_name": "Control module voltage",
+    "unit": "V",
+    "formula": {
+      "op": "u16_div",
+      "divisor": 1000,
+      "byte_length": 2
+    },
+    "range": {
+      "min": 0,
+      "max": 65.535
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "42"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:control_module_voltage"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 1.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "PID 42 is voltage at the control module. It is not automatically the battery post voltage."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 42"
+  },
+  {
+    "signal_id": "ect",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "05",
+    "official_name": "Engine coolant temperature",
+    "unit": "degC",
+    "formula": {
+      "op": "u8_add",
+      "add": -40,
+      "byte_length": 1
+    },
+    "range": {
+      "min": -40,
+      "max": 215
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "05"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:ect_sensor"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 0.2,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "A reading of -40 C is the open-circuit sentinel on many ECUs, not proof the coolant is that cold."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 05"
+  },
+  {
+    "signal_id": "engine_load",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "04",
+    "official_name": "Calculated engine load",
+    "unit": "percent",
+    "formula": {
+      "op": "percent_255",
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 100
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "04"
+    },
+    "source_kind": "ECU_CALCULATION",
+    "dependencies": [],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 1.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Calculated load is an ECU percentage, not a torque sensor."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 04"
+  },
+  {
+    "signal_id": "engine_oil_temp",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "5C",
+    "official_name": "Engine oil temperature",
+    "unit": "degC",
+    "formula": {
+      "op": "u8_add",
+      "add": -40,
+      "byte_length": 1
+    },
+    "range": {
+      "min": -40,
+      "max": 215
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "5C"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:oil_temperature_sensor"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 0.2,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Oil temperature is not coolant temperature."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 5C"
+  },
+  {
+    "signal_id": "fuel_system_status",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "03",
+    "official_name": "Fuel system status",
+    "unit": "bitfield",
+    "formula": {
+      "op": "bitfield",
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 255
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "03"
+    },
+    "source_kind": "ECU_CALCULATION",
+    "dependencies": [],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 1.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Bit 0 open loop, coolant not warm. Bit 1 closed loop. Bit 2 open loop from driving conditions, which covers both fuel-cut and power enrichment. Bit 2 alone is not DFCO.",
+      "Bank 2 status is a second byte when present and is not decoded as a second signal in this registry."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 03"
+  },
+  {
+    "signal_id": "iat",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "0F",
+    "official_name": "Intake air temperature",
+    "unit": "degC",
+    "formula": {
+      "op": "u8_add",
+      "add": -40,
+      "byte_length": 1
+    },
+    "range": {
+      "min": -40,
+      "max": 215
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "0F"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:iat_sensor"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 0.2,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "A reading of -40 C is the open-circuit sentinel on many ECUs."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 0F"
+  },
+  {
+    "signal_id": "ltft_b1",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "07",
+    "official_name": "Long term fuel trim, bank 1",
+    "unit": "percent",
+    "formula": {
+      "op": "percent_128",
+      "byte_length": 1
+    },
+    "range": {
+      "min": -100,
+      "max": 99.22
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "07"
+    },
+    "source_kind": "LEARNED_VALUE",
+    "dependencies": [
+      "stft_b1"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 0.5,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Long term fuel trim is a learned value. It is not comparable across baseline epochs."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 07"
+  },
+  {
+    "signal_id": "ltft_b2",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "09",
+    "official_name": "Long term fuel trim, bank 2",
+    "unit": "percent",
+    "formula": {
+      "op": "percent_128",
+      "byte_length": 1
+    },
+    "range": {
+      "min": -100,
+      "max": 99.22
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "09"
+    },
+    "source_kind": "LEARNED_VALUE",
+    "dependencies": [
+      "stft_b2"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 0.5,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Bank 2 long term trim is a learned value and is epoch-bound."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 09"
+  },
+  {
+    "signal_id": "maf",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "10",
+    "official_name": "Mass air flow",
+    "unit": "g/s",
+    "formula": {
+      "op": "u16_div",
+      "divisor": 100,
+      "byte_length": 2
+    },
+    "range": {
+      "min": 0,
+      "max": 655.35
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "10"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:maf_sensor"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 2.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "PID 10 is mass air flow. A zero reading with the engine running is a conflict with RPM, not a diagnosis by itself."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 10"
+  },
+  {
+    "signal_id": "map",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "0B",
+    "official_name": "Intake manifold absolute pressure",
+    "unit": "kPa",
+    "formula": {
+      "op": "u8_add",
+      "add": 0,
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 255
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "0B"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:map_sensor"
+    ],
+    "nonindependent_signals": [
+      "baro"
+    ],
+    "minimum_rate": {
+      "value": 1.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Nominal SAE source is a MAP sensor. Some ECUs estimate this PID.",
+      "At key-on engine-off, MAP is an ambient-pressure reading only if the engine is stopped and the sensor is real. That still needs an independent barometer before it is an anchor."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 0B"
+  },
+  {
+    "signal_id": "phone_baro",
+    "protocol": "PHONE",
+    "service": "SENSOR",
+    "identifier": "BARO",
+    "official_name": "Phone barometric pressure",
+    "unit": "kPa",
+    "formula": {
+      "op": "decimal_text",
+      "byte_length": 0
+    },
+    "range": {
+      "min": 30,
+      "max": 120
+    },
+    "support_detection": {
+      "type": "phone_sensor",
+      "sensor": "barometer"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:phone_barometer"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 0.5,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "phone_sensor_transport"
+    ],
+    "misinterpretations": [
+      "This is an independent ambient pressure only when a phone or other external barometer is actually connected. ECU PID 33 is not this signal."
+    ],
+    "source_reference": "Host phone sensor transport"
+  },
+  {
+    "signal_id": "rpm",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "0C",
+    "official_name": "Engine speed",
+    "unit": "rpm",
+    "formula": {
+      "op": "u16_div",
+      "divisor": 4,
+      "byte_length": 2
+    },
+    "range": {
+      "min": 0,
+      "max": 16383.75
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "0C"
+    },
+    "source_kind": "ECU_CALCULATION",
+    "dependencies": [
+      "physical:crankshaft_position_sensor"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 2.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "PID 0C is computed by the ECU from the crankshaft sensor. It is not a direct tachometer voltage."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 0C"
+  },
+  {
+    "signal_id": "runtime_since_start",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "1F",
+    "official_name": "Run time since engine start",
+    "unit": "s",
+    "formula": {
+      "op": "u16_div",
+      "divisor": 1,
+      "byte_length": 2
+    },
+    "range": {
+      "min": 0,
+      "max": 65535
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "1F"
+    },
+    "source_kind": "COUNTER",
+    "dependencies": [],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 0.2,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "A backward jump of this counter is an ECU reset witness, not a repair record."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 1F"
+  },
+  {
+    "signal_id": "stft_b1",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "06",
+    "official_name": "Short term fuel trim, bank 1",
+    "unit": "percent",
+    "formula": {
+      "op": "percent_128",
+      "byte_length": 1
+    },
+    "range": {
+      "min": -100,
+      "max": 99.22
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "06"
+    },
+    "source_kind": "ECU_CALCULATION",
+    "dependencies": [
+      "physical:oxygen_sensor"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 2.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Short term fuel trim moves with closed-loop control. A single value is not a vacuum-leak finding."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 06"
+  },
+  {
+    "signal_id": "stft_b2",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "08",
+    "official_name": "Short term fuel trim, bank 2",
+    "unit": "percent",
+    "formula": {
+      "op": "percent_128",
+      "byte_length": 1
+    },
+    "range": {
+      "min": -100,
+      "max": 99.22
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "08"
+    },
+    "source_kind": "ECU_CALCULATION",
+    "dependencies": [
+      "physical:oxygen_sensor"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 2.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Bank 2 exists only on some engines. Absence of this PID means unsupported, not zero trim."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 08"
+  },
+  {
+    "signal_id": "throttle_abs",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "11",
+    "official_name": "Absolute throttle position",
+    "unit": "percent",
+    "formula": {
+      "op": "percent_255",
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 100
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "11"
+    },
+    "source_kind": "PHYSICAL_SENSOR",
+    "dependencies": [
+      "physical:throttle_position_sensor"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 2.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Absolute throttle position is often not zero when the throttle is closed.",
+      "Do not treat PID 11, PID 45, and PID 4C as the same measurement."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 11"
+  },
+  {
+    "signal_id": "throttle_cmd",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "4C",
+    "official_name": "Commanded throttle actuator",
+    "unit": "percent",
+    "formula": {
+      "op": "percent_255",
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 100
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "4C"
+    },
+    "source_kind": "COMMAND",
+    "dependencies": [],
+    "nonindependent_signals": [
+      "throttle_abs"
+    ],
+    "minimum_rate": {
+      "value": 2.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Commanded throttle is the ECU command, not the throttle-position sensor."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 4C"
+  },
+  {
+    "signal_id": "throttle_rel",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "45",
+    "official_name": "Relative throttle position",
+    "unit": "percent",
+    "formula": {
+      "op": "percent_255",
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 100
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "45"
+    },
+    "source_kind": "ECU_CALCULATION",
+    "dependencies": [
+      "throttle_abs"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 2.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Relative throttle position is learned. Closed is near zero. It is not absolute throttle."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 45"
+  },
+  {
+    "signal_id": "timing_advance",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "0E",
+    "official_name": "Timing advance",
+    "unit": "deg",
+    "formula": {
+      "op": "half_minus_64",
+      "byte_length": 1
+    },
+    "range": {
+      "min": -64,
+      "max": 63.5
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "0E"
+    },
+    "source_kind": "ECU_CALCULATION",
+    "dependencies": [],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 1.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "Timing advance is commanded or calculated. It is not a knock-sensor voltage."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 0E"
+  },
+  {
+    "signal_id": "vehicle_speed",
+    "protocol": "SAE_J1979",
+    "service": "01",
+    "identifier": "0D",
+    "official_name": "Vehicle speed",
+    "unit": "km/h",
+    "formula": {
+      "op": "u8_add",
+      "add": 0,
+      "byte_length": 1
+    },
+    "range": {
+      "min": 0,
+      "max": 255
+    },
+    "support_detection": {
+      "type": "mode01_bitmap",
+      "pid": "0D"
+    },
+    "source_kind": "ECU_CALCULATION",
+    "dependencies": [
+      "physical:vehicle_speed_sensor"
+    ],
+    "nonindependent_signals": [],
+    "minimum_rate": {
+      "value": 1.0,
+      "unit": "Hz"
+    },
+    "transport_constraints": [
+      "elm_one_outstanding_request",
+      "functional_address_7DF"
+    ],
+    "misinterpretations": [
+      "PID 0D is vehicle speed as reported by the ECU, in km/h."
+    ],
+    "source_reference": "SAE J1979DA Mode 01 PID 0D"
+  }
+]

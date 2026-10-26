@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: lylo-mechanic
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install -r ../requirements.txt
+    startCommand: gunicorn -w 2 -b 0.0.0.0:$PORT --timeout 120 --log-level info --access-logfile - --error-logfile - --capture-output --enable-stdio-inheritance app:app
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11.0"

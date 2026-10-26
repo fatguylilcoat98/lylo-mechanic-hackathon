@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LYLO Mechanic — Honest Car Diagnostics Powered by CLASPION</title>
+<link rel="icon" type="image/png" href="/static/lylo_mechanic_logo_.png">
+<link rel="apple-touch-icon" href="/static/lylo_mechanic_logo_.png">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2333;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 640px;
+    padding: 0 16px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 40px 0 24px;
+  }
+  header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  header h1 span { color: var(--accent); }
+  header p {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-top: 8px;
+  }
+  .tagline {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  /* ── INPUT SCREEN ── */
+  #input-screen {}
+
+  .input-box {
+    margin-top: 24px;
+  }
+  .input-box textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 16px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 17px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-box textarea:focus {
+    border-color: var(--accent);
+  }
+  .input-box textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .input-hint {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #79c0ff; }
+  .btn-primary:disabled {
+    background: var(--border);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* ── DEMO SECTION ── */
+  .demo-section {
+    margin-top: 32px;
+  }
+  .demo-section h3 {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .demo-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .demo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .demo-card:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+  .demo-card .demo-label {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .demo-card .demo-desc {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  .demo-card .demo-arrow {
+    color: var(--accent);
+    font-size: 18px;
+  }
+
+  /* ── LOADING ── */
+  #loading-screen {
+    display: none;
+    text-align: center;
+    padding: 80px 0;
+  }
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-screen p {
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  /* ── RESULT SCREEN ── */
+  #result-screen {
+    display: none;
+    padding-bottom: 40px;
+  }
+
+  .result-header {
+    text-align: center;
+    padding: 24px 0 16px;
+  }
+  .result-code {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--accent);
+  }
+  .result-input-echo {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .icon { font-size: 18px; }
+
+  /* Urgency badge */
+  .urgency-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .urgency-green { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid var(--green); }
+  .urgency-orange { background: rgba(210,153,34,0.15); color: var(--orange); border: 1px solid var(--orange); }
+  .urgency-red { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid var(--red); }
+
+  .urgency-msg {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  /* Lists */
+  .result-list {
+    list-style: none;
+    padding: 0;
+  }
+  .result-list li {
+    padding: 6px 0;
+    font-size: 14px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .result-list li:last-child { border-bottom: none; }
+  .result-list li::before {
+    content: ">";
+    color: var(--accent);
+    font-weight: 700;
+    margin-right: 8px;
+  }
+
+  /* Cost grid */
+  .cost-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .cost-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .cost-item.full-width {
+    grid-column: 1 / -1;
+  }
+  .cost-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .cost-value {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 4px;
+    color: var(--green);
+  }
+  .cost-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  /* Difficulty */
+  .difficulty-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .difficulty-level {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .difficulty-easy { color: var(--green); }
+  .difficulty-medium { color: var(--orange); }
+  .difficulty-hard { color: var(--red); }
+
+  /* ShopScript */
+  .shop-script {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 15px;
+    line-height: 1.6;
+    font-style: italic;
+    position: relative;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--border);
+    color: var(--text);
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .copy-btn:hover { background: var(--accent); color: #000; }
+
+  /* Red flags */
+  .red-flag {
+    background: rgba(248,81,73,0.08);
+    border-left: 3px solid var(--red);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Back button */
+  .back-row {
+    margin-top: 16px;
+    text-align: center;
+  }
+  .btn-back {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 12px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-back:hover { background: rgba(88,166,255,0.1); }
+
+  /* Multi-result tabs */
+  .result-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    justify-content: center;
+  }
+  .result-tab {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .result-tab.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  /* Note banner */
+  .note-banner {
+    background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  /* CLASPION Verification Styles */
+  .claspion-verification {
+    border-left: 3px solid var(--accent);
+    background: rgba(88, 166, 255, 0.05);
+  }
+
+  .claspion-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .claspion-verified {
+    background: rgba(63, 185, 80, 0.1);
+    border: 1px solid rgba(63, 185, 80, 0.3);
+    color: var(--green);
+  }
+
+  .claspion-flagged {
+    background: rgba(248, 81, 73, 0.1);
+    border: 1px solid rgba(248, 81, 73, 0.3);
+    color: var(--red);
+  }
+
+  .claspion-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 14px;
+  }
+
+  .metric-label {
+    color: var(--text-muted);
+  }
+
+  .metric-value {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .claspion-layers {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .layers-toggle {
+    color: var(--accent);
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 6px;
+    user-select: none;
+  }
+
+  .layers-toggle:hover {
+    text-decoration: underline;
+  }
+
+  .layers-detail {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+  }
+
+  .layer-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+    font-size: 13px;
+  }
+
+  .layer-name {
+    color: var(--text-muted);
+  }
+
+  .claspion-explanation {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>LYLO <span>Mechanic</span></h1>
+    <p>Honest car diagnostics powered by CLASPION execution governance</p>
+    <div class="tagline">Truth · Safety · We Got Your Back</div>
+  </header>
+
+  <!-- ════════ INPUT SCREEN ════════ -->
+  <div id="input-screen">
+
+    <!-- Checks remaining badge -->
+    <div id="checks-badge" style="text-align:center;margin-bottom:8px;">
+      <span style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:13px;color:var(--text-muted);">
+        <span id="checks-count">...</span> checks remaining
+      </span>
+    </div>
+
+    <!-- ── Tab toggle: OBD / Describe ── -->
+    <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--surface);border-radius:10px;padding:4px;">
+      <button class="tab-btn active" id="tab-obd" onclick="switchInputTab('obd')"
+        style="flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:var(--accent);color:#000;transition:all 0.2s;">
+        OBD Codes
+      </button>
+      <button class="tab-btn" id="tab-manual" onclick="switchInputTab('manual')"
+        style="flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text-muted);transition:all 0.2s;">
+        Describe Issue
+      </button>
+    </div>
+
+    <!-- ── OBD Code Input ── -->
+    <div id="input-obd">
+      <div class="input-box">
+        <input type="text" id="obd-codes" placeholder="P0420  P0302  P0171"
+          style="width:100%;padding:16px;background:var(--surface);border:2px solid var(--border);border-radius:12px;color:var(--text);font-size:20px;font-family:'SF Mono','Fira Code',monospace;letter-spacing:2px;outline:none;text-transform:uppercase;"
+        />
+        <div class="input-hint">Enter one or more OBD codes (space separated)</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="analyzeOBD()">Diagnose Codes</button>
+      </div>
+    </div>
+
+    <!-- ── Manual Text Input ── -->
+    <div id="input-manual" style="display:none;">
+      <div class="input-box">
+        <textarea id="user-input" placeholder="Describe what's happening...&#10;&#10;&quot;Check engine light on, rough idle, smells like gas&quot;"></textarea>
+        <div class="input-hint">Describe symptoms in plain English — we'll figure out the codes</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="analyzeManual()">Analyze</button>
+      </div>
+    </div>
+
+    <!-- ── Demo Section ── -->
+    <div class="demo-section">
+      <h3>Try a demo</h3>
+      <div class="demo-cards">
+        <div class="demo-card" onclick="runDemo('p0420')">
+          <div>
+            <div class="demo-label">P0420 — Check Engine Light</div>
+            <div class="demo-desc">The most misdiagnosed code. See why shops get it wrong.</div>
+          </div>
+          <div class="demo-arrow">&rarr;</div>
+        </div>
+        <div class="demo-card" onclick="runDemo('misfire')">
+          <div>
+            <div class="demo-label">Engine Misfire</div>
+            <div class="demo-desc">Rough idle, shaking, loss of power.</div>
+          </div>
+          <div class="demo-arrow">&rarr;</div>
+        </div>
+        <div class="demo-card" onclick="runDemo('battery')">
+          <div>
+            <div class="demo-label">Battery / Electrical</div>
+            <div class="demo-desc">Dim lights, slow crank, electrical problems.</div>
+          </div>
+          <div class="demo-arrow">&rarr;</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>Built by <a href="#">The Good Neighbor Guard</a></p>
+      <p style="margin-top: 4px;">Not a substitute for professional diagnosis. Always verify with a qualified mechanic.</p>
+    </footer>
+  </div>
+
+  <!-- ════════ UPGRADE SCREEN ════════ -->
+  <div id="upgrade-screen" style="display:none;text-align:center;padding:40px 0;">
+    <div style="font-size:48px;margin-bottom:16px;">&#128275;</div>
+    <h2 style="font-size:22px;margin-bottom:8px;">You've used all your free checks</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">Before you approve your next repair:</p>
+    <div style="text-align:left;max-width:400px;margin:0 auto;">
+      <div style="padding:8px 0;font-size:15px;">&#10003; See real price ranges — know what you should pay</div>
+      <div style="padding:8px 0;font-size:15px;">&#10003; Know if you're being upsold or scammed</div>
+      <div style="padding:8px 0;font-size:15px;">&#10003; Get your personalized ShopScript</div>
+      <div style="padding:8px 0;font-size:15px;">&#10003; Red flag alerts — things to watch out for</div>
+      <div style="padding:8px 0;font-size:15px;">&#10003; 50 checks per month — 10x more than free</div>
+    </div>
+    <a href="/api/v1/billing/checkout/pro" class="btn btn-primary" style="display:inline-block;margin-top:24px;padding:16px 40px;text-decoration:none;font-size:18px;border-radius:12px;">
+      Upgrade to LYLO PRO — $4.99/mo
+    </a>
+    <p style="color:var(--text-muted);font-size:13px;margin-top:12px;">Cancel anytime. No contracts.</p>
+    <button class="btn-back" onclick="goBack()" style="margin-top:16px;">Maybe later</button>
+  </div>
+
+  <!-- ════════ LOADING SCREEN ════════ -->
+  <div id="loading-screen">
+    <div class="spinner"></div>
+    <p>Analyzing your vehicle...</p>
+  </div>
+
+  <!-- ════════ RESULT SCREEN ════════ -->
+  <div id="result-screen">
+    <div class="result-header">
+      <div class="result-code" id="r-code"></div>
+      <div class="result-input-echo" id="r-input-echo"></div>
+    </div>
+
+    <div id="r-note-banner"></div>
+    <div id="r-tabs" class="result-tabs"></div>
+    <div id="r-body"></div>
+
+    <div class="back-row">
+      <button class="btn-back" onclick="goBack()">Check another issue</button>
+    </div>
+
+    <footer>
+      <p>Built by <a href="#">The Good Neighbor Guard</a></p>
+      <p style="margin-top: 4px;">Not a substitute for professional diagnosis.</p>
+    </footer>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin + '/api/v1';
+
+function showScreen(name) {
+  document.getElementById('input-screen').style.display = name === 'input' ? 'block' : 'none';
+  document.getElementById('loading-screen').style.display = name === 'loading' ? 'block' : 'none';
+  document.getElementById('result-screen').style.display = name === 'result' ? 'block' : 'none';
+  document.getElementById('upgrade-screen').style.display = name === 'upgrade' ? 'block' : 'none';
+}
+
+// ── Tab switching ──
+function switchInputTab(tab) {
+  document.getElementById('input-obd').style.display = tab === 'obd' ? 'block' : 'none';
+  document.getElementById('input-manual').style.display = tab === 'manual' ? 'block' : 'none';
+  document.getElementById('tab-obd').style.background = tab === 'obd' ? 'var(--accent)' : 'transparent';
+  document.getElementById('tab-obd').style.color = tab === 'obd' ? '#000' : 'var(--text-muted)';
+  document.getElementById('tab-manual').style.background = tab === 'manual' ? 'var(--accent)' : 'transparent';
+  document.getElementById('tab-manual').style.color = tab === 'manual' ? '#000' : 'var(--text-muted)';
+}
+
+// Enter to submit
+document.getElementById('user-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); analyzeManual(); }
+});
+document.getElementById('obd-codes').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); analyzeOBD(); }
+});
+
+// ── Load check count on page load ──
+async function loadChecks() {
+  try {
+    const res = await fetch(API + '/analyze/status');
+    const data = await res.json();
+    document.getElementById('checks-count').textContent = data.checks_remaining;
+  } catch(e) {
+    document.getElementById('checks-count').textContent = '?';
+  }
+}
+loadChecks();
+
+// ── Unified call to /api/v1/analyze ──
+async function callAnalyze(payload) {
+  showScreen('loading');
+  try {
+    const res = await fetch(API + '/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    // Update checks badge
+    if (data.checks_remaining !== undefined) {
+      document.getElementById('checks-count').textContent = data.checks_remaining;
+    }
+
+    // Check limit hit → show upgrade screen
+    if (res.status === 403 && (data.upgrade_required || data.status === 'locked')) {
+      showScreen('upgrade');
+      return;
+    }
+
+    if (res.status === 429) {
+      alert(data.error || 'Please wait 20 seconds between checks.');
+      showScreen('input');
+      return;
+    }
+
+    if (data.error) {
+      alert(data.error);
+      showScreen('input');
+      return;
+    }
+
+    renderResults(data);
+  } catch (err) {
+    alert('Connection error. Please try again.');
+    showScreen('input');
+  }
+}
+
+// ── OBD codes input ──
+function analyzeOBD() {
+  const raw = document.getElementById('obd-codes').value.trim().toUpperCase();
+  if (!raw) return;
+  const codes = raw.split(/[\s,;]+/).filter(c => c.length >= 5);
+  callAnalyze({ source: 'obd', codes: codes });
+}
+
+// ── Manual text input ──
+function analyzeManual() {
+  const input = document.getElementById('user-input').value.trim();
+  if (!input) return;
+  callAnalyze({ source: 'manual', input: input });
+}
+
+// ── Demo (still uses old endpoint — doesn't cost a check) ──
+async function runDemo(id) {
+  showScreen('loading');
+  try {
+    const res = await fetch(API + '/quick/demo/' + id);
+    const data = await res.json();
+    renderResults(data);
+  } catch (err) {
+    alert('Connection error. Please try again.');
+    showScreen('input');
+  }
+}
+
+let currentResults = [];
+let currentIndex = 0;
+
+function renderResults(data) {
+  currentResults = data.results || [];
+  currentIndex = 0;
+
+  document.getElementById('r-input-echo').textContent = 'You asked: "' + data.input + '"';
+
+  // Note banner
+  const noteBanner = document.getElementById('r-note-banner');
+  if (data.note) {
+    noteBanner.innerHTML = '<div class="note-banner">' + data.note + '</div>';
+  } else {
+    noteBanner.innerHTML = '';
+  }
+
+  // Tabs for multiple results
+  const tabsEl = document.getElementById('r-tabs');
+  if (currentResults.length > 1) {
+    tabsEl.innerHTML = currentResults.map((r, i) =>
+      '<div class="result-tab' + (i === 0 ? ' active' : '') + '" onclick="switchTab(' + i + ')">' +
+      (r.code || 'Result ' + (i+1)) + '</div>'
+    ).join('');
+  } else {
+    tabsEl.innerHTML = '';
+  }
+
+  renderSingleResult(0);
+  showScreen('result');
+  window.scrollTo(0, 0);
+}
+
+function switchTab(idx) {
+  currentIndex = idx;
+  document.querySelectorAll('.result-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+  renderSingleResult(idx);
+}
+
+function renderSingleResult(idx) {
+  const r = currentResults[idx];
+  if (!r) return;
+
+  document.getElementById('r-code').textContent = r.code || '';
+
+  const w = r.whats_wrong || {};
+  const u = r.urgency || {};
+  const c = r.cost || {};
+  const d = r.difficulty || {};
+
+  let html = '';
+
+  // 1. What's Likely Wrong
+  html += '<div class="card">';
+  html += '<div class="card-title"><span class="icon">&#128295;</span> What\'s Likely Wrong</div>';
+  html += '<p style="font-size:15px;font-weight:600;margin-bottom:8px;">' + esc(w.summary || '') + '</p>';
+  if (w.likely_cause) {
+    html += '<p style="font-size:14px;color:var(--text-muted);margin-bottom:8px;">Most likely: <strong style="color:var(--text)">' + esc(w.likely_cause) + '</strong></p>';
+  }
+  if (w.explanation) {
+    html += '<p style="font-size:14px;color:var(--text-muted);line-height:1.5;">' + esc(w.explanation) + '</p>';
+  }
+  if (w.other_possibilities && w.other_possibilities.length) {
+    html += '<p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Also possible: ' + w.other_possibilities.map(esc).join(', ') + '</p>';
+  }
+  if (w.check_first && w.check_first.length) {
+    html += '<ul class="result-list" style="margin-top:12px;">';
+    w.check_first.forEach(item => { html += '<li>' + esc(item) + '</li>'; });
+    html += '</ul>';
+  }
+  html += '</div>';
+
+  // CLASPION Verification Status (if available)
+  if (r.claspion_verification) {
+    html += renderClaspionVerification(r.claspion_verification);
+  }
+
+  // 2. Urgency
+  html += '<div class="card">';
+  html += '<div class="card-title"><span class="icon">&#9888;&#65039;</span> Urgency</div>';
+  const uClass = u.color === 'red' ? 'urgency-red' : u.color === 'orange' ? 'urgency-orange' : 'urgency-green';
+  html += '<div class="urgency-badge ' + uClass + '">' + esc(u.level || '') + '</div>';
+  html += '<div class="urgency-msg">' + esc(u.message || '') + '</div>';
+  html += '</div>';
+
+  // 3. Cost
+  html += '<div class="card">';
+  html += '<div class="card-title"><span class="icon">&#128176;</span> Estimated Cost</div>';
+  html += '<div class="cost-grid">';
+  html += '<div class="cost-item"><div class="cost-label">DIY</div><div class="cost-value">' + esc(c.diy || 'N/A') + '</div></div>';
+  html += '<div class="cost-item"><div class="cost-label">Shop</div><div class="cost-value">' + esc(c.shop || 'N/A') + '</div></div>';
+  if (c.dealer) {
+    html += '<div class="cost-item full-width"><div class="cost-label">Dealer</div><div class="cost-value" style="color:var(--orange)">' + esc(c.dealer) + '</div></div>';
+  }
+  html += '</div>';
+  if (c.note) {
+    html += '<div class="cost-note">' + esc(c.note) + '</div>';
+  }
+  html += '</div>';
+
+  // 4. Difficulty
+  html += '<div class="card">';
+  html += '<div class="card-title"><span class="icon">&#128736;</span> Fix Difficulty</div>';
+  const dClass = d.level === 'Easy' ? 'difficulty-easy' : d.level === 'Hard' ? 'difficulty-hard' : 'difficulty-medium';
+  html += '<div class="difficulty-display">';
+  html += '<span class="difficulty-level ' + dClass + '">' + esc(d.level || 'Unknown') + '</span>';
+  html += '<span style="color:var(--text-muted);font-size:14px;">' + esc(d.label || '') + '</span>';
+  html += '</div>';
+  html += '</div>';
+
+  // 5. ShopScript
+  html += '<div class="card">';
+  html += '<div class="card-title"><span class="icon">&#128483;</span> What To Say At The Shop</div>';
+  html += '<div class="shop-script">';
+  html += '<button class="copy-btn" onclick="copyScript(this)">Copy</button>';
+  html += esc(r.shop_script || '');
+  html += '</div>';
+  html += '</div>';
+
+  // 6. Red Flags
+  if (r.red_flags && r.red_flags.length) {
+    html += '<div class="card">';
+    html += '<div class="card-title"><span class="icon">&#128681;</span> Red Flags</div>';
+    r.red_flags.forEach(flag => {
+      html += '<div class="red-flag">' + esc(flag) + '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('r-body').innerHTML = html;
+}
+
+function copyScript(btn) {
+  const text = btn.parentElement.textContent.replace('Copy', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  });
+}
+
+function goBack() {
+  showScreen('input');
+  window.scrollTo(0, 0);
+}
+
+function esc(s) {
+  const el = document.createElement('span');
+  el.textContent = s;
+  return el.innerHTML;
+}
+
+function renderClaspionVerification(claspion) {
+  const verified = claspion.decision === 'ALLOWED';
+  const statusIcon = verified ? '✅' : '🛡️';
+  const statusText = verified ? 'Diagnosis Verified' : 'Requires Review';
+  const statusClass = verified ? 'claspion-verified' : 'claspion-flagged';
+
+  let html = '<div class="card claspion-verification">';
+  html += '<div class="card-title"><span class="icon">🔐</span> CLASPION Security Verification</div>';
+
+  html += '<div class="claspion-status ' + statusClass + '">';
+  html += '<span class="status-icon">' + statusIcon + '</span>';
+  html += '<span class="status-text">' + statusText + '</span>';
+  html += '</div>';
+
+  // Risk Score
+  html += '<div class="claspion-metric">';
+  html += '<span class="metric-label">Risk Score:</span>';
+  html += '<span class="metric-value">' + (claspion.risk_score * 100).toFixed(1) + '%</span>';
+  html += '</div>';
+
+  // Confidence Level
+  html += '<div class="claspion-metric">';
+  html += '<span class="metric-label">Confidence:</span>';
+  html += '<span class="metric-value">' + (claspion.confidence * 100).toFixed(1) + '%</span>';
+  html += '</div>';
+
+  // Layers Checked
+  if (claspion.layers_passed && claspion.layers_passed.length > 0) {
+    html += '<div class="claspion-layers">';
+    html += '<span class="metric-label">Security Layers:</span>';
+    html += '<span class="layers-summary">' + claspion.layers_passed.length + ' checked</span>';
+
+    // Expandable layer details
+    html += '<div class="layers-toggle" onclick="toggleClaspionDetails(this)">Show Details ↓</div>';
+    html += '<div class="layers-detail" style="display:none;">';
+    claspion.layers_passed.forEach(layer => {
+      const layerStatus = layer.status === 'passed' ? '✅' : '❌';
+      html += '<div class="layer-item">';
+      html += '<span class="layer-icon">' + layerStatus + '</span>';
+      html += '<span class="layer-name">' + esc(layer.layer) + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // Simple explanation
+  html += '<div class="claspion-explanation">';
+  html += '<p style="font-size:14px;color:var(--text-muted);line-height:1.5;">';
+  if (verified) {
+    html += 'This diagnosis has been verified by CLASPION\'s multi-layer security analysis. No concerning patterns detected.';
+  } else {
+    html += 'This diagnosis has been flagged for review: ' + esc(claspion.reason || 'Security check required');
+  }
+  html += '</p>';
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+function toggleClaspionDetails(toggle) {
+  const details = toggle.nextElementSibling;
+  const isHidden = details.style.display === 'none';
+
+  details.style.display = isHidden ? 'block' : 'none';
+  toggle.textContent = isHidden ? 'Hide Details ↑' : 'Show Details ↓';
+}
+</script>
+
+</body>
+</html>

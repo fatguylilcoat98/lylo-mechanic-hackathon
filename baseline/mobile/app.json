@@ -1,0 +1,78 @@
+{
+  "expo": {
+    "name": "LYLO Mechanic",
+    "slug": "lylo-mechanic",
+    "version": "0.3.0",
+    "orientation": "portrait",
+    "icon": "./assets/app-icon.png",
+    "userInterfaceStyle": "dark",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "splash": {
+      "backgroundColor": "#ffffff",
+      "image": "./assets/splash-logo.png",
+      "resizeMode": "contain"
+    },
+    "android": {
+      "package": "com.stangman1998.lylomechanic",
+      "versionCode": 3,
+      "icon": "./assets/app-icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-fg.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.stangman1998.lylomechanic",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "LYLO Mechanic uses Bluetooth to talk to your OBDLink adapter."
+      }
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 23,
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34
+          }
+        }
+      ],
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "modes": [
+            "central"
+          ],
+          "bluetoothAlwaysPermission": "LYLO Mechanic uses Bluetooth to talk to your OBDLink adapter.",
+          "neverForLocation": true
+        }
+      ],
+      "./plugins/withBluetoothClassic",
+      "./plugins/withAndroidBaseColors"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "916eda9d-5bf2-40c4-abdb-22ea6e491d96"
+      }
+    },
+    "updates": {
+      "enabled": false
+    }
+  }
+}

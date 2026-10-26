@@ -1,0 +1,13 @@
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+*.sqlite
+.venv/
+.expo/
+.gradle/
+build/
