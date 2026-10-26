@@ -1,0 +1,500 @@
+{
+  "scenario": "voice question about usedcar + photo evidence",
+  "http_status": 200,
+  "estimated_cost_usd": 0.00848,
+  "request": {
+    "scan": {
+      "adapter_id": "DEMO (no adapter)",
+      "protocol": "ELM protocol 6",
+      "connection_quality": "stable",
+      "read_complete": true,
+      "vehicle_profile": {
+        "vin": "1HG**************",
+        "year": 2003,
+        "make": "Honda"
+      },
+      "raw_dtcs": [
+        {
+          "code": "P0420",
+          "status": "pending"
+        },
+        {
+          "code": "P0171",
+          "status": "permanent"
+        }
+      ],
+      "raw_pids": [
+        {
+          "name": "DIST_SINCE_CODES_CLEARED",
+          "pid_code": "31",
+          "raw_value": 19,
+          "unit": "km"
+        },
+        {
+          "name": "WARMUPS_SINCE_CLEAR",
+          "pid_code": "30",
+          "raw_value": 3,
+          "unit": ""
+        },
+        {
+          "name": "TIME_SINCE_CODES_CLEARED",
+          "pid_code": "4E",
+          "raw_value": 41,
+          "unit": "min"
+        },
+        {
+          "name": "DIST_MIL_ON",
+          "pid_code": "21",
+          "raw_value": 0,
+          "unit": "km"
+        },
+        {
+          "name": "TIME_MIL_ON",
+          "pid_code": "4D",
+          "raw_value": 0,
+          "unit": "min"
+        },
+        {
+          "name": "BATTERY_VOLTAGE",
+          "pid_code": "42",
+          "raw_value": 14.1,
+          "unit": "V"
+        },
+        {
+          "name": "ENGINE_RPM",
+          "pid_code": "0C",
+          "raw_value": 720,
+          "unit": "rpm"
+        },
+        {
+          "name": "ENGINE_COOLANT_TEMP",
+          "pid_code": "05",
+          "raw_value": 192,
+          "unit": "°F"
+        },
+        {
+          "name": "LONG_TERM_FUEL_TRIM_B1",
+          "pid_code": "07",
+          "raw_value": 14.8,
+          "unit": "%"
+        },
+        {
+          "name": "SHORT_TERM_FUEL_TRIM_B1",
+          "pid_code": "06",
+          "raw_value": 3.1,
+          "unit": "%"
+        }
+      ],
+      "readiness_monitors": [
+        {
+          "name": "Misfire",
+          "status": "complete"
+        },
+        {
+          "name": "Fuel system",
+          "status": "complete"
+        },
+        {
+          "name": "Comprehensive components",
+          "status": "complete"
+        },
+        {
+          "name": "Catalyst",
+          "status": "incomplete"
+        },
+        {
+          "name": "Evaporative system (EVAP)",
+          "status": "incomplete"
+        },
+        {
+          "name": "Oxygen sensor",
+          "status": "incomplete"
+        },
+        {
+          "name": "Oxygen sensor heater",
+          "status": "complete"
+        },
+        {
+          "name": "EGR / VVT system",
+          "status": "complete"
+        }
+      ],
+      "codes_cleared_before_scan": true,
+      "codes_cleared_evidence": [
+        "Only 19 km driven since codes were cleared (under 80).",
+        "Only 3 warm-ups since codes were cleared (under 10).",
+        "Only 41 engine minutes since codes were cleared (under 60).",
+        "Permanent code(s) P0171 present with no matching stored code, which usually means the stored codes were erased."
+      ]
+    },
+    "audio": "assets/synthetic_question.wav",
+    "photo_evidence": [
+      {
+        "color": "amber",
+        "confidence": "high",
+        "description": "Yellow engine-shaped warning light illuminated at top center",
+        "id": "photo:check_engine:amber",
+        "name": "check_engine",
+        "source": "photo",
+        "trust": "lower than sensor data",
+        "type": "photo_warning_light"
+      },
+      {
+        "color": "red",
+        "confidence": "high",
+        "description": "Red oil pressure warning light illuminated at top right",
+        "id": "photo:oil_pressure:red",
+        "name": "oil_pressure",
+        "source": "photo",
+        "trust": "lower than sensor data",
+        "type": "photo_warning_light"
+      },
+      {
+        "color": "red",
+        "confidence": "high",
+        "description": "Coolant temperature gauge needle pointing near H indicating overheating",
+        "id": "photo:temperature_gauge_high:red",
+        "name": "temperature_gauge_high",
+        "source": "photo",
+        "trust": "lower than sensor data",
+        "type": "photo_visible_issue"
+      }
+    ]
+  },
+  "response": {
+    "answer": {
+      "cites": [
+        "rule:safety",
+        "pid:DIST_SINCE_CODES_CLEARED",
+        "pid:TIME_SINCE_CODES_CLEARED",
+        "pid:WARMUPS_SINCE_CLEAR",
+        "dtc:P0171:permanent",
+        "dtc:P0420:pending",
+        "clr:e4",
+        "mon:catalyst",
+        "mon:evaporative_system_evap",
+        "mon:oxygen_sensor",
+        "photo:oil_pressure:red",
+        "photo:temperature_gauge_high:red",
+        "photo:check_engine:amber"
+      ],
+      "status": "verified",
+      "text": "Drive only a short distance, not a full trip home, because the scan calls for limited driving until more drive cycles complete. Yes you should worry the codes were cleared only 19 km, 41 minutes and 3 warm-ups ago, with permanent P0171 still present with no matching stored code and pending P0420, plus catalyst, EVAP and oxygen sensor monitors still incomplete. The photo suggests a red oil pressure light, a temperature gauge near H indicating overheating, and an amber check engine light."
+    },
+    "answer_status": "ok",
+    "final_safety_level": "EMERGENCY_STOP_IMMEDIATELY",
+    "follow_up_checks": [
+      {
+        "cites": [
+          "photo:oil_pressure:red",
+          "photo:temperature_gauge_high:red"
+        ],
+        "text": "Check oil level / oil pressure and coolant level / overheating immediately before any further driving."
+      },
+      {
+        "cites": [
+          "mon:catalyst",
+          "mon:evaporative_system_evap",
+          "mon:oxygen_sensor",
+          "pid:DIST_SINCE_CODES_CLEARED",
+          "pid:WARMUPS_SINCE_CLEAR",
+          "dtc:P0171:permanent",
+          "dtc:P0420:pending"
+        ],
+        "text": "Drive more cycles then re-scan to let catalyst, EVAP and oxygen sensor monitors complete and confirm if P0171 and P0420 return."
+      }
+    ],
+    "ledger": [
+      {
+        "code": "P0420",
+        "id": "dtc:P0420:pending",
+        "status": "pending",
+        "type": "dtc"
+      },
+      {
+        "code": "P0171",
+        "id": "dtc:P0171:permanent",
+        "status": "permanent",
+        "type": "dtc"
+      },
+      {
+        "id": "pid:DIST_SINCE_CODES_CLEARED",
+        "name": "DIST_SINCE_CODES_CLEARED",
+        "type": "codes_cleared_counter",
+        "unit": "km",
+        "value": 19
+      },
+      {
+        "id": "pid:WARMUPS_SINCE_CLEAR",
+        "name": "WARMUPS_SINCE_CLEAR",
+        "type": "codes_cleared_counter",
+        "unit": "",
+        "value": 3
+      },
+      {
+        "id": "pid:TIME_SINCE_CODES_CLEARED",
+        "name": "TIME_SINCE_CODES_CLEARED",
+        "type": "codes_cleared_counter",
+        "unit": "min",
+        "value": 41
+      },
+      {
+        "id": "pid:DIST_MIL_ON",
+        "name": "DIST_MIL_ON",
+        "type": "pid",
+        "unit": "km",
+        "value": 0
+      },
+      {
+        "id": "pid:TIME_MIL_ON",
+        "name": "TIME_MIL_ON",
+        "type": "pid",
+        "unit": "min",
+        "value": 0
+      },
+      {
+        "id": "pid:BATTERY_VOLTAGE",
+        "name": "BATTERY_VOLTAGE",
+        "type": "pid",
+        "unit": "V",
+        "value": 14.1
+      },
+      {
+        "id": "pid:ENGINE_RPM",
+        "name": "ENGINE_RPM",
+        "type": "pid",
+        "unit": "rpm",
+        "value": 720
+      },
+      {
+        "id": "pid:ENGINE_COOLANT_TEMP",
+        "name": "ENGINE_COOLANT_TEMP",
+        "type": "pid",
+        "unit": "°F",
+        "value": 192
+      },
+      {
+        "id": "pid:LONG_TERM_FUEL_TRIM_B1",
+        "name": "LONG_TERM_FUEL_TRIM_B1",
+        "type": "pid",
+        "unit": "%",
+        "value": 14.8
+      },
+      {
+        "id": "pid:SHORT_TERM_FUEL_TRIM_B1",
+        "name": "SHORT_TERM_FUEL_TRIM_B1",
+        "type": "pid",
+        "unit": "%",
+        "value": 3.1
+      },
+      {
+        "id": "mon:misfire",
+        "name": "Misfire",
+        "status": "complete",
+        "type": "readiness_monitor"
+      },
+      {
+        "id": "mon:fuel_system",
+        "name": "Fuel system",
+        "status": "complete",
+        "type": "readiness_monitor"
+      },
+      {
+        "id": "mon:comprehensive_components",
+        "name": "Comprehensive components",
+        "status": "complete",
+        "type": "readiness_monitor"
+      },
+      {
+        "id": "mon:catalyst",
+        "name": "Catalyst",
+        "status": "incomplete",
+        "type": "readiness_monitor"
+      },
+      {
+        "id": "mon:evaporative_system_evap",
+        "name": "Evaporative system (EVAP)",
+        "status": "incomplete",
+        "type": "readiness_monitor"
+      },
+      {
+        "id": "mon:oxygen_sensor",
+        "name": "Oxygen sensor",
+        "status": "incomplete",
+        "type": "readiness_monitor"
+      },
+      {
+        "id": "mon:oxygen_sensor_heater",
+        "name": "Oxygen sensor heater",
+        "status": "complete",
+        "type": "readiness_monitor"
+      },
+      {
+        "id": "mon:egr_vvt_system",
+        "name": "EGR / VVT system",
+        "status": "complete",
+        "type": "readiness_monitor"
+      },
+      {
+        "id": "clr:flag",
+        "type": "codes_cleared",
+        "value": true
+      },
+      {
+        "id": "clr:e1",
+        "text": "Only 19 km driven since codes were cleared (under 80).",
+        "type": "codes_cleared_evidence"
+      },
+      {
+        "id": "clr:e2",
+        "text": "Only 3 warm-ups since codes were cleared (under 10).",
+        "type": "codes_cleared_evidence"
+      },
+      {
+        "id": "clr:e3",
+        "text": "Only 41 engine minutes since codes were cleared (under 60).",
+        "type": "codes_cleared_evidence"
+      },
+      {
+        "id": "clr:e4",
+        "text": "Permanent code(s) P0171 present with no matching stored code, which usually means the stored codes were erased.",
+        "type": "codes_cleared_evidence"
+      },
+      {
+        "id": "veh:year",
+        "name": "year",
+        "type": "vehicle",
+        "value": 2003
+      },
+      {
+        "id": "veh:make",
+        "name": "make",
+        "type": "vehicle",
+        "value": "Honda"
+      },
+      {
+        "id": "veh:vin_masked",
+        "name": "vin_masked",
+        "type": "vehicle",
+        "value": "1HG**************"
+      },
+      {
+        "id": "rule:safety",
+        "level": "DRIVE_SHORT_DISTANCE_ONLY",
+        "triggers": [
+          "Codes were recently cleared — readiness monitors need more drive cycles to complete"
+        ],
+        "type": "rule_safety"
+      },
+      {
+        "cause": "Vacuum Leak",
+        "confidence": 75,
+        "id": "rule:hyp:vacuum_leak",
+        "rank": 1,
+        "type": "rule_hypothesis"
+      },
+      {
+        "cause": "Dirty or Failing MAF Sensor",
+        "confidence": 50,
+        "id": "rule:hyp:dirty_maf_sensor",
+        "rank": 2,
+        "type": "rule_hypothesis"
+      },
+      {
+        "cause": "Weak Fuel Pump / Low Fuel Pressure",
+        "confidence": 30,
+        "id": "rule:hyp:weak_fuel_pump",
+        "rank": 3,
+        "type": "rule_hypothesis"
+      },
+      {
+        "color": "amber",
+        "confidence": "high",
+        "description": "Yellow engine-shaped warning light illuminated at top center",
+        "id": "photo:check_engine:amber",
+        "name": "check_engine",
+        "source": "photo",
+        "trust": "lower than sensor data",
+        "type": "photo_warning_light"
+      },
+      {
+        "color": "red",
+        "confidence": "high",
+        "description": "Red oil pressure warning light illuminated at top right",
+        "id": "photo:oil_pressure:red",
+        "name": "oil_pressure",
+        "source": "photo",
+        "trust": "lower than sensor data",
+        "type": "photo_warning_light"
+      },
+      {
+        "color": "red",
+        "confidence": "high",
+        "description": "Coolant temperature gauge needle pointing near H indicating overheating",
+        "id": "photo:temperature_gauge_high:red",
+        "name": "temperature_gauge_high",
+        "source": "photo",
+        "trust": "lower than sensor data",
+        "type": "photo_visible_issue"
+      }
+    ],
+    "question": "is it safe to drive this car home? and should I worry that the codes were cleared?",
+    "receipt": {
+      "cited_ledger_ids": [
+        "clr:e1",
+        "clr:e4",
+        "dtc:P0171:permanent",
+        "dtc:P0420:pending",
+        "mon:catalyst",
+        "mon:evaporative_system_evap",
+        "mon:oxygen_sensor",
+        "photo:check_engine:amber",
+        "photo:oil_pressure:red",
+        "photo:temperature_gauge_high:red",
+        "pid:DIST_SINCE_CODES_CLEARED",
+        "pid:TIME_SINCE_CODES_CLEARED",
+        "pid:WARMUPS_SINCE_CLEAR",
+        "rule:safety"
+      ],
+      "finish_reason": "stop",
+      "latency_ms": 4942,
+      "ledger_size": 35,
+      "model": "muse-spark-1.3",
+      "prompt_sha256_16": "f73b2137f762b1ff",
+      "usage": {
+        "completion_tokens": 1355,
+        "completion_tokens_details": {
+          "reasoning_tokens": 869
+        },
+        "prompt_tokens": 1958,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 3313
+      }
+    },
+    "rule_safety_level": "DO_NOT_DRIVE",
+    "safety_action": "raised_by_detective",
+    "safety_opinion": {
+      "cites": [
+        "rule:safety",
+        "photo:oil_pressure:red",
+        "photo:temperature_gauge_high:red",
+        "clr:e1",
+        "clr:e4"
+      ],
+      "level": "EMERGENCY_STOP_IMMEDIATELY",
+      "reason": "Rule engine requires DRIVE_SHORT_DISTANCE_ONLY for recently cleared codes, but the photo suggests red oil pressure warning and temperature gauge near H indicating overheating, which is more severe."
+    },
+    "transcribe_receipt": {
+      "audio_duration_ms": 5440,
+      "audio_seconds": 5.39,
+      "audio_stored": false,
+      "latency_ms": 2297,
+      "model": "muse-voice-transcribe-1.0"
+    },
+    "transcript": "is it safe to drive this car home? and should I worry that the codes were cleared?",
+    "unverified_claims": [],
+    "voice_status": "ok"
+  }
+}

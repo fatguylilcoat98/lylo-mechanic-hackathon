@@ -45,6 +45,13 @@ All of these live under `baseline/` at tag `baseline-pre-hackathon`, commit 867e
 | 2026-10-26 09:40 | (docs commit) | hackathon/mobile-bridge/package.json | Test script uses `test/*.test.js` (Node 22 on the Dell treated `test/` as a file and ran 0 tests) |
 | 2026-10-26 09:35 | b5bb53c | hackathon/server/lylo_hack/validation.py, tests/test_live.py | Empty-scan gate: no codes and no numeric readings gives 400 with a plain reason (flag `LYLO_HACK_REQUIRE_DATA`, default on, `0` disables). New test; the 500-path test now posts a valid scan. 13 Python tests |
 | 2026-10-26 09:35 | b5bb53c | hackathon/mobile-bridge/src/diagnosisView.js, ServerDiagnosisCard.js, test/diagnosisView.test.js | Results-screen card: safety level, source (LYLO server vs on-phone engine) and fallback reason. Renders nothing without `scan.serverDiagnosis`. 6 new tests (25 Node total), including every backend safety level mapped |
+| 2026-10-26 10:00 | 9f7d842 | hackathon/server/tests/test_live.py | Muse-free 260 °F overheat regression guard (Muse off, and Muse on but failing) |
+| 2026-10-26 10:20 | 8839252 | hackathon/mobile-bridge/src/detectiveView.js, DetectiveCard.js, ServerDiagnosisCard.js, test/detectiveView.test.js | Muse Detective card: cleared-codes red flag, ranked hypotheses with confidence, tap to show cited ledger items, UNVERIFIED labels, receipt line (model, latency, prompt hash). Renders nothing unless detective.muse_status is ok. 8 new tests (33 Node total), including the real evidence files |
+| 2026-10-26 10:20 | 8839252 | hackathon/server/lylo_hack/vision.py, safety.py, app.py, muse.py, detective.py, live.py, requirements.txt (Pillow) | POST /api/v1/vision/dash (flag LYLO_HACK_VISION, default 0): 5 MB cap, EXIF/GPS stripped by re-encoding, never stored unless LYLO_HACK_VISION_DEBUG_SAVE=1; muse-spark-1.3 image input gives typed `photo:*` ledger items (source=photo, lower trust); a red oil, coolant or brake light or a hot gauge sets at least DO_NOT_DRIVE; never lowers. The live route keeps its own 256 KB cap |
+| 2026-10-26 10:20 | 8839252 | hackathon/server/lylo_hack/voice.py, muse.py (transcribe_wav), app.py | POST /api/v1/voice/ask (flag LYLO_HACK_VOICE, default 0): WAV (or ffmpeg-converted) audio, transcribed by muse-voice-transcribe-1.0 and never stored, answered against the scan ledger with citations, unverified answers withheld, never lowers safety |
+| 2026-10-26 10:20 | 8839252, a639e8c | hackathon/server/tests/test_vision_voice.py, scripts/live_vision_voice_demo.py, evidence/* | 20 mocked tests (48 Python total). Live demo script and evidence (synthetic dashboard image and robot-voice WAV) |
+| 2026-10-26 10:25 | a639e8c | hackathon/server/lylo_hack/app.py, voice.py | The photo floor is applied before the ledger is built, so rule:safety shows the raised level to the Detective and voice; voice replies add safety_notice |
+| 2026-10-26 10:30 | (docs commit) | docs/DEMO_SCRIPT.md, docs/HACKATHON_LOG.md | 3-minute demo outline; a root HACKATHON_LOG.md created by mistake in eeb51a4 was merged into docs/HACKATHON_LOG.md |
 
 ## Modified baseline files
 Every file under `baseline/` changed after the tag must have a row here. The full path must appear in this section, or `scripts/check-baseline-integrity.sh` fails.
@@ -57,7 +64,7 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/src/screens/CodesScreen.js | Same 3-line change as UsedCarScreen. |
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/metro.config.js | Added `resolver.nodeModulesPaths` (the app's own node_modules) so files under hackathon/ can resolve react/react-native. |
 
-## Muse Detective (b53890c, 6137584, docs commit)
+## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
 - `live.py`: adds a `detective` block to `/api/v1/live/live`, plus `install_shared_list_fix()` (`LYLO_HACK_FIX_SHARED_LIST`, default 1). This works around a baseline bug where `_build_hypothesis` mutated the shared rule-table list. The fix lives in the hackathon layer and no baseline file was edited.
 - `app.py`: loads the gitignored `hackathon/server/.env` (mode 600 on the Dell). `/healthz` reports muse on/off.
