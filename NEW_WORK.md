@@ -82,3 +82,5 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - PM2 config: gunicorn `--timeout 60`.
 - mobile-bridge: `X-LYLO-App-Key` from `EXPO_PUBLIC_LYLO_APP_KEY` (build time only); 401/429 fall back offline (tests).
 - `baseline/mobile/android/` is gitignored (Expo native project, untracked); its build.gradle versionCode 4 / versionName 0.4.0 edit is local to the build box and mirrors app.json.
+- Deployed (Oct 26 ~10:40 PT): Dell lylo-hack restarted with key check on; tunnel ingress `lylo-api.thegoodneighborguard.com -> http://127.0.0.1:5088` added (backup `~/.cloudflared/config.yml.bak-lylo-api-20261026-173838`), CNAME routed, PM2 `tunnel` restarted. All 17 existing hostnames returned the same status before/after (splendor showed one 000 right after restart, then 200 x3).
+- APK v0.4.0 built natively on the box (Gradle assembleRelease, Metro cache cleared), signed with the v0.3.0 debug keystore (cert SHA-256 fac61745…3b9c, identical). Box: `/workspace/lylo-mechanic-export/lylo-mechanic-v0.4.0.apk`, sha256 a881d70d…d6bc.
