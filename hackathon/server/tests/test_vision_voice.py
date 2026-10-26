@@ -130,6 +130,8 @@ class VisionRouteTests(unittest.TestCase):
         self.assertEqual(j["photo_action"], "raised_by_photo")
         ids = [i["id"] for i in res["detective"]["ledger"]]
         self.assertIn("photo:oil_pressure:red", ids)
+        rule = [i for i in res["detective"]["ledger"] if i["id"] == "rule:safety"][0]
+        self.assertEqual(rule["level"], "DO_NOT_DRIVE")
         self.assertIn("dtc:P0171:active", ids)
         self.assertNotIn("1HGCM82633A004352", json.dumps(res["detective"]["ledger"]))
 
@@ -216,6 +218,9 @@ class VoiceTests(unittest.TestCase):
         item = [i for i in j["ledger"] if i["id"] == "photo:oil_pressure:red"][0]
         self.assertEqual(item["source"], "photo")  # client cannot upgrade trust
         self.assertEqual(j["final_safety_level"], "DO_NOT_DRIVE")
+        rule = [i for i in j["ledger"] if i["id"] == "rule:safety"][0]
+        self.assertEqual(rule["level"], "DO_NOT_DRIVE")  # the model sees the photo-raised level
+        self.assertIn("do not drive", j["safety_notice"])
 
     def test_requires_scan_and_valid_audio(self):
         self.assertEqual(self.ask({"question": "q"}).status_code, 400)

@@ -50,6 +50,10 @@ def main():
     scan = demo("usedcar")
     total, calls = 0.0, 0
 
+    if "--voice-only" in sys.argv:  # reuse photo evidence saved by the last full run (no vision call)
+        with open(os.path.join(HERE, "evidence", "vision_usedcar_dash.json")) as fh:
+            j = json.load(fh)["response"]
+        return voice_step(c, scan, j, total, calls)
     with open(os.path.join(ASSETS, "synthetic_dash_cel_oil.jpg"), "rb") as fh:
         photo = fh.read()
     r = c.post("/api/v1/vision/dash", content_type="multipart/form-data",
@@ -73,6 +77,10 @@ def main():
         return print(f"calls={calls} total=${total:.4f}")
 
     time.sleep(8)
+    voice_step(c, scan, j, total, calls)
+
+
+def voice_step(c, scan, j, total, calls):
     with open(os.path.join(ASSETS, "synthetic_question.wav"), "rb") as fh:
         audio = fh.read()
     r = c.post("/api/v1/voice/ask", content_type="multipart/form-data",
@@ -91,6 +99,7 @@ def main():
     print(f"voice: http {r.status_code} status={k.get('voice_status')} transcript={k.get('transcript')!r} asr_ms={tr.get('latency_ms')} "
           f"answer_status={(k.get('answer') or {}).get('status')} final={k.get('final_safety_level')} action={k.get('safety_action')} "
           f"unverified={len(k.get('unverified_claims') or [])} cost=${cost:.4f}")
+    print("answer:", (k.get("answer") or {}).get("text"))
     print(f"calls={calls} total=${total:.4f}")
 
 

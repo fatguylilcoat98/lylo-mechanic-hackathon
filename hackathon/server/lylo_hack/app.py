@@ -124,9 +124,13 @@ def create_app():
             return jsonify({"vision_status": "error: internal; no photo evidence added, safety unchanged",
                             "photo_evidence": [], "photo_safety_floor": None}), 500
         if data is not None:
-            run_det = request.form.get("detective") == "1"
-            result = live.diagnose(data, muse=run_det, extra_items=v["photo_evidence"])
+            # Photo floor first, so the ledger's rule:safety item (and the Detective) see the raised level.
+            result = live.diagnose(data, muse=False, extra_items=v["photo_evidence"])
             v["photo_action"] = apply_floor(result, v["photo_safety_floor"], "; ".join(v["floor_reasons"])[:200], "photo")
+            if request.form.get("detective") == "1":
+                detective.run(data, result, extra_items=v["photo_evidence"])
+            else:
+                live._det_off(data, result, v["photo_evidence"])
             v["scan_result"] = result
             v["final_safety_level"] = result["safety"]["level"]
         else:
@@ -169,11 +173,14 @@ def create_app():
         result = live.diagnose(data, muse=False, extra_items=photo_items)
         floor, reasons = vision.floor_for(photo_items)
         apply_floor(result, floor, "; ".join(reasons)[:200], "photo")
+        live._det_off(data, result, photo_items)  # rebuild so rule:safety carries the photo-raised level
         items = result["detective"]["ledger"]
         rule_level = result["safety"]["level"]
         out["question"] = question
         out.update(voice.answer(question, items, rule_level))
         out["final_safety_level"] = higher(rule_level, out["final_safety_level"])
+        out["safety_notice"] = ("Safety level for this car: " + str(out["final_safety_level"]).replace("_", " ").lower()
+                                + ". This always outranks the spoken answer.")
         out["ledger"] = items
         return jsonify(out)
 
