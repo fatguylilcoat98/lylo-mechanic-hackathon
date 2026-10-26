@@ -33,6 +33,13 @@ All of these live under `baseline/` at tag `baseline-pre-hackathon`, commit 867e
 | Date/time (PT) | Commit | Files | What |
 |---|---|---|---|
 | 2026-10-26 06:15 | a9c55a5 | NEW_WORK.md, docs/HACKATHON_LOG.md, scripts/*, hackathon/*/README.md, hackathon/.env.example, .gitignore | Repo setup and separation tooling (no feature code) |
+| 2026-10-26 09:07 | bbc4a88 | hackathon/mobile-bridge/src/scanToLive.js | Android scan converter: exact backend PID names (fix 1), codes-cleared derived from PIDs 30/31/4E and orphan permanent codes, with evidence listed (fix 2), permanent codes sent as their own status (fix 3), VIN plus user-entered model/odometer (fix 4) |
+| 2026-10-26 09:07 | bbc4a88 | hackathon/mobile-bridge/src/uploadClient.js | Upload call to /api/v1/live/live with a 20 s client timeout (fix 5, client side) and fallback to the existing on-phone engine on no server, error, timeout, 4xx/5xx or a reply with no safety level |
+| 2026-10-26 09:07 | bbc4a88 | hackathon/server/lylo_hack/validation.py | Input validation: 400/415 with plain errors instead of 500s; unknown PID names and wrong units rejected so a misnamed reading can't silently lower safety (fix 6) |
+| 2026-10-26 09:07 | bbc4a88 | hackathon/server/lylo_hack/live.py | Live adapter over the baseline pipeline: passes vin/trim/engine_type/transmission/drive_type/model/odometer (fix 4), maps `permanent` to active with a note (fix 3), stubs the onrender Layer-12 handshake call without failing open (fix 5) |
+| 2026-10-26 09:07 | bbc4a88 | hackathon/server/lylo_hack/app.py, baseline_path.py, __init__.py | Hackathon Flask app (POST /api/v1/live/live, GET /healthz); 4xx stay 4xx; pipeline errors are 500 without leaking exception text; doesn't load baseline app.py, billing or auth |
+| 2026-10-26 09:07 | bbc4a88 | hackathon/server/tests/test_live.py, hackathon/mobile-bridge/test/*.test.js | 12 Python + 14 Node tests, including the wrong-PID-name safety-downgrade guard (JS names checked against the Python PID_RANGES; server rejects `coolant_temp`, while `ENGINE_COOLANT_TEMP` 260 °F gives EMERGENCY_STOP_IMMEDIATELY), end-to-end JS converter to server on both demo scans, malformed-input matrix, no external call, determinism |
+| 2026-10-26 09:07 | bbc4a88 | hackathon/server/README.md, requirements.txt, hackathon/mobile-bridge/README.md, package.json | Docs and run instructions |
 
 ## Modified baseline files
 Every file under `baseline/` changed after the tag must have a row here. The full path must appear in this section, or `scripts/check-baseline-integrity.sh` fails.
