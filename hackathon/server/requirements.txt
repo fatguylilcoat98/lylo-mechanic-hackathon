@@ -1,0 +1,3 @@
+# Hackathon server. Imports baseline/backend modules read-only; these are the
+# packages that path needs (from baseline/backend/requirements.txt) plus Flask.
+-r ../../baseline/backend/requirements.txt
