@@ -156,3 +156,29 @@ class LiveRouteTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OverheatRegressionTests(unittest.TestCase):
+    """Permanent, Muse-free guard: 260 °F coolant must stay EMERGENCY_STOP_IMMEDIATELY."""
+    HOT = {"symptoms": {"primary_category": "overheating", "severity": "severe", "frequency": "constant"},
+           "raw_pids": [{"name": "ENGINE_COOLANT_TEMP", "pid_code": "05", "raw_value": 260, "unit": "°F"}]}
+
+    def setUp(self):
+        self.c = create_app().test_client()
+
+    def test_overheat_emergency_with_muse_off(self):
+        r = self.c.post(URL, json=self.HOT)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()["safety"]["level"], "EMERGENCY_STOP_IMMEDIATELY")
+
+    def test_overheat_emergency_when_muse_on_but_fails(self):
+        from lylo_hack import muse
+        boom = mock.Mock(side_effect=muse.MuseError("NETWORK", "mocked"))
+        with mock.patch.dict(os.environ, {"LYLO_HACK_MUSE": "1", "META_MODEL_API_KEY": "test-not-real"}), \
+             mock.patch.object(muse, "chat_json", boom):
+            r = self.c.post(URL, json=self.HOT)
+        self.assertEqual(r.status_code, 200)
+        j = r.get_json()
+        self.assertEqual(j["safety"]["level"], "EMERGENCY_STOP_IMMEDIATELY")
+        self.assertEqual(j["detective"]["final_safety_level"], "EMERGENCY_STOP_IMMEDIATELY")
+        self.assertTrue(boom.called)
