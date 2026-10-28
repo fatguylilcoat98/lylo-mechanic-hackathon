@@ -32,12 +32,10 @@ export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp }) 
 
   return (
     <ScrollView style={st.screen} contentContainerStyle={st.scroll}>
-      <View style={st.header}>
-        <Image source={require('../../../../baseline/mobile/assets/app-icon.png')} style={st.logo} accessibilityIgnoresInvertColors />
-        <View style={{ flex: 1 }}>
-          <Text style={st.brand}>LYLO Mechanic</Text>
-          <Text style={st.powered}>Powered by Meta AI</Text>
-        </View>
+      <View style={st.header} testID="brand-header">
+        <Image source={require('../../../../baseline/mobile/assets/app-icon.png')} style={st.logo} accessibilityLabel="LYLO Mechanic logo" />
+        <Text style={st.brand}>LYLO Mechanic</Text>
+        <Text style={st.powered}>Powered by Meta AI</Text>
       </View>
       <Text style={st.hero}>The car AI that shows its proof.</Text>
       <Text style={st.sub}>And can't talk you out of a safety warning.</Text>
@@ -79,12 +77,12 @@ export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp }) 
 const st = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   scroll: { padding: space.xl, paddingTop: 56, paddingBottom: 56 },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: space.xxl },
-  logo: { width: 48, height: 48, borderRadius: radius.md, marginRight: space.md },
-  brand: { color: color.text, ...type.h },
-  powered: { color: color.textDim, ...type.small },
-  hero: { color: color.text, ...type.hero },
-  sub: { color: color.textDim, ...type.body, marginTop: space.sm, marginBottom: space.xl },
+  header: { alignItems: 'center', marginBottom: space.xxl },
+  logo: { width: 132, height: 132, borderRadius: 28, marginBottom: space.lg },
+  brand: { color: color.text, ...type.h, textAlign: 'center' },
+  powered: { color: color.textDim, ...type.small, textAlign: 'center', marginTop: space.xs },
+  hero: { color: color.text, ...type.hero, textAlign: 'center' },
+  sub: { color: color.textDim, ...type.body, textAlign: 'center', marginTop: space.sm, marginBottom: space.xl },
   connected: { backgroundColor: color.surface, borderRadius: radius.lg, padding: space.lg, borderWidth: 1.5, borderColor: color.line },
   connLabel: { color: color.green, ...type.label },
   connName: { color: color.text, ...type.h, marginTop: space.xs },
