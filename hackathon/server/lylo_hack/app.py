@@ -7,6 +7,7 @@ DATABASE_URL, billing, auth or Stripe code is loaded.
 import json
 import logging
 import os
+import math
 import time
 
 from flask import Flask, jsonify, request
@@ -342,6 +343,8 @@ def create_app():
         if not prove.enabled():
             return jsonify({"error": "Point and prove is off (LYLO_HACK_PROVE is not 1).", "errors": []}), 503
         body = request.get_json(silent=True) if request.is_json else None
+        if request.is_json and body is None:
+            return jsonify({"error": "Body is not valid JSON.", "errors": []}), 400
         body = body if isinstance(body, dict) else {}
         sess = prove.STORE.get(str(body.get("session_id") or ""))
         if not sess:
@@ -351,6 +354,10 @@ def create_app():
             return jsonify({"error": "samples must be a list (max 2000).", "errors": []}), 400
         now = time.time()
         samples = []
+        bad = [i for i, x in enumerate(raw) if isinstance(x, dict) and "pid" in x and not (
+            isinstance(x.get("value"), (int, float)) and not isinstance(x.get("value"), bool) and math.isfinite(x["value"]))]
+        if bad:
+            return jsonify({"error": "Readings need a finite numeric value.", "errors": [f"samples[{i}].value" for i in bad[:10]]}), 400
         for x in raw:  # dt = seconds after the lock; readings "from the future" are dropped
             if isinstance(x, dict) and isinstance(x.get("dt"), (int, float)) and not isinstance(x.get("dt"), bool):
                 t = sess["locked_at"] + float(x["dt"])
@@ -457,6 +464,10 @@ def create_app():
     @app.errorhandler(HTTPException)
     def http_error(e):  # keep 4xx as 4xx (baseline turned them into 500)
         return jsonify({"error": e.description, "errors": []}), e.code
+
+    @app.errorhandler(RecursionError)
+    def too_deep(e):  # deeply nested JSON blows the parser's recursion limit inside get_json: client error, not 500
+        return jsonify({"error": "Body is not valid JSON (nested too deeply).", "errors": []}), 400
 
     return app
 

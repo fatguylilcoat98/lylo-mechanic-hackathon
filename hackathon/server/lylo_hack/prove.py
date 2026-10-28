@@ -37,8 +37,28 @@ KNOWN_PIDS = {
 } | {f"MISFIRE_COUNT_CYL{n}" for n in range(1, 13)}
 VAGUE = re.compile(r"\b(something|anything|maybe|might|possibly|perhaps|some issue|could be|various|may or may not|"
                    r"general(ly)? (problem|issue)|not sure)\b", re.I)
-CLAIMS_PROOF = re.compile(r"\b(confirmed|proven|proved|verified|certain(ly)?|definitely|guaranteed|for sure|"
-                          r"no doubt|sensor (shows|showed|confirms)|already (seen|measured))\b", re.I)
+# Phrases that claim the outcome is already known. Phrases rather than bare words, so a normal mechanic sentence
+# ("stays below 90C under certain loads") passes.
+CLAIMS_PROOF = re.compile(r"\b(confirmed( by)?|is confirmed|proven|proved|verified (by|with)|definitely (is|has)|"
+                          r"guaranteed|for sure|no doubt|sensor (shows|showed|confirms)|already (seen|measured))\b"
+                          r"|\bproof\s*[:=]", re.I)
+_CONFUSE = str.maketrans({"\u0430": "a", "\u0435": "e", "\u043e": "o", "\u0440": "p", "\u0441": "c", "\u0445": "x",
+                          "\u0456": "i", "\u0443": "y", "\u0455": "s", "\u0501": "d", "\u0391": "A", "\u0395": "E",
+                          "\u039f": "O", "\u03bf": "o", "\u0410": "A", "\u0415": "E", "\u041e": "O", "\u0420": "P",
+                          "\u0421": "C", "\u0412": "B", "\u041d": "H", "\u041a": "K", "\u041c": "M", "\u0422": "T",
+                          "\u200b": "", "\u200c": "", "\u200d": "", "\u2060": "", "\ufeff": "", "\u00ad": ""})
+
+
+def fold(text):
+    """NFKC, strip zero-width chars, map common Cyrillic/Greek look-alikes, drop accents."""
+    import unicodedata
+    t = unicodedata.normalize("NFKC", str(text or "")).translate(_CONFUSE)
+    t = "".join(c for c in unicodedata.normalize("NFKD", t) if not unicodedata.combining(c))
+    return re.sub(r"\s+", " ", t)
+
+
+def claims_proof(text):
+    return bool(CLAIMS_PROOF.search(fold(text)))
 MODEL_ONLY_FIELDS = ("status", "measured", "proven", "verified", "outcome", "checked_at", "result", "held", "failed")
 SCHEMA = {
     "type": "object", "additionalProperties": False,
@@ -77,7 +97,7 @@ def validate(raw):
         raise Rejected("hypothesis must be 12-240 characters")
     if VAGUE.search(hyp):
         raise Rejected("hypothesis is vague (hedging words are not testable)")
-    if CLAIMS_PROOF.search(hyp) or CLAIMS_PROOF.search(str(p.get("if_fails") or "")):
+    if claims_proof(hyp) or claims_proof(p.get("if_fails")):
         raise Rejected("a prediction cannot claim it is already proven; only the checker decides")
     cond = p.get("condition")
     if cond not in CONDITIONS:
@@ -136,7 +156,12 @@ class ProveLedger:
         with self._lock:
             return copy.deepcopy(self._e)
 
-    def verify(self):
+    def verify(self, head=None, n=None):
+        """Chain integrity. Pass the server-held head sha (and count) to also catch tail truncation."""
+        if head is not None and (not self._e or self._e[-1]["sha256"] != head):
+            return False
+        if n is not None and len(self._e) != n:
+            return False
         prev = "0" * 64
         for i, e in enumerate(self._e):
             body = {k: v for k, v in e.items() if k != "sha256"}
@@ -352,8 +377,7 @@ def evaluate(sid, samples, now=None, store=STORE):
 
 def chain_ok(sess):
     """Chain intact AND its tail matches the head this server recorded (catches tail truncation)."""
-    e = sess["ledger"].entries()
-    return sess["ledger"].verify() and len(e) == sess["n_entries"] and bool(e) and e[-1]["sha256"] == sess["head_sha"]
+    return sess["ledger"].verify(head=sess["head_sha"], n=sess["n_entries"])
 
 
 def _view(sess, r):

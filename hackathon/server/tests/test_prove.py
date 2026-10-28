@@ -280,7 +280,7 @@ class VeraFixes(unittest.TestCase):
 
     def test_proof_claims_rejected(self):
         for h in ("Cylinder 2 misfire confirmed by the scan", "Cylinder 2 is proven to misfire",
-                  "Cylinder 2 misfire verified by sensor data", "Cylinder 2 is definitely misfiring"):
+                  "Cylinder 2 misfire verified by sensor data", "Cylinder 2 definitely is misfiring"):
             with self.assertRaises(P.Rejected, msg=h):
                 P.validate(dict(GOOD, hypothesis=h))
 
@@ -296,6 +296,57 @@ class VeraFixes(unittest.TestCase):
             for body in ({"session_id": sid, "samples": [{"dt": 0.1, "pid": ["x"], "value": 1}]},
                          {"session_id": sid, "samples": "nope"}, {"session_id": sid, "samples": [None, 3, {"dt": "1"}]}):
                 self.assertIn(c.post("/api/v1/prove/check", json=body).status_code, (200, 400))
+
+
+class VeraRound2(unittest.TestCase):
+    def test_normal_mechanic_sentences_pass(self):
+        for h in ("Coolant stays below 90C under certain loads", "Cylinder 2 misfire count rises above 10 at idle",
+                  "Short term fuel trim stays above 10 percent once warm", "The verified range for this sensor is 0 to 5 V"):
+            P.validate(dict(GOOD, hypothesis=h))
+
+    def test_claim_phrases_and_obfuscation_rejected(self):
+        for h in ("Cylinder 2 misfire confirmed by the scan", "Cylinder 2 is proven to misfire",
+                  "Misfire verified by sensor data", "Cylinder 2 definitely is misfiring", "proof: cylinder 2 misfires",
+                  "Cylinder 2 misfire c\u043enfirmed by scan",  # Cyrillic o
+                  "Cylinder 2 is pr\u00f3ven to misfire",  # accent
+                  "Cylinder 2 is pro\u200bven to misfire",  # zero-width
+                  "Cylinder 2 is \uff50\uff52\uff4f\uff56\uff45\uff4e to misfire",  # fullwidth (NFKC)
+                  "PROOF : cylinder 2"):
+            with self.assertRaises(P.Rejected, msg=h):
+                P.validate(dict(GOOD, hypothesis=h))
+
+    def test_verify_takes_head(self):
+        led = P.ProveLedger()
+        a = led.append("prediction", {"x": 1}, now=0)
+        b = led.append("outcome", {"y": 2}, now=1)
+        self.assertTrue(led.verify(head=b["sha256"], n=2))
+        self.assertFalse(led.verify(head=a["sha256"]))
+        led._e.pop()
+        self.assertTrue(led.verify())
+        self.assertFalse(led.verify(head=b["sha256"], n=2))
+
+    def _sid(self, c):
+        return c.post("/api/v1/live/live", json=SCAN).get_json()["detective"]["prove"]["session_id"]
+
+    def test_non_numeric_values_rejected(self):
+        c = create_app().test_client()
+        with mock.patch.dict(os.environ, {"LYLO_HACK_PROVE": "1"}):
+            sid = self._sid(c)
+            for v in ("40", None, True, [40], {"v": 1}):
+                r = c.post("/api/v1/prove/check", json={"session_id": sid, "samples": [{"dt": 1, "pid": "MISFIRE_COUNT_CYL2", "value": v}]})
+                self.assertEqual(r.status_code, 400, v)
+            r = c.post("/api/v1/prove/check", data='{"session_id":"%s","samples":[{"dt":1,"pid":"X","value":NaN}]}' % sid,
+                       content_type="application/json")
+            self.assertEqual(r.status_code, 400)
+
+    def test_deep_or_bad_json_is_400(self):
+        c = create_app().test_client()
+        deep = "[" * 100000 + "]" * 100000
+        with mock.patch.dict(os.environ, {"LYLO_HACK_PROVE": "1"}):
+            for route in ("/api/v1/live/live", "/api/v1/prove/check", "/api/v1/prove/replay"):
+                for body in (deep, "{not json", '{"session_id": '):
+                    r = c.post(route, data=body, content_type="application/json")
+                    self.assertEqual(r.status_code, 400, (route, body[:9]))
 
 
 if __name__ == "__main__":

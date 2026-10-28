@@ -161,3 +161,8 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 - test_live, test_sam and test_prove force LYLO_HACK_PROVE/SAM off, and test_sam uses mock.patch.dict.
 - Mobile: the replay demoLabel no longer starts with "REPLAY ·", because ReplayBadge adds that prefix. This fixes "REPLAY · REPLAY".
 - README: known limit added. Client readings are trusted as measured, and the session id acts as a bearer token.
+
+## v0.4.8 Point and prove: Vera round 2 should-fixes (2026-10-28)
+- app.py: JSON nested too deeply (a RecursionError inside get_json) returns 400 instead of 500. Bad JSON on /prove/check returns 400 (it used to be 404). /prove/check returns 400 when a reading's `value` is not a finite number (string, bool, null, list, NaN).
+- prove.py: the proof-claim check now matches phrases ("confirmed by", "proven", "verified by/with", "definitely is/has", "proof:", ...). Bare "certain"/"verified" are no longer matched, so "Coolant stays below 90C under certain loads" passes. Text is folded before the check: NFKC, zero-width chars stripped, Cyrillic/Greek look-alikes mapped, accents dropped.
+- `ProveLedger.verify(head=, n=)` checks the server-held head sha and entry count, and `chain_ok` uses it. Tests: test_prove.py VeraRound2 (5).
