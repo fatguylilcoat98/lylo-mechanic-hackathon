@@ -5,10 +5,16 @@
 import React, { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
+/** Only https links ever leave the app (store, YouTube, Maps); anything else is refused. */
+export function safeOpen(open) {
+  const raw = open || ((u) => Linking.openURL(u).catch(() => {}));
+  return (u) => (typeof u === 'string' && /^https:\/\//i.test(u) ? raw(u) : false);
+}
+
 export function PriceButtons({ p, open }) {
   const [near, setNear] = useState(false);
   if (!p) return null;
-  const go = open || ((u) => Linking.openURL(u).catch(() => {}));
+  const go = safeOpen(open);
   return (
     <View style={s.box} testID="price-buttons">
       <Text style={s.title}>{p.title}</Text>
@@ -54,7 +60,7 @@ export function PriceButtons({ p, open }) {
 
 export function VehicleLine({ v, open }) {
   if (!v) return null;
-  const go = open || ((u) => Linking.openURL(u).catch(() => {}));
+  const go = safeOpen(open);
   return (
     <View style={s.car} testID="vehicle-line">
       <Text style={s.carName}>{'\uD83D\uDE97  '}{v.name}</Text>

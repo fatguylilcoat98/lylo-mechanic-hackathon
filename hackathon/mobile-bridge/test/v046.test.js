@@ -19,7 +19,10 @@ test('priceLinks: watch button uses the remembered vehicle + part', () => {
   assert.match(p.watch.text, /videos for your 2003 Honda Accord/);
   const q = priceLinks('engine air filter', null);
   assert.match(q.watch.url, /search_query=engine%20air%20filter$/);
-  assert.match(q.watch.note, /Add your VIN/);
+  assert.match(q.watch.note, /Add your VIN to get videos for your model/);
+  assert.match(q.watch.note, /not checked by LYLO/);
+  assert.match(p.watch.note, /not checked by LYLO/);
+  assert.ok(!/exact car/.test(JSON.stringify([p, q])), 'never claims exact-car videos');
   assert.ok(p.buttons.length >= 4, 'existing store buttons kept');
 });
 

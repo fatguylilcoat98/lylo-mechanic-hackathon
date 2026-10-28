@@ -86,7 +86,7 @@ export default function SetupScreen({ navigation, storage, fetchImpl, baseUrl, a
       ) : (
         <>
           <Text style={s.h1}>Your vehicle</Text>
-          <Text style={s.body}>Your VIN gets recalls for your model and parts that fit. It's on the driver's door frame or the dash by the windshield.</Text>
+          <Text style={s.body}>Your VIN gets recalls for your model and parts searches for your model. It's on the driver's door frame or the dash by the windshield.</Text>
           <TextInput testID="setup-vin" style={s.input} value={vin} onChangeText={(t) => setVin(t.toUpperCase())} placeholder="17-character VIN" placeholderTextColor="#7a8794" autoCapitalize="characters" maxLength={20} />
           {busy ? <ActivityIndicator color={Y} /> : <Big title="Look up my VIN" onPress={lookUp} testID="setup-vin-go" />}
           <Text style={s.or}>or</Text>

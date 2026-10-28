@@ -3,6 +3,7 @@ import React from 'react';
 import { render, fireEvent, act } from './testUtils';
 import NoAdapterScreen from '../../../hackathon/mobile-bridge/src/NoAdapterScreen';
 import SetupScreen from '../../../hackathon/mobile-bridge/src/SetupScreen';
+import { safeOpen } from '../../../hackathon/mobile-bridge/src/PriceButtons';
 import RepairLinks from '../../../hackathon/mobile-bridge/src/RepairLinks';
 import { buildCodeResult } from '../src/engine/diagnose';
 import HomeScreen from '../src/screens/HomeScreen';
@@ -90,4 +91,21 @@ test('Home: first launch opens Setup once; Tools has a Setup button', async () =
   nav.navigate.mockClear();
   fireEvent.press(ui.getByText('Setup: adapter, view, your car'));
   expect(nav.navigate).toHaveBeenCalledWith('Setup');
+});
+
+test('links: only https URLs are opened', () => {
+  const open = jest.fn();
+  const go = safeOpen(open);
+  go('http://example.com'); go('javascript:alert(1)'); go('intent://x'); go(null);
+  expect(open).not.toHaveBeenCalled();
+  go('https://www.youtube.com/results?search_query=x');
+  expect(open).toHaveBeenCalledTimes(1);
+});
+
+test('setup: vehicle step does not claim parts fitment', () => {
+  const ui = render(<SetupScreen navigation={{ navigate: jest.fn() }} storage={mem()} noAdapterOn={true} />);
+  fireEvent.press(ui.getByTestId('setup-skip-q'));
+  fireEvent.press(ui.getByTestId('setup-skip-q'));
+  expect(ui.getByText(/parts searches for your model/)).toBeTruthy();
+  expect(ui.queryByText(/parts that fit/)).toBeNull();
 });

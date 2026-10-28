@@ -94,8 +94,9 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 - Watch how: a YouTube search for "<year make model> <repair or part>" from the remembered vehicle. No API or key. Shown on Code detail and on every repair price card.
 - Find nearest store: Google Maps searches for AutoZone, O'Reilly and NAPA "near me". No location permission; the store price buttons are kept.
 - No adapter screen: the "less accurate without live sensor data" note is now in the top card, before the first check.
-- First-run setup: 3 skippable questions, shown once, re-open from Home > Tools. Flag `EXPO_PUBLIC_LYLO_FIRST_RUN=1`. Uses the existing `lylo.viewMode` and `lylo.vehicle` keys.
+- First-run setup: 3 skippable questions, shown once, re-open from Home > Tools. Only the first-run auto-open (and the Tools > Setup button) is behind `EXPO_PUBLIC_LYLO_FIRST_RUN=1`. Uses the existing `lylo.viewMode` and `lylo.vehicle` keys.
 - Recalls: wording is "recalls for your model" everywhere; never implies the exact VIN.
+- Not flagged (correction after Vera's review): Watch how, nearest store, RepairLinks on Code detail, the no-sensor note, the recall wording and the Setup route show in every build. With no flags set the app is not identical to v0.4.5.
 - No server code changed, so no restart.
 - Tests: Node 99/99, jest UI 44/44 (box), baseline node 16 and 19. `expo export --platform android --clear` with first-run, no-adapter, dash and voice flags on: a 2.31 MB Hermes bundle that contains the new screens.
 - Not tested yet: a real phone (YouTube and Maps opening in their apps, the setup flow on an install).

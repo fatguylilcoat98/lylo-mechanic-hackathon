@@ -29,6 +29,9 @@ const NEARBY = [
   { id: 'napa', name: 'NAPA', url: 'https://www.google.com/maps/search/?api=1&query=' + enc('NAPA Auto Parts near me') },
 ];
 
+const WATCH_NOTE = "Opens a YouTube search. The videos are other people's, not checked by LYLO.";
+function watchNote(name) { return name ? WATCH_NOTE : 'Add your VIN to get videos for your model. ' + WATCH_NOTE; }
+
 /** v0.4.6 "Watch how": a plain YouTube search URL (no API, no key) for "<year> <make> <model> <repair or part>". */
 function youtubeUrl(query) {
   const q = String(query || '').replace(/\s+/g, ' ').trim();
@@ -90,7 +93,7 @@ function priceLinks(part, vehicle, estimate) {
     estimate: estimate ? `Estimate: ${estimate}` : 'Estimate: not in LYLO\'s price data',
     buttons,
     watch: { url: youtubeUrl(query), text: name ? `Watch how: videos for your ${name}` : 'Watch how (videos on YouTube)',
-             note: name ? 'Opens a YouTube search. The videos are other people\'s, not checked by LYLO.' : 'Add your VIN to get videos for your exact car. Opens a YouTube search.' },
+             note: watchNote(name) },
     nearby: NEARBY,
     note: name ? 'Opens the store\'s own website. Prices and fit are theirs, not LYLO\'s.'
       : 'Add your VIN so the stores can match the part to your car. Opens the store\'s own website.',
@@ -119,7 +122,7 @@ function forCodeDetail(codeResult, vehicle) {
   const q = [name, codeResult.code, codeResult.title, 'fix'].filter(Boolean).join(' ');
   return { title: 'Watch how and find a store', query: q, estimate: null, buttons: [], note: null, nearby: NEARBY,
     watch: { url: youtubeUrl(q), text: name ? `Watch how: videos for your ${name}` : 'Watch how (videos on YouTube)',
-             note: name ? "Opens a YouTube search. The videos are other people's, not checked by LYLO." : 'Add your VIN to get videos for your exact car. Opens a YouTube search.' } };
+             note: watchNote(name) } };
 }
 
 module.exports = { forCodeDetail, NEARBY, youtubeUrl, STORES, JOB_PARTS, REPAIR_COSTS, priceLinks, forJob, forCode, partFromFix, partFromCause, vehicleName };
