@@ -7,6 +7,7 @@ DATABASE_URL, billing, auth or Stripe code is loaded.
 import json
 import logging
 import os
+import time
 
 from flask import Flask, jsonify, request
 from werkzeug.exceptions import HTTPException
@@ -20,6 +21,7 @@ from .safety import apply_floor, higher
 from . import security
 from . import netpref
 from . import engine_user
+from . import prove
 
 log = logging.getLogger("lylo_hack")
 
@@ -333,6 +335,44 @@ def create_app():
         except Exception:
             log.exception("demo replay failed")
             return jsonify({"error": "Diagnosis failed inside the pipeline.", "errors": []}), 500
+
+    @app.post("/api/v1/prove/check")
+    def prove_check():
+        """Point and prove: the deterministic checker on readings taken after the lock. Flag LYLO_HACK_PROVE=1."""
+        if not prove.enabled():
+            return jsonify({"error": "Point and prove is off (LYLO_HACK_PROVE is not 1).", "errors": []}), 503
+        body = request.get_json(silent=True) if request.is_json else None
+        body = body if isinstance(body, dict) else {}
+        sess = prove.STORE.get(str(body.get("session_id") or ""))
+        if not sess:
+            return jsonify({"error": "Unknown or expired prove session.", "errors": []}), 404
+        raw = body.get("samples")
+        if not isinstance(raw, list) or len(raw) > 2000:
+            return jsonify({"error": "samples must be a list (max 2000).", "errors": []}), 400
+        now = time.time()
+        samples = []
+        for x in raw:  # dt = seconds after the lock; readings "from the future" are dropped
+            if isinstance(x, dict) and isinstance(x.get("dt"), (int, float)) and not isinstance(x.get("dt"), bool):
+                t = sess["locked_at"] + float(x["dt"])
+                if t <= now + 1:
+                    samples.append(dict({k: v for k, v in x.items() if k in ("pid", "value", "dtc", "dtc_read")}, t=t))
+        return jsonify(prove.evaluate(sess["id"], samples))
+
+    @app.post("/api/v1/prove/replay")
+    def prove_replay():
+        """A recorded PID session through the same lock -> check pipeline. Always carries the REPLAY badge."""
+        if not prove.enabled():
+            return jsonify({"error": "Point and prove is off (LYLO_HACK_PROVE is not 1).", "errors": []}), 503
+        body = request.get_json(silent=True) if request.is_json else None
+        case = str((body or {}).get("case") or "")
+        sess = prove.load_replay(case)
+        if not sess:
+            return jsonify({"error": "Unknown replay case.", "errors": ["case must be one of " + ", ".join(prove.REPLAY_CASES)]}), 400
+        try:
+            return jsonify(prove.replay_session(sess, case))
+        except Exception:
+            log.exception("prove replay failed")
+            return jsonify({"error": "Replay failed inside the pipeline.", "errors": []}), 500
 
     @app.post("/api/v1/demo/proof")
     def demo_proof():

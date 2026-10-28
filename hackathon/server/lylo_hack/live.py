@@ -123,9 +123,12 @@ def diagnose(data, muse=True, extra_items=None):
         "vehicle_received": {k: getattr(session.vehicle_profile, k) for k in ("vin", "model", "odometer")},
     }
     from . import detective
-    if muse:
-        return detective.run(data, result, extra_items=extra_items)
-    return _det_off(data, result, extra_items)
+    out = detective.run(data, result, extra_items=extra_items) if muse else _det_off(data, result, extra_items)
+    from . import prove
+    if muse and prove.enabled():  # LYLO_HACK_PROVE=1: lock a testable prediction (off = unchanged)
+        det = out.get("detective") or {}
+        prove.lock(out, data, proposal=det.pop("prediction_proposal", None))
+    return out
 
 
 def _det_off(data, result, extra_items):

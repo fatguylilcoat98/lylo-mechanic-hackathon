@@ -53,6 +53,13 @@ You get an EVIDENCE LEDGER: a JSON list of facts, each with an "id". Rules:
 9. Do not claim certainty; this is a scan, not an inspection. Output only the JSON object."""
 
 
+PROVE_RULE = """
+10. "prediction": commit ONE testable prediction about your top hypothesis BEFORE more readings arrive:
+hypothesis (specific, no hedging words), pids (1-4 PID names from the ledger or MISFIRE_COUNT_CYL<n>, or trouble
+codes for dtc_present), condition (above|below|between|outside|dtc_present), threshold (numbers; [] for dtc_present),
+window_s (5-600), if_fails (what it means if the reading disagrees). LYLO's checker, not you, decides if it held."""
+
+
 def enabled():
     return os.environ.get("LYLO_HACK_MUSE", "0") == "1"
 
@@ -173,13 +180,20 @@ def run(data, result, call=None, extra_items=None, force_call=False):
         det["muse_status"] = "off (LYLO_HACK_MUSE is not 1)"
         return result
     ledger_json = json.dumps(items, sort_keys=True, ensure_ascii=False)
-    messages = [{"role": "system", "content": INSTRUCTIONS},
+    from . import prove as P
+    schema, instructions = SCHEMA, INSTRUCTIONS
+    if P.enabled():  # LYLO_HACK_PROVE=1 only: ask for one testable prediction (it is validated and locked elsewhere)
+        schema = json.loads(json.dumps(SCHEMA))
+        schema["properties"]["prediction"] = P.SCHEMA
+        schema["required"] = schema["required"] + ["prediction"]
+        instructions = INSTRUCTIONS + PROVE_RULE
+    messages = [{"role": "system", "content": instructions},
                 {"role": "user", "content": "EVIDENCE LEDGER:\n" + ledger_json}]
     prompt_hash = hashlib.sha256(json.dumps(messages, sort_keys=True).encode()).hexdigest()[:16]
     receipt = {"prompt_sha256_16": prompt_hash, "ledger_size": len(items)}
     det["receipt"] = receipt
     try:
-        out, meta = (call or muse.chat_json)(messages, SCHEMA,
+        out, meta = (call or muse.chat_json)(messages, schema,
                                              timeout=float(os.environ.get("LYLO_HACK_MUSE_TIMEOUT_S", "25")))
     except muse.MuseError as e:
         det["muse_status"] = f"error: {e.code}; deterministic result returned unchanged"
@@ -204,6 +218,8 @@ def run(data, result, call=None, extra_items=None, force_call=False):
                 "safety_opinion": verified["safety_opinion"], "unverified_claims": unverified,
                 "final_safety_level": final, "safety_action": action, "cold_engine_note": cold_note})
     receipt["cited_ledger_ids"] = _cited(verified)
+    if P.enabled() and isinstance(out.get("prediction"), dict):
+        det["prediction_proposal"] = out["prediction"]  # raw proposal; prove.lock validates and removes it
     if action == "raised_by_detective":
         s = result["safety"]
         s["rule_level"] = rule_level

@@ -1,0 +1,81 @@
+{
+ "id": "prove_misfire_synthetic",
+ "title": "misfire replay: cylinder 3 (made-up data)",
+ "synthetic": true,
+ "source": "SYNTHETIC: invented for testing and the demo. Not from any real car.",
+ "scan": {
+  "adapter_id": "DEMO replay (no adapter)",
+  "protocol": "ELM protocol 6",
+  "connection_quality": "stable",
+  "read_complete": true,
+  "vehicle_profile": {},
+  "readiness_monitors": [],
+  "codes_cleared_before_scan": false,
+  "codes_cleared_evidence": [],
+  "raw_dtcs": [
+   {
+    "code": "P0303",
+    "status": "pending"
+   }
+  ],
+  "raw_pids": [
+   {
+    "name": "ENGINE_RPM",
+    "pid_code": "0C",
+    "raw_value": 690,
+    "unit": "rpm"
+   },
+   {
+    "name": "ENGINE_COOLANT_TEMP",
+    "pid_code": "05",
+    "raw_value": 188,
+    "unit": "\u00b0F"
+   }
+  ],
+  "mode06": {
+   "supported": true,
+   "misfire_counts": {
+    "1": 0,
+    "2": 1,
+    "3": 3,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 1,
+    "8": 0
+   }
+  }
+ },
+ "samples": [
+  {
+   "dt": 5,
+   "pid": "MISFIRE_COUNT_CYL3",
+   "value": 4
+  },
+  {
+   "dt": 15,
+   "pid": "MISFIRE_COUNT_CYL3",
+   "value": 9
+  },
+  {
+   "dt": 25,
+   "pid": "MISFIRE_COUNT_CYL3",
+   "value": 17
+  },
+  {
+   "dt": 35,
+   "pid": "MISFIRE_COUNT_CYL3",
+   "value": 31
+  },
+  {
+   "dt": 5,
+   "pid": "MISFIRE_COUNT_CYL1",
+   "value": 0
+  },
+  {
+   "dt": 25,
+   "pid": "MISFIRE_COUNT_CYL1",
+   "value": 0
+  }
+ ]
+}

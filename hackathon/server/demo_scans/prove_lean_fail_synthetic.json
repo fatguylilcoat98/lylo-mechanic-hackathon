@@ -1,0 +1,53 @@
+{
+ "id": "prove_lean_fail_synthetic",
+ "title": "lean prediction that fails as the engine warms (made-up data)",
+ "synthetic": true,
+ "source": "SYNTHETIC: invented for testing and the demo. Not from any real car.",
+ "scan": {
+  "adapter_id": "DEMO replay (no adapter)",
+  "protocol": "ELM protocol 6",
+  "connection_quality": "stable",
+  "read_complete": true,
+  "vehicle_profile": {},
+  "readiness_monitors": [],
+  "codes_cleared_before_scan": false,
+  "codes_cleared_evidence": [],
+  "raw_dtcs": [],
+  "raw_pids": [
+   {
+    "name": "SHORT_TERM_FUEL_TRIM_BANK_1",
+    "pid_code": "06",
+    "raw_value": 14.0,
+    "unit": "%"
+   },
+   {
+    "name": "ENGINE_COOLANT_TEMP",
+    "pid_code": "05",
+    "raw_value": 120,
+    "unit": "\u00b0F"
+   }
+  ]
+ },
+ "samples": [
+  {
+   "dt": 10,
+   "pid": "SHORT_TERM_FUEL_TRIM_BANK_1",
+   "value": 8.5
+  },
+  {
+   "dt": 20,
+   "pid": "SHORT_TERM_FUEL_TRIM_BANK_1",
+   "value": 5.0
+  },
+  {
+   "dt": 30,
+   "pid": "SHORT_TERM_FUEL_TRIM_BANK_1",
+   "value": 3.1
+  },
+  {
+   "dt": 45,
+   "pid": "SHORT_TERM_FUEL_TRIM_BANK_1",
+   "value": 2.4
+  }
+ ]
+}
