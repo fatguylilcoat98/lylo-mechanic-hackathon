@@ -166,3 +166,10 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 - app.py: JSON nested too deeply (a RecursionError inside get_json) returns 400 instead of 500. Bad JSON on /prove/check returns 400 (it used to be 404). /prove/check returns 400 when a reading's `value` is not a finite number (string, bool, null, list, NaN).
 - prove.py: the proof-claim check now matches phrases ("confirmed by", "proven", "verified by/with", "definitely is/has", "proof:", ...). Bare "certain"/"verified" are no longer matched, so "Coolant stays below 90C under certain loads" passes. Text is folded before the check: NFKC, zero-width chars stripped, Cyrillic/Greek look-alikes mapped, accents dropped.
 - `ProveLedger.verify(head=, n=)` checks the server-held head sha and entry count, and `chain_ok` uses it. Tests: test_prove.py VeraRound2 (5).
+## 2026-10-28 ui-polish: logged uiV2.test.js in NEW_WORK.md (fixes the integrity check), replay badge pinned as a sticky header, one badge only.
+
+## v0.5.0: merged ui-polish into v048 (2026-10-28)
+- UI v2 (flag `EXPO_PUBLIC_LYLO_UI_V2=1`) and Point and prove (`LYLO_HACK_PROVE=1` / `EXPO_PUBLIC_LYLO_PROVE=1`) are both kept behind their flags. With the flags off, the old screens render.
+- Wiring checked with a new jest test in `uiV2.test.js` ("v0.5.0 wiring"): `prove.asScan(replay)` → `demoLabel` → ReplayBadge is pinned as a sticky header with exactly one "REPLAY ·". PredictionBanner shows the server's `detective.prediction` text and measured value: HELD → prediction-held, LOCKED → prediction-pending.
+- Bug fix found by that test: `prove.asScan` did not set `serverDiagnosis.source = 'server'`, so `resultsView.serverResult` returned null and a prove replay would have rendered a blank results screen. Fixed in `hackathon/mobile-bridge/src/prove.js`.
+- Version bump to 0.5.0 (versionCode 13): `baseline/mobile/app.json`, `baseline/mobile/package.json`, `baseline/mobile/package-lock.json`, `baseline/mobile/src/screens/HomeScreen.js` ("TEST BUILD v0.5.0"), `baseline/mobile/ui-tests/screens.test.js`, `baseline/mobile/ui-tests/uiV2.test.js`, `hackathon/mobile-bridge/src/ui2/HomeV2.js`.

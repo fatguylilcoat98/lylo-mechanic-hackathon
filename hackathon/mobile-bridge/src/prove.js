@@ -50,7 +50,7 @@ function asScan(j) {
   // ReplayBadge already prints "REPLAY ·", so the label is the description only (never empty for a replay).
   const raw = String((j && j.replay && j.replay.label) || '').replace(/^\s*REPLAY\s*[\u00B7:-]?\s*/i, '').trim();
   const label = isReplay ? (raw || 'recorded session, not live data') : null;
-  return { serverDiagnosis: { result: j }, demoLabel: label, replay: isReplay };
+  return { serverDiagnosis: { source: 'server', result: j }, demoLabel: label, replay: isReplay };
 }
 
 module.exports = { REPLAY_CASES, STATUS, features, samplesSince, check, replay, predictionView, asScan };

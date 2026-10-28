@@ -61,6 +61,7 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 
 | Date/time (PT) | Commit | File | Reason |
 |---|---|---|---|
+| 2026-10-28 | 6b1aaf6, c8d9cf1 | `baseline/mobile/ui-tests/uiV2.test.js` | New jest UI tests for UI v2 (flag EXPO_PUBLIC_LYLO_UI_V2), synthetic data, test-only. Covers the single pinned replay badge. |
 | 2026-10-26 09:30 | 1cd4918 | baseline/mobile/src/screens/ScanScreen.js | 3 lines: import `afterScan` from hackathon/mobile-bridge and pass the finished scan through it before navigating. With `EXPO_PUBLIC_LYLO_SERVER_URL` unset it returns the identical object, so the app behaves exactly as before. Needed so a phone scan can reach the Dell pipeline. |
 | 2026-10-26 09:30 | 1cd4918 | baseline/mobile/metro.config.js | New file: stock Expo Metro config plus `watchFolders` for hackathon/mobile-bridge, so Metro can bundle the import above. No other settings. |
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/src/screens/UsedCarScreen.js | 3 lines: import `ServerDiagnosisCard` and render it under the demo banner. It returns null when the scan has no serverDiagnosis, so the screen is unchanged with the flag unset. |
@@ -268,3 +269,14 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - app.py: JSON nested too deeply (a RecursionError inside get_json) returns 400 instead of 500. Bad JSON on /prove/check returns 400 (it used to be 404). /prove/check returns 400 when a reading's `value` is not a finite number (string, bool, null, list, NaN).
 - prove.py: the proof-claim check now matches phrases ("confirmed by", "proven", "verified by/with", "definitely is/has", "proof:", ...). Bare "certain"/"verified" are no longer matched, so "Coolant stays below 90C under certain loads" passes. Text is folded before the check: NFKC, zero-width chars stripped, Cyrillic/Greek look-alikes mapped, accents dropped.
 - `ProveLedger.verify(head=, n=)` checks the server-held head sha and entry count, and `chain_ok` uses it. Tests: test_prove.py VeraRound2 (5).
+
+## UI v2 (ui-polish branch, flag EXPO_PUBLIC_LYLO_UI_V2=1): baseline changes logged (2026-10-28)
+- `baseline/mobile/ui-tests/uiV2.test.js` (new jest UI test file from commit 6b1aaf6, now extended): synthetic-data render tests for the UI v2 components and the results screen (overruled-AI red banner, prediction states, evidence summary, replay badge). It's test-only and no baseline app code changed.
+- `hackathon/mobile-bridge/src/ui2/ResultsV2.js`: on a replay, ReplayBadge is the ScrollView's sticky header (`stickyHeaderIndices=[0]`, testID `replay-pin`), so it can't scroll out of view. It renders exactly once. `ResultsV2Body` takes `pinnedReplay` so it doesn't render a second badge.
+- `ui2/model.js` (eb33b9f): prediction status is matched case-insensitively, so the server's LOCKED/HELD/FAILED work.
+
+## v0.5.0: merged ui-polish into v048 (2026-10-28)
+- UI v2 (flag `EXPO_PUBLIC_LYLO_UI_V2=1`) and Point and prove (`LYLO_HACK_PROVE=1` / `EXPO_PUBLIC_LYLO_PROVE=1`) are both kept behind their flags. With the flags off, the old screens render.
+- Wiring checked with a new jest test in `uiV2.test.js` ("v0.5.0 wiring"): `prove.asScan(replay)` → `demoLabel` → ReplayBadge is pinned as a sticky header with exactly one "REPLAY ·". PredictionBanner shows the server's `detective.prediction` text and measured value: HELD → prediction-held, LOCKED → prediction-pending.
+- Bug fix found by that test: `prove.asScan` did not set `serverDiagnosis.source = 'server'`, so `resultsView.serverResult` returned null and a prove replay would have rendered a blank results screen. Fixed in `hackathon/mobile-bridge/src/prove.js`.
+- Version bump to 0.5.0 (versionCode 13): `baseline/mobile/app.json`, `baseline/mobile/package.json`, `baseline/mobile/package-lock.json`, `baseline/mobile/src/screens/HomeScreen.js` ("TEST BUILD v0.5.0"), `baseline/mobile/ui-tests/screens.test.js`, `baseline/mobile/ui-tests/uiV2.test.js`, `hackathon/mobile-bridge/src/ui2/HomeV2.js`.
