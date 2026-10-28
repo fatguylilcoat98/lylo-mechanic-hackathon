@@ -13,3 +13,5 @@ Not done yet: wiring `diagnoseScan` into the app's scan screen (that's a logged 
 
 ## v0.4.4: Snap the dash + Ask out loud
 `src/dashVoice.js` + `src/DashVoicePanel.js` (rendered by SimpleResults). Build flags `EXPO_PUBLIC_LYLO_DASH_PHOTO=1`, `EXPO_PUBLIC_LYLO_VOICE_ASK=1`; unset = nothing rendered or sent.
+
+- v0.4.8: `EXPO_PUBLIC_LYLO_ENGINE_OVERRIDE=1` shows "Not my engine?" on Your car and sends the owner-set engine (server flag `LYLO_HACK_ENGINE_OVERRIDE=1`).

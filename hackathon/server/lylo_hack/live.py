@@ -132,6 +132,8 @@ def _det_off(data, result, extra_items):
     """Deterministic ledger only (no Muse call), used by vision/voice to rebuild the scan."""
     from . import ledger as L
     items = L.build_ledger(data, result) + list(extra_items or [])
+    from . import engine_user as E
+    E.apply_to_items(items, data)  # no-op unless LYLO_HACK_ENGINE_OVERRIDE=1
     level = (result.get("safety") or {}).get("level")
     result["detective"] = {"muse_status": "skipped (deterministic rebuild)", "ledger": items,
                            "rule_safety_level": level, "final_safety_level": level,

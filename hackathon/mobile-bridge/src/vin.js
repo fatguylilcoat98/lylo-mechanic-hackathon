@@ -50,7 +50,11 @@ async function decodeVin(vinInput, { baseUrl, appKey, fetchImpl, timeoutMs = 120
   if (!baseUrl || !f) return { status: 'offline', vin: v.vin, message: 'Saved your VIN. We will look up the car when you are online.' };
   try {
     const { json } = await post(f, `${baseUrl}/api/v1/vin/decode`, appKey, JSON.stringify({ vin: v.vin }), true, timeoutMs);
-    if (json && json.vin_status === 'ok' && json.vehicle) return { status: 'ok', vin: v.vin, vehicle: json.vehicle, recalls: json.recalls || null };
+    if (json && json.vin_status === 'ok' && json.vehicle) {
+      const ok = { status: 'ok', vin: v.vin, vehicle: json.vehicle, recalls: json.recalls || null };
+      if (typeof json.engine_check_hint === 'string' && json.engine_check_hint) ok.engineHint = json.engine_check_hint.slice(0, 400); // v0.4.8 server flag only
+      return ok;
+    }
     if (json && json.vin_status === 'invalid') return { status: 'invalid', message: json.message };
     return { status: 'unknown', vin: v.vin, message: "We couldn't look up this VIN right now. The app still works without it." };
   } catch (e) {

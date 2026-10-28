@@ -28,7 +28,7 @@ export default function HomeScreen({ navigation }) {
         <Text style={s.title}>LYLO Mechanic</Text>
         <Text style={s.tag}>Know what's wrong before you buy or walk into a shop.</Text>
         <Text style={s.powered}>Powered by Meta AI</Text>
-        <Text style={s.build}>TEST BUILD v0.4.7 · works offline · no login</Text>
+        <Text style={s.build}>TEST BUILD v0.4.8 · works offline · no login</Text>
       </View>
 
       {device ? (

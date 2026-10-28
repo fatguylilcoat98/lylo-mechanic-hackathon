@@ -13,6 +13,8 @@
  */
 'use strict';
 
+const EO = require('./engineOverride');
+
 const { scanToLivePayload } = require('./scanToLive');
 const { LEVELS } = require('./diagnosisView');
 
@@ -93,6 +95,7 @@ function scanField(scan, opts) {
 
 /** POST the dash photo (with the scan so the server applies the photo floor). detective=0: one model call, fast. */
 async function requestDash({ baseUrl, appKey, fetchImpl, photo, scan, timeoutMs = DASH_TIMEOUT_MS }) {
+  if (EO.features().on) await EO.ensureLoaded(); // v0.4.8 owner-set engine rides in the scan field
   const form = new FormData();
   form.append('photo', { uri: photo.uri, type: photo.type || 'image/jpeg', name: photo.name || 'dash.jpg' });
   const s = scan ? scanField(scan) : null;
@@ -103,6 +106,7 @@ async function requestDash({ baseUrl, appKey, fetchImpl, photo, scan, timeoutMs 
 
 /** POST the recorded question with the scan (+ any dash-photo evidence) so the answer cites it. */
 async function requestVoice({ baseUrl, appKey, fetchImpl, audio, scan, photoEvidence, timeoutMs = VOICE_TIMEOUT_MS }) {
+  if (EO.features().on) await EO.ensureLoaded(); // v0.4.8
   const s = scanField(scan);
   if (!s) return { ok: false, error: MSG.bad };
   const form = new FormData();

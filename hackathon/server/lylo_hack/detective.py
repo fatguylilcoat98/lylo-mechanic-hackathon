@@ -14,6 +14,7 @@ import os
 from . import ledger as L
 from . import muse, wiring
 from . import vin as V
+from . import engine_user as E
 
 CLAIM = {"type": "object", "additionalProperties": False,
          "required": ["text", "cites"],
@@ -158,6 +159,7 @@ def run(data, result, call=None, extra_items=None, force_call=False):
     extra_items: already-typed ledger items from other sources (e.g. photo)."""
     items = L.build_ledger(data, result) + [i for i in (extra_items or []) if isinstance(i, dict) and i.get("id")]
     items += V.ledger_items(data)
+    E.apply_to_items(items, data)  # owner-set engine; no-op unless LYLO_HACK_ENGINE_OVERRIDE=1
     _w = wiring.hint_item(items)
     if _w:
         items.append(_w)

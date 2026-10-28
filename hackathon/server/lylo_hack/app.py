@@ -19,6 +19,7 @@ from . import vin as vinmod
 from .safety import apply_floor, higher
 from . import security
 from . import netpref
+from . import engine_user
 
 log = logging.getLogger("lylo_hack")
 
@@ -203,6 +204,9 @@ def create_app():
         out = {"vin_status": dec["status"], "vehicle": dec}
         if dec["status"] == "ok":
             out["recalls"] = vinmod.recalls(dec)
+            hint = engine_user.decode_hint(dec)  # None unless LYLO_HACK_ENGINE_OVERRIDE=1
+            if hint:
+                out["engine_check_hint"] = hint
         return jsonify(out)
 
     @app.post("/api/v1/vin/photo")
@@ -238,6 +242,7 @@ def create_app():
         vehicle = None
         if vinmod.enabled() and request.form.get("vin"):
             vehicle = vinmod.decode(request.form.get("vin"))
+            vehicle = engine_user.apply_to_decode(vehicle, engine_user.from_fields(request.form))
         try:
             return jsonify(helper.analyze(job, raw, vehicle=vehicle))
         except vision.PhotoError as e:
@@ -357,6 +362,7 @@ def create_app():
                 v = str(v).strip()[:40]
             if v:
                 vehicle[k] = v
+        ov = engine_user.from_fields(src)  # None unless LYLO_HACK_ENGINE_OVERRIDE=1
         out = {"check_status": "ok", "mode": "no_adapter", "confidence_note": symptoms.NO_SENSOR_NOTE, "invalid_codes": bad_codes}
         f = request.files.get("audio") if body is None else None
         if f:
@@ -380,6 +386,9 @@ def create_app():
         floor, reasons = vision.floor_for(photo_items)
         diag = (lambda d: live.diagnose(d, muse=False)) if codes else None
         items, level, notes, hits, result = symptoms.build(text, codes, vehicle, photo_items, diag, floor, reasons)
+        if ov:
+            items += engine_user.vehicle_items(ov)
+            out["vehicle_engine"] = {"engine": ov["label"], "engine_source": ov["engine_source"]}
         out.update({"rule_safety_level": level, "final_safety_level": level, "symptom_matches": hits, "codes": codes,
                     "notes": notes, "hypotheses": [{"cause": h.get("cause"), "confidence": h.get("confidence"), "id": h["id"]}
                                                     for h in items if h.get("type") == "rule_hypothesis"]})

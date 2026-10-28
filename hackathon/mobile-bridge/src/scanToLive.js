@@ -101,6 +101,7 @@ function scanToLivePayload(scan, opts = {}) {
   if (typeof v.is_hybrid === 'boolean') vehicle_profile.is_hybrid = v.is_hybrid;
   if (typeof v.is_ev === 'boolean') vehicle_profile.is_ev = v.is_ev;
   if (scan.monitor && scan.monitor.engineType === 'diesel' && !vehicle_profile.engine_type) vehicle_profile.engine_type = 'diesel';
+  Object.assign(vehicle_profile, require('./engineOverride').fieldsFor(vehicle_profile.vin, opts.env)); // v0.4.8; {} unless EXPO_PUBLIC_LYLO_ENGINE_OVERRIDE=1
 
   const cleared = deriveCodesCleared(scan);
   const payload = {

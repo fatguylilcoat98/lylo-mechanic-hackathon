@@ -7,6 +7,7 @@
 'use strict';
 
 const { scanToLivePayload } = require('./scanToLive');
+const EO = require('./engineOverride');
 
 const DEFAULT_TIMEOUT_MS = 20000; // the baseline Layer-12 call alone could take 10 s+
 
@@ -25,6 +26,7 @@ function defaultOfflineEngine() {
  * @returns {source:'server'|'offline', result, payload, error?, status?}
  */
 async function diagnoseScan(scan, opts = {}) {
+  if (EO.features(opts.env).on) await EO.ensureLoaded(undefined, opts.env); // v0.4.8 owner-set engine
   const payload = scanToLivePayload(scan, opts);
   const offline = opts.offlineEngine || defaultOfflineEngine();
   const fallback = (error, status) => ({ source: 'offline', result: offline(scan), payload, error, status });

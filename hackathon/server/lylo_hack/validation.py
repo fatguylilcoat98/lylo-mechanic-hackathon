@@ -74,6 +74,8 @@ def validate_live_payload(data):
         for f in ("is_hybrid", "is_ev"):
             if f in vp and not isinstance(vp[f], bool):
                 errs.append(f"vehicle_profile.{f} must be true or false.")
+        from . import engine_user  # v0.4.8; adds nothing unless LYLO_HACK_ENGINE_OVERRIDE=1
+        errs += engine_user.validation_errors(vp)
 
     for list_key in ("raw_dtcs", "raw_pids", "readiness_monitors"):
         v = data.get(list_key, [])

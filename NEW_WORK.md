@@ -129,6 +129,30 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-28 05:45 | net fix | hackathon/server/tests/test_netpref.py | New: tests that flag off patches nothing and flag on keeps only IPv4 results. |
 | 2026-10-28 05:45 | net fix | hackathon/server/gunicorn.conf.py | New: gthread worker, 8 threads, so one slow Muse call cannot block quick lookups. Delete the file to revert. |
 | 2026-10-28 05:45 | net fix | docs/HACKATHON_LOG.md | Session log for the VIN-lookup timeout fix and the v0.4.7 APK URL. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/server/lylo_hack/engine_user.py | New: owner-set engine. Validates engine_user (plain text, 60 chars) and fuel_user (gas/diesel/hybrid_ev/not_sure); prefers it over the vPIC engine in the ledger (labeled "set by owner", vPIC kept as nhtsa_engine); cautious engine_check_hint for a diesel decode on a Ford E/F-series. All behind LYLO_HACK_ENGINE_OVERRIDE=1. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/server/lylo_hack/app.py | /vin/decode adds engine_check_hint; /noadapter/check adds the owner engine item + vehicle_engine; /photo/helper prompt uses the owner engine. All no-ops unless LYLO_HACK_ENGINE_OVERRIDE=1. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/server/lylo_hack/detective.py | Detective ledger: owner engine replaces the decoded engine (flag only). |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/server/lylo_hack/live.py | Deterministic ledger rebuild (dash photo, voice) gets the same owner-engine step (flag only). |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/server/lylo_hack/validation.py | Live payload: checks the new vehicle_profile engine fields only when the flag is on; off = no new errors. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/server/tests/test_engine_user.py | New: 8 tests (flag off ignores everything, cleaning/caps, labels, validation, hint only for Ford E/F diesel, decode route, live ledger + prompt, no-adapter route). |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/src/engineOverride.js | New: "Not my engine?" store (lylo.engineOverride, same VIN as lylo.vehicle) and the fields sent to the server (engine_user, fuel_user, engine_source=user). Flag EXPO_PUBLIC_LYLO_ENGINE_OVERRIDE=1. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/src/VinScreen.js | "Not my engine?" editor (Gas/Diesel/Hybrid/EV/Not sure + optional engine name); card shows "Engine set by you" with the NHTSA decode in small text; shows the server hint. Flag only. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/src/scanToLive.js | vehicle_profile gets the owner engine fields (live/detective, dash photo, voice). {} when the flag is off. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/src/uploadClient.js | Loads the saved owner engine before building the live payload (flag only). |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/src/dashVoice.js | Loads the saved owner engine before the dash and voice requests (flag only). |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/src/noAdapter.js | No-adapter check form carries the owner engine fields (flag only). |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/src/photoHelper.js | Photo Helper form carries the owner engine fields when a VIN is sent (flag only). |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/src/vin.js | decodeVin keeps the server engine_check_hint as engineHint, only when the server sends one. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/test/engineOverride.test.js | New: 7 node tests (flag, cleaning, storage round trip, flag-off payload byte-identical, flag-on payload, all four request paths on/off, hint pass-through). |
+| 2026-10-28 06:20 | v0.4.8 | baseline/mobile/ui-tests/engineOverride.test.js | New: 3 render tests (flag off = old card; flag on: hint, pick Gas + engine, "Engine set by you", NHTSA kept; saved override loads and clears). |
+| 2026-10-28 06:20 | v0.4.8 | baseline/mobile/src/screens/HomeScreen.js | Build label v0.4.8. |
+| 2026-10-28 06:20 | v0.4.8 | baseline/mobile/app.json | Version 0.4.8, versionCode 12. No new permissions. |
+| 2026-10-28 06:20 | v0.4.8 | baseline/mobile/package.json | Version 0.4.8. No new dependencies. |
+| 2026-10-28 06:20 | v0.4.8 | baseline/mobile/package-lock.json | Version 0.4.8 (root entry only). |
+| 2026-10-28 06:20 | v0.4.8 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.8. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/.env.example | Documents LYLO_HACK_ENGINE_OVERRIDE and LYLO_HACK_FORCE_IPV4 (default off). |
+| 2026-10-28 06:20 | v0.4.8 | docs/HACKATHON_LOG.md | Session log for v0.4.8. |
+| 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/README.md | Documents the EXPO_PUBLIC_LYLO_ENGINE_OVERRIDE flag. |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).

@@ -11,6 +11,8 @@
  */
 'use strict';
 
+const EO = require('./engineOverride');
+
 const { ORDER, higher, errorFor, MSG: DV_MSG } = require('./dashVoice');
 const { LEVELS } = require('./diagnosisView');
 
@@ -98,6 +100,7 @@ async function requestCheck({ baseUrl, appKey, fetchImpl, text, codes, vehicle, 
   const v = vehicle || {};
   ['year', 'make', 'model'].forEach((k) => { if (v[k]) form.append(k, String(v[k])); });
   if (Array.isArray(photoEvidence) && photoEvidence.length) form.append('photo_evidence', JSON.stringify(photoEvidence));
+  if (EO.features().on) { await EO.ensureLoaded(); EO.appendTo(form, v.vin); } // v0.4.8 owner-set engine
   if (audio) form.append('audio', { uri: audio.uri, type: audio.type || 'audio/aac', name: audio.name || 'symptoms.aac' });
   const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
   let timer;

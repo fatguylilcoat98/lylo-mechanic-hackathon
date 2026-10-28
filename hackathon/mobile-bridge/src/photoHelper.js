@@ -3,6 +3,8 @@
  * The server (POST /api/v1/photo/helper) decides marks; this file only validates
  * again, lays marks out on the shown photo, and words things for Simple view.
  */
+const EO = require('./engineOverride');
+
 const DISCLAIMER = 'This is not a guarantee. It gives you an idea of where to look.';
 const NOT_FOUND = "I can't see it in this photo. Try a closer picture or check your owner's manual.";
 const GET_A_PRO = 'Get a pro for this one.';
@@ -101,6 +103,7 @@ async function requestHelper({ baseUrl, appKey, fetchImpl, job, photo, vin, time
   const form = new FormData();
   form.append('job', job);
   if (vin) form.append('vin', vin); // server decodes it; Meta AI only gets year/make/model/engine
+  if (vin && EO.features().on) { await EO.ensureLoaded(); EO.appendTo(form, vin); } // v0.4.8 owner-set engine
   form.append('photo', { uri: photo.uri, type: photo.type || 'image/jpeg', name: photo.name || 'photo.jpg' });
   const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
   const t = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
