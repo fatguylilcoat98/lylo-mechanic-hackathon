@@ -12,6 +12,7 @@ import { MODE_LABELS, loadViewMode, saveViewMode } from './viewMode';
 import { loadVehicle } from './vin';
 import { PriceButtons, VehicleLine } from './PriceButtons';
 import DashVoicePanel from './DashVoicePanel'; // v0.4.4, renders nothing with its flags unset
+import { uiV2On } from './ui2/theme'; // UI v2, flag EXPO_PUBLIC_LYLO_UI_V2=1 (off = this screen)
 
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
@@ -86,7 +87,7 @@ function SimpleView({ m }) {
   );
 }
 
-function MechanicView({ m }) {
+export function MechanicView({ m }) {
   const x = m.mechanic;
   return (
     <View>
@@ -146,7 +147,7 @@ export function ResultsBody({ m, mode, onMode }) {
   );
 }
 
-export default function SimpleResults({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice }) {
+function SimpleResultsV1({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice }) {
   const store = storage === undefined ? defaultStorage : storage;
   const [mode, setMode] = useState('simple');
   const [vehicle, setVehicle] = useState(null);
@@ -194,3 +195,10 @@ const s = StyleSheet.create({
   powered: { color: '#c5d1dc', fontSize: 14, fontWeight: '700' },
   mono: { color: '#8a99a8', fontSize: 12, fontFamily: 'monospace', marginTop: 4 },
 });
+
+/** UI v2 switch: presentation only. uiV2 prop overrides the build flag (tests). */
+export default function SimpleResults(props) {
+  const on = props.uiV2 === undefined ? uiV2On({ EXPO_PUBLIC_LYLO_UI_V2: process.env.EXPO_PUBLIC_LYLO_UI_V2 }) : !!props.uiV2;
+  if (on) { const ResultsV2 = require('./ui2/ResultsV2').default; return <ResultsV2 {...props} />; }
+  return <SimpleResultsV1 {...props} />;
+}
