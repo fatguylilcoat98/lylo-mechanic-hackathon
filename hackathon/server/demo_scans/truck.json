@@ -1,0 +1,95 @@
+{
+ "id": "truck",
+ "title": "Chris's truck: cold engine, high fuel trim",
+ "source": "Readings from Chris's own truck scan, as shown on his phone (short-term fuel trim 27.3%, long-term 6.3%, coolant 79 °F, 984 rpm, no codes). Vehicle details left out.",
+ "scan": {
+  "adapter_id": "DEMO replay (no adapter)",
+  "protocol": "ELM protocol 6",
+  "connection_quality": "stable",
+  "read_complete": true,
+  "vehicle_profile": {},
+  "raw_dtcs": [],
+  "raw_pids": [
+   {
+    "name": "DIST_SINCE_CODES_CLEARED",
+    "pid_code": "31",
+    "raw_value": 6400,
+    "unit": "km"
+   },
+   {
+    "name": "WARMUPS_SINCE_CLEAR",
+    "pid_code": "30",
+    "raw_value": 255,
+    "unit": ""
+   },
+   {
+    "name": "TIME_SINCE_CODES_CLEARED",
+    "pid_code": "4E",
+    "raw_value": 9800,
+    "unit": "min"
+   },
+   {
+    "name": "BATTERY_VOLTAGE",
+    "pid_code": "42",
+    "raw_value": 14.3,
+    "unit": "V"
+   },
+   {
+    "name": "ENGINE_RPM",
+    "pid_code": "0C",
+    "raw_value": 984,
+    "unit": "rpm"
+   },
+   {
+    "name": "ENGINE_COOLANT_TEMP",
+    "pid_code": "05",
+    "raw_value": 79,
+    "unit": "°F"
+   },
+   {
+    "name": "LONG_TERM_FUEL_TRIM_B1",
+    "pid_code": "07",
+    "raw_value": 6.3,
+    "unit": "%"
+   },
+   {
+    "name": "SHORT_TERM_FUEL_TRIM_B1",
+    "pid_code": "06",
+    "raw_value": 27.3,
+    "unit": "%"
+   }
+  ],
+  "readiness_monitors": [
+   {
+    "name": "Misfire",
+    "status": "complete"
+   },
+   {
+    "name": "Fuel system",
+    "status": "complete"
+   },
+   {
+    "name": "Comprehensive components",
+    "status": "complete"
+   },
+   {
+    "name": "Catalyst",
+    "status": "complete"
+   },
+   {
+    "name": "Evaporative system (EVAP)",
+    "status": "complete"
+   },
+   {
+    "name": "Oxygen sensor",
+    "status": "complete"
+   },
+   {
+    "name": "Oxygen sensor heater",
+    "status": "complete"
+   }
+  ],
+  "codes_cleared_before_scan": false,
+  "codes_cleared_evidence": []
+ }
+}

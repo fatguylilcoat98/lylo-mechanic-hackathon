@@ -12,7 +12,7 @@ from flask import Flask, jsonify, request
 from werkzeug.exceptions import HTTPException
 
 from .validation import validate_live_payload
-from . import live
+from . import demo, live
 from . import detective
 from . import muse, vision, voice, helper, symptoms
 from . import vin as vinmod
@@ -60,7 +60,8 @@ def create_app():
     limiter = security.Limiter()
     muse_routes = {"/api/v1/live/live": detective.enabled, "/api/v1/vision/dash": vision.enabled, "/api/v1/vin/photo": vinmod.enabled,
                    "/api/v1/voice/ask": voice.enabled, "/api/v1/photo/helper": helper.enabled,
-                   "/api/v1/noadapter/check": symptoms.enabled}
+                   "/api/v1/noadapter/check": symptoms.enabled,
+                   "/api/v1/demo/replay": lambda: demo.enabled() and detective.enabled()}
 
     @app.before_request
     def guard():
@@ -102,7 +103,7 @@ def create_app():
         return jsonify({"ok": True, "external_handshake": "stubbed" if live.external_handshake_disabled() else "live",
                         "muse": "on" if detective.enabled() else "off",
                         "vision": "on" if vision.enabled() else "off", "voice": "on" if voice.enabled() else "off", "no_adapter": "on" if symptoms.enabled() else "off",
-                        "photo_helper": "on" if helper.enabled() else "off",
+                        "photo_helper": "on" if helper.enabled() else "off", "demo": "on" if demo.enabled() else "off",
                         "vin": "on" if vinmod.enabled() else "off"})
 
     @app.post("/api/v1/live/live")
@@ -298,6 +299,38 @@ def create_app():
                                 + ". This always outranks the spoken answer.")
         out["ledger"] = items
         return jsonify(out)
+
+    @app.get("/api/v1/demo/cases")
+    def demo_cases():
+        if not demo.enabled():
+            return jsonify({"error": "Demo is off (LYLO_HACK_DEMO is not 1).", "errors": []}), 503
+        return jsonify({"cases": demo.cases()})
+
+    @app.post("/api/v1/demo/replay")
+    def demo_replay():
+        """A bundled demo scan through the real live pipeline (rules, Muse if on, never-lower merge)."""
+        if not demo.enabled():
+            return jsonify({"error": "Demo is off (LYLO_HACK_DEMO is not 1).", "errors": []}), 503
+        body = request.get_json(silent=True) if request.is_json else None
+        case = str((body or {}).get("case") or "")
+        if case not in demo.CASE_IDS:
+            return jsonify({"error": "Unknown demo case.", "errors": ["case must be one of " + ", ".join(demo.CASE_IDS)]}), 400
+        try:
+            return jsonify(demo.replay(case))
+        except Exception:
+            log.exception("demo replay failed")
+            return jsonify({"error": "Diagnosis failed inside the pipeline.", "errors": []}), 500
+
+    @app.post("/api/v1/demo/proof")
+    def demo_proof():
+        """AI vs rules: a labeled SIMULATED lower AI answer through the real never-lower merge. No model call."""
+        if not demo.enabled():
+            return jsonify({"error": "Demo is off (LYLO_HACK_DEMO is not 1).", "errors": []}), 503
+        try:
+            return jsonify(demo.proof())
+        except Exception:
+            log.exception("demo proof failed")
+            return jsonify({"error": "Proof failed inside the pipeline.", "errors": []}), 500
 
     @app.post("/api/v1/noadapter/check")
     def noadapter_route():

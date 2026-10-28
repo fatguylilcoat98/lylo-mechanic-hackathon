@@ -41,7 +41,7 @@ const nav = { navigate: jest.fn(), replace: jest.fn(), popToTop: jest.fn() };
 test('Home renders and the Used-Car demo shows the recently-cleared warning', async () => {
   const ui = render(<App />);
   expect(ui.getByText('LYLO Mechanic')).toBeTruthy();
-  expect(ui.getByText(/TEST BUILD v0.4.6/)).toBeTruthy();
+  expect(ui.getByText(/TEST BUILD v0.4.7/)).toBeTruthy();
   expect(ui.getByText('Powered by Meta AI')).toBeTruthy();
   await act(async () => { fireEvent.press(ui.getByText('Demo: Used-Car Check')); });
   expect(await ui.findByText('CONCERNS FOUND')).toBeTruthy();

@@ -10,9 +10,11 @@ import { Button, Card, u } from '../components/ui';
 import { C } from '../constants/colors';
 import { features as noAdapterFeatures } from '../../../../hackathon/mobile-bridge/src/noAdapter'; // hackathon v0.4.5
 import { useFirstRunSetup } from '../../../../hackathon/mobile-bridge/src/SetupScreen'; // hackathon v0.4.6
+import { features as demoFeatures } from '../../../../hackathon/mobile-bridge/src/demo'; // hackathon v0.4.7
 
 export default function HomeScreen({ navigation }) {
   const noAdapter = noAdapterFeatures().on;
+  const demoOn = demoFeatures().on; // hackathon v0.4.7: judge demo, flag EXPO_PUBLIC_LYLO_DEMO=1
   const setupOn = useFirstRunSetup(navigation); // hackathon v0.4.6: first-run setup, once
   const [device, setDevice] = useState(OBDService.device);
   useFocusEffect(useCallback(() => { setDevice(OBDService.connected ? OBDService.device : null); }, []));
@@ -26,7 +28,7 @@ export default function HomeScreen({ navigation }) {
         <Text style={s.title}>LYLO Mechanic</Text>
         <Text style={s.tag}>Know what's wrong before you buy or walk into a shop.</Text>
         <Text style={s.powered}>Powered by Meta AI</Text>
-        <Text style={s.build}>TEST BUILD v0.4.6 · works offline · no login</Text>
+        <Text style={s.build}>TEST BUILD v0.4.7 · works offline · no login</Text>
       </View>
 
       {device ? (
@@ -43,6 +45,12 @@ export default function HomeScreen({ navigation }) {
           <Button title="Connect OBDLink adapter" onPress={() => navigation.navigate('Connect')} />
         </Card>
       )}
+
+      {demoOn ? (
+        <Card title="No car? No adapter?">
+          <Button title="Try a demo scan" onPress={() => navigation.navigate('Demo')} />
+        </Card>
+      ) : null}
 
       {noAdapter ? (
         <Card title="No adapter? Start here" accent={C.green}>

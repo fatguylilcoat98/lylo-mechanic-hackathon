@@ -114,6 +114,13 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-28 04:50 | v0.4.6 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.6. |
 | 2026-10-28 04:50 | v0.4.6 | baseline/mobile/ui-tests/vinPrice.test.js | Recall text now reads "recall for your model". |
 | 2026-10-28 04:50 | v0.4.6 | baseline/mobile/ui-tests/v046.test.js | New: 7 render tests (no-sensor note before the first check; Watch how + nearest store on code detail, with and without a vehicle; setup no-adapter/mechanic/year-make-model; setup VIN path; skip all; Home first-run open + Tools button). |
+| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/src/App.js | Registers the `Demo` route (hackathon DemoScreen). |
+| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/src/screens/HomeScreen.js | "No car? No adapter?" card with "Try a demo scan", only when EXPO_PUBLIC_LYLO_DEMO=1; build label v0.4.7. |
+| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/app.json | Version 0.4.7, versionCode 11. No new permissions. |
+| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/package.json | Version 0.4.7. No new dependencies. |
+| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/package-lock.json | Version 0.4.7 (root entry only). |
+| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.7. |
+| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/ui-tests/demo.test.js | New: 5 render tests (three cases listed; truck replay shows server verdict, causes, receipt; AI-vs-rules proof shows the simulated label, both verdicts and "Rules won"; no-server message; Home entry). |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
@@ -193,3 +200,12 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - **Not behind any flag (visible in every build):** Watch how and Find nearest store on Code detail (RepairLinks) and on every price card, the no-sensor note on the No adapter screen (that screen itself needs `EXPO_PUBLIC_LYLO_NO_ADAPTER=1`), the "recalls for your model" wording, and the registered `Setup` route. A build with no flags set is therefore NOT identical to v0.4.5.
 - `vin.js`: recall text "N recalls for your model (year make model)", never implying the exact VIN.
 - Tests: `test/v046.test.js` (Node), `baseline/mobile/ui-tests/v046.test.js` (jest UI). No server code changed.
+
+## v0.4.7 Try a demo scan, AI vs rules (Oct 28)
+- Server (flag `LYLO_HACK_DEMO=1`, off by default; routes return 503 when off): `lylo_hack/demo.py`, `demo_scans/{truck,usedcar,overheat}.json`.
+  - `GET /api/v1/demo/cases`; `POST /api/v1/demo/replay {case}` runs the bundled scan through `live.diagnose` (the same pipeline as `/api/v1/live/live`: rules, Muse Detective when `LYLO_HACK_MUSE=1`, never-lower merge, receipts). Counts against the Muse rate limits when Muse is on.
+  - `POST /api/v1/demo/proof`: "AI vs rules". There is no recorded run where Muse proposed a lower level than the rules (all evidence runs are `agreed` or `raised_by_detective`), so this injects a **simulated** SAFE_TO_DRIVE answer, labeled "Simulated AI answer for this test (no AI model was called)", into the real `detective.run` / `merge_safety` on the 260 °F scan. Rules: EMERGENCY_STOP_IMMEDIATELY; final: EMERGENCY_STOP_IMMEDIATELY; action `detective_lower_ignored`. No model call.
+  - `detective.run(..., force_call=False)`: new keyword so the proof can inject its simulated answer while Muse is off. Default behavior unchanged.
+  - Demo scans: truck = readings from Chris's own truck scan (STFT 27.3 %, LTFT 6.3 %, coolant 79 °F, 984 rpm, no codes), vehicle details removed; usedcar = LYLO's built-in used-car demo (not a real car); overheat = made-up 260 °F test scan.
+- Phone (flag `EXPO_PUBLIC_LYLO_DEMO=1`): `hackathon/mobile-bridge/src/demo.js` (client + view models, Node-tested) and `DemoScreen.js`. Shows only numbers the server returned; the receipt line appears only when Muse actually ran.
+- Tests: `hackathon/server/tests/test_demo.py` (5), `hackathon/mobile-bridge/test/demo.test.js` (4), `baseline/mobile/ui-tests/demo.test.js` (5).

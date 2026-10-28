@@ -1,0 +1,129 @@
+{
+ "id": "usedcar",
+ "title": "Used car: codes recently cleared",
+ "source": "LYLO's built-in used-car demo scan (not a real car): codes cleared recently, emissions monitors not finished.",
+ "scan": {
+  "adapter_id": "DEMO replay (no adapter)",
+  "protocol": "ELM protocol 6",
+  "connection_quality": "stable",
+  "read_complete": true,
+  "vehicle_profile": {
+   "vin": "1HG**************",
+   "year": 2003,
+   "make": "Honda"
+  },
+  "raw_dtcs": [
+   {
+    "code": "P0420",
+    "status": "pending"
+   },
+   {
+    "code": "P0171",
+    "status": "permanent"
+   }
+  ],
+  "raw_pids": [
+   {
+    "name": "DIST_SINCE_CODES_CLEARED",
+    "pid_code": "31",
+    "raw_value": 19,
+    "unit": "km"
+   },
+   {
+    "name": "WARMUPS_SINCE_CLEAR",
+    "pid_code": "30",
+    "raw_value": 3,
+    "unit": ""
+   },
+   {
+    "name": "TIME_SINCE_CODES_CLEARED",
+    "pid_code": "4E",
+    "raw_value": 41,
+    "unit": "min"
+   },
+   {
+    "name": "DIST_MIL_ON",
+    "pid_code": "21",
+    "raw_value": 0,
+    "unit": "km"
+   },
+   {
+    "name": "TIME_MIL_ON",
+    "pid_code": "4D",
+    "raw_value": 0,
+    "unit": "min"
+   },
+   {
+    "name": "BATTERY_VOLTAGE",
+    "pid_code": "42",
+    "raw_value": 14.1,
+    "unit": "V"
+   },
+   {
+    "name": "ENGINE_RPM",
+    "pid_code": "0C",
+    "raw_value": 720,
+    "unit": "rpm"
+   },
+   {
+    "name": "ENGINE_COOLANT_TEMP",
+    "pid_code": "05",
+    "raw_value": 192,
+    "unit": "°F"
+   },
+   {
+    "name": "LONG_TERM_FUEL_TRIM_B1",
+    "pid_code": "07",
+    "raw_value": 14.8,
+    "unit": "%"
+   },
+   {
+    "name": "SHORT_TERM_FUEL_TRIM_B1",
+    "pid_code": "06",
+    "raw_value": 3.1,
+    "unit": "%"
+   }
+  ],
+  "readiness_monitors": [
+   {
+    "name": "Misfire",
+    "status": "complete"
+   },
+   {
+    "name": "Fuel system",
+    "status": "complete"
+   },
+   {
+    "name": "Comprehensive components",
+    "status": "complete"
+   },
+   {
+    "name": "Catalyst",
+    "status": "incomplete"
+   },
+   {
+    "name": "Evaporative system (EVAP)",
+    "status": "incomplete"
+   },
+   {
+    "name": "Oxygen sensor",
+    "status": "incomplete"
+   },
+   {
+    "name": "Oxygen sensor heater",
+    "status": "complete"
+   },
+   {
+    "name": "EGR / VVT system",
+    "status": "complete"
+   }
+  ],
+  "codes_cleared_before_scan": true,
+  "codes_cleared_evidence": [
+   "Only 19 km driven since codes were cleared (under 80).",
+   "Only 3 warm-ups since codes were cleared (under 10).",
+   "Only 41 engine minutes since codes were cleared (under 60).",
+   "Permanent code(s) P0171 present with no matching stored code, which usually means the stored codes were erased."
+  ]
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "id": "overheat",
+ "title": "Overheating: coolant 260 °F",
+ "source": "Made-up test scan: coolant at 260 °F at idle. Used to show the safety rules.",
+ "scan": {
+  "adapter_id": "DEMO replay (no adapter)",
+  "protocol": "ELM protocol 6",
+  "connection_quality": "stable",
+  "read_complete": true,
+  "vehicle_profile": {},
+  "raw_dtcs": [],
+  "raw_pids": [
+   {
+    "name": "ENGINE_COOLANT_TEMP",
+    "pid_code": "05",
+    "raw_value": 260,
+    "unit": "°F"
+   },
+   {
+    "name": "ENGINE_RPM",
+    "pid_code": "0C",
+    "raw_value": 850,
+    "unit": "rpm"
+   },
+   {
+    "name": "BATTERY_VOLTAGE",
+    "pid_code": "42",
+    "raw_value": 14.1,
+    "unit": "V"
+   }
+  ],
+  "readiness_monitors": [],
+  "codes_cleared_before_scan": false,
+  "codes_cleared_evidence": []
+ }
+}

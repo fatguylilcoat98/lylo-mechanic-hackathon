@@ -153,7 +153,7 @@ def _cited(verified):
     return sorted(ids)
 
 
-def run(data, result, call=None, extra_items=None):
+def run(data, result, call=None, extra_items=None, force_call=False):
     """Adds result['detective'] and may raise result['safety']['level'].
     extra_items: already-typed ledger items from other sources (e.g. photo)."""
     items = L.build_ledger(data, result) + [i for i in (extra_items or []) if isinstance(i, dict) and i.get("id")]
@@ -167,7 +167,7 @@ def run(data, result, call=None, extra_items=None):
            "final_safety_level": rule_level, "safety_action": "kept_rule_level",
            "recently_cleared": L.recently_cleared(items)}
     result["detective"] = det
-    if not enabled():
+    if not enabled() and not force_call:  # force_call: demo proof with an injected, labeled simulated answer
         det["muse_status"] = "off (LYLO_HACK_MUSE is not 1)"
         return result
     ledger_json = json.dumps(items, sort_keys=True, ensure_ascii=False)

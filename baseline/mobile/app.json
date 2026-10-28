@@ -2,7 +2,7 @@
   "expo": {
     "name": "LYLO Mechanic",
     "slug": "lylo-mechanic",
-    "version": "0.4.6",
+    "version": "0.4.7",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "dark",
@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.stangman1998.lylomechanic",
-      "versionCode": 10,
+      "versionCode": 11,
       "icon": "./assets/app-icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-fg.png",
