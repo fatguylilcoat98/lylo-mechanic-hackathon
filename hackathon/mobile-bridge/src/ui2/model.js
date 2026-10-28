@@ -33,7 +33,8 @@ function safetyStory(r, det) {
 function prediction(det) {
   const p = det && det.prediction;
   if (!p || !p.text) return null;
-  const status = ['held', 'failed'].includes(p.status) ? p.status : 'pending';
+  const raw = String(p.status || '').toLowerCase();
+  const status = ['held', 'failed'].includes(raw) ? raw : 'pending';
   return { text: String(p.text), status, measured: p.measured ? String(p.measured) : null };
 }
 
