@@ -214,7 +214,7 @@ def build(job, out, meta=None, info=None, prompt_hash=None, image_hash=None):
     return res
 
 
-def analyze(job, raw, call=None, vehicle=None):
+def analyze(job, raw, call=None, vehicle=None, sam_post=None):
     jpeg, info = sanitize(raw)
     j = JOBS[job]
     url = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode()
@@ -231,6 +231,9 @@ def analyze(job, raw, call=None, vehicle=None):
     out, meta = (call or muse.chat_json)(messages, SCHEMA, name="photo_helper", max_tokens=2500,
                                          timeout=float(os.environ.get("LYLO_HACK_VISION_TIMEOUT_S", "25")))
     res = build(job, out, meta, info, ph, ih)
+    from . import sam
+    if sam.enabled():  # LYLO_HACK_SAM=1 only; the Muse circles are unchanged either way
+        res["sam"] = sam.outline(job, jpeg, post=sam_post)
     if vehicle and vehicle.get("status") == "ok":
         res["vehicle"] = {k: vehicle[k] for k in ("name", "year", "make", "model", "engine", "caveat", "source")}
     return res
