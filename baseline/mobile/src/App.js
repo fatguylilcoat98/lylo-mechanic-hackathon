@@ -21,6 +21,7 @@ import LogScreen from './screens/LogScreen';
 import PhotoHelperScreen from '../../../hackathon/mobile-bridge/src/PhotoHelperScreen'; // hackathon v0.4.2
 import VinScreen from '../../../hackathon/mobile-bridge/src/VinScreen'; // hackathon v0.4.3
 import NoAdapterScreen from '../../../hackathon/mobile-bridge/src/NoAdapterScreen'; // hackathon v0.4.5
+import SetupScreen from '../../../hackathon/mobile-bridge/src/SetupScreen'; // hackathon v0.4.6
 import { C } from './constants/colors';
 
 const Stack = createNativeStackNavigator();
@@ -55,6 +56,7 @@ export default function App() {
           <Stack.Screen name="PhotoHelper" component={PhotoHelperScreen} options={{ title: 'Photo Helper' }} />
           <Stack.Screen name="Vin" component={VinScreen} options={{ title: 'Your car' }} />
           <Stack.Screen name="NoAdapter" component={NoAdapterScreen} options={{ title: 'No adapter' }} />
+          <Stack.Screen name="Setup" component={SetupScreen} options={{ title: 'Quick setup' }} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

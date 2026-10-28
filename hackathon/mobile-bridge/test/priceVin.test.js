@@ -70,7 +70,7 @@ test('decodeVin: ok -> summary with factory-engine caveat and labeled recalls', 
   const s = V.vehicleSummary(r);
   assert.strictEqual(s.name, '2003 Honda Accord');
   assert.strictEqual(s.caveat, 'assumes the factory engine (not swapped)');
-  assert.match(s.recalls.text, /^2 recalls on record/);
+  assert.match(s.recalls.text, /^2 recalls for your model \(2003 Honda Accord\)/);
   assert.match(s.recalls.source, /NHTSA/);
 });
 

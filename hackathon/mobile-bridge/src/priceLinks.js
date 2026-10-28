@@ -21,6 +21,20 @@ const STORES = [
     url: (q, v) => `https://www.rockauto.com/en/catalog/${slug(v.make)},${v.year},${slug(v.model)}` },
 ];
 
+// v0.4.6: "Find nearest store" opens Google Maps search (official Maps URL, api=1). The Maps app uses the
+// phone's own location; LYLO asks for no location permission and never sees where you are.
+const NEARBY = [
+  { id: 'autozone', name: 'AutoZone', url: 'https://www.google.com/maps/search/?api=1&query=' + enc('AutoZone near me') },
+  { id: 'oreilly', name: "O'Reilly", url: 'https://www.google.com/maps/search/?api=1&query=' + enc("O'Reilly Auto Parts near me") },
+  { id: 'napa', name: 'NAPA', url: 'https://www.google.com/maps/search/?api=1&query=' + enc('NAPA Auto Parts near me') },
+];
+
+/** v0.4.6 "Watch how": a plain YouTube search URL (no API, no key) for "<year> <make> <model> <repair or part>". */
+function youtubeUrl(query) {
+  const q = String(query || '').replace(/\s+/g, ' ').trim();
+  return q ? 'https://www.youtube.com/results?search_query=' + enc(q) : null;
+}
+
 // Parts the Photo Helper jobs are about (search words), and LYLO repair_costs keys when we have one.
 const JOB_PARTS = {
   engine_air_filter: { part: 'engine air filter' },
@@ -75,6 +89,9 @@ function priceLinks(part, vehicle, estimate) {
     query,
     estimate: estimate ? `Estimate: ${estimate}` : 'Estimate: not in LYLO\'s price data',
     buttons,
+    watch: { url: youtubeUrl(query), text: name ? `Watch how: videos for your ${name}` : 'Watch how (videos on YouTube)',
+             note: name ? 'Opens a YouTube search. The videos are other people\'s, not checked by LYLO.' : 'Add your VIN to get videos for your exact car. Opens a YouTube search.' },
+    nearby: NEARBY,
     note: name ? 'Opens the store\'s own website. Prices and fit are theirs, not LYLO\'s.'
       : 'Add your VIN so the stores can match the part to your car. Opens the store\'s own website.',
   };
@@ -94,4 +111,15 @@ function forCode(codeResult, vehicle) {
   return priceLinks(part, vehicle, shop && !/unknown|diagnosis/i.test(shop) ? `${shop} at a shop` : null);
 }
 
-module.exports = { STORES, JOB_PARTS, REPAIR_COSTS, priceLinks, forJob, forCode, partFromFix, partFromCause, vehicleName };
+/** v0.4.6 Code detail: price buttons when the fix names a part; otherwise just "Watch how" + nearest store. */
+function forCodeDetail(codeResult, vehicle) {
+  const p = forCode(codeResult, vehicle);
+  if (p || !codeResult || !codeResult.code) return p;
+  const name = vehicleName(vehicle);
+  const q = [name, codeResult.code, codeResult.title, 'fix'].filter(Boolean).join(' ');
+  return { title: 'Watch how and find a store', query: q, estimate: null, buttons: [], note: null, nearby: NEARBY,
+    watch: { url: youtubeUrl(q), text: name ? `Watch how: videos for your ${name}` : 'Watch how (videos on YouTube)',
+             note: name ? "Opens a YouTube search. The videos are other people's, not checked by LYLO." : 'Add your VIN to get videos for your exact car. Opens a YouTube search.' } };
+}
+
+module.exports = { forCodeDetail, NEARBY, youtubeUrl, STORES, JOB_PARTS, REPAIR_COSTS, priceLinks, forJob, forCode, partFromFix, partFromCause, vehicleName };

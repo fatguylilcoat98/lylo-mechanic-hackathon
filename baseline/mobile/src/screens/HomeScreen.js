@@ -9,9 +9,11 @@ import { DEMO_SCANS } from '../data/demoScans';
 import { Button, Card, u } from '../components/ui';
 import { C } from '../constants/colors';
 import { features as noAdapterFeatures } from '../../../../hackathon/mobile-bridge/src/noAdapter'; // hackathon v0.4.5
+import { useFirstRunSetup } from '../../../../hackathon/mobile-bridge/src/SetupScreen'; // hackathon v0.4.6
 
 export default function HomeScreen({ navigation }) {
   const noAdapter = noAdapterFeatures().on;
+  const setupOn = useFirstRunSetup(navigation); // hackathon v0.4.6: first-run setup, once
   const [device, setDevice] = useState(OBDService.device);
   useFocusEffect(useCallback(() => { setDevice(OBDService.connected ? OBDService.device : null); }, []));
 
@@ -24,7 +26,7 @@ export default function HomeScreen({ navigation }) {
         <Text style={s.title}>LYLO Mechanic</Text>
         <Text style={s.tag}>Know what's wrong before you buy or walk into a shop.</Text>
         <Text style={s.powered}>Powered by Meta AI</Text>
-        <Text style={s.build}>TEST BUILD v0.4.5 · works offline · no login</Text>
+        <Text style={s.build}>TEST BUILD v0.4.6 · works offline · no login</Text>
       </View>
 
       {device ? (
@@ -58,6 +60,7 @@ export default function HomeScreen({ navigation }) {
         <Button title="Photo Helper: find a part on your car" onPress={() => navigation.navigate('PhotoHelper')} />
         <Button title="Your car: add your VIN" onPress={() => navigation.navigate('Vin')} />
         <Button title="Look up a trouble code" kind="secondary" onPress={() => navigation.navigate('Lookup')} />
+        {setupOn ? <Button title="Setup: adapter, view, your car" kind="secondary" onPress={() => navigation.navigate('Setup')} /> : null}
         <Button title="Debug log (for testing)" kind="secondary" onPress={() => navigation.navigate('Log')} />
       </Card>
 

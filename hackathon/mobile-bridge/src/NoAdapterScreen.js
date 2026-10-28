@@ -120,6 +120,7 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
       <View style={s.hero}>
         <Text style={s.h1}>No adapter? Start here</Text>
         <Text style={s.body}>You don't need an OBD adapter or Bluetooth for anything on this screen.</Text>
+        <Text style={s.small} testID="no-sensor-note">{'\u2139\uFE0F  '}Heads up: without live sensor data, these checks are less accurate than a scan with an OBD adapter. They're a starting point, not a diagnosis.</Text>
       </View>
 
       <Text style={s.h2}>{'\uD83D\uDDE3\uFE0F  '}What's happening with your car?</Text>

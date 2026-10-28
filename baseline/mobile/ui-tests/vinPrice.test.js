@@ -33,7 +33,7 @@ test('Type VIN: decoded car shown with factory-engine caveat and labeled recalls
   await settle();
   expect(ui.getByText(/2003 Honda Accord/)).toBeTruthy();
   expect(ui.getByText(/assumes the factory engine \(not swapped\)/)).toBeTruthy();
-  expect(ui.getByText(/1 recall on record/)).toBeTruthy();
+  expect(ui.getByText(/1 recall for your model/)).toBeTruthy();
   expect(ui.getByText(/Source: NHTSA recalls by year\/make\/model/)).toBeTruthy();
   expect(JSON.parse(st.m['lylo.vehicle']).name).toBe('2003 Honda Accord');
 });

@@ -83,7 +83,7 @@ function vehicleSummary(res) {
     vin: res.vin, name: `${v.year} ${v.make} ${v.model}`, year: v.year, make: v.make, model: v.model,
     engine: v.engine || '', caveat: CAVEAT, source: v.source || 'NHTSA vPIC VIN decoder',
     recalls: rc && rc.status === 'ok' ? {
-      text: rc.count ? `${rc.count} recall${rc.count === 1 ? '' : 's'} on record for this model year` + (rc.components && rc.components.length ? ` (${rc.components.slice(0, 3).join(', ')})` : '') : 'No recalls on record for this model year',
+      text: rc.count ? `${rc.count} recall${rc.count === 1 ? '' : 's'} for your model (${v.year} ${v.make} ${v.model})` + (rc.components && rc.components.length ? ` (${rc.components.slice(0, 3).join(', ')})` : '') : `No recalls on record for your model (${v.year} ${v.make} ${v.model})`,
       source: rc.source, checkUrl: rc.check_url,
     } : null,
   };

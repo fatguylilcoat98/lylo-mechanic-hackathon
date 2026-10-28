@@ -98,10 +98,22 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-28 03:15 | v0.4.4 | baseline/mobile/ui-tests/dashVoice.test.js | New: 6 render tests (flags unset = no buttons; dash photo raises the verdict; never lowers; camera denied, offline, 503; voice transcript + notice + cited answer; mic denied; unverified answer withheld). |
 | 2026-10-28 04:00 | v0.4.5 | baseline/mobile/src/App.js | Registers the `NoAdapter` route (hackathon NoAdapterScreen). |
 | 2026-10-28 04:00 | v0.4.5 | baseline/mobile/src/screens/HomeScreen.js | "No adapter? Start here" card when EXPO_PUBLIC_LYLO_NO_ADAPTER=1 (hidden otherwise); build label v0.4.5. |
-| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/app.json, package.json, package-lock.json | Version 0.4.5, versionCode 9. No new permissions or dependencies. |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/app.json | Version 0.4.5, versionCode 9. No new permissions. |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/package.json | Version 0.4.5. No new dependencies. |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/package-lock.json | Version 0.4.5 (root entry only). |
 | 2026-10-28 04:00 | v0.4.5 | baseline/mobile/ui-tests/testUtils.js | Adds getByTestId/queryByTestId helpers (test-only). |
 | 2026-10-28 04:00 | v0.4.5 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.5. |
-| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/ui-tests/noAdapter.test.js, noAdapterHome.test.js | New: 7 render tests (flag off = nothing; offline rule floor; typed code meaning + price links; server cannot lower; OBDLink links; no Bluetooth prompt or BleManager at launch; Home entry opens the screen). |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/ui-tests/noAdapter.test.js | New: render tests for the No adapter screen (flag off = nothing; offline rule floor; typed code meaning + price links; server cannot lower; OBDLink links). |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/ui-tests/noAdapterHome.test.js | New: no Bluetooth prompt or BleManager at launch; Home entry opens the No adapter screen. |
+| 2026-10-28 04:50 | v0.4.6 | baseline/mobile/src/App.js | Registers the `Setup` route (hackathon SetupScreen, first-run setup). |
+| 2026-10-28 04:50 | v0.4.6 | baseline/mobile/src/screens/HomeScreen.js | Opens Setup once on first launch and adds a Tools > Setup button, both only when EXPO_PUBLIC_LYLO_FIRST_RUN=1; build label v0.4.6. |
+| 2026-10-28 04:50 | v0.4.6 | baseline/mobile/src/screens/CodeDetailScreen.js | Renders hackathon RepairLinks under "How to fix it": Watch how (YouTube search for the remembered vehicle + repair), Find nearest store (Google Maps), store price buttons when the fix names a part. |
+| 2026-10-28 04:50 | v0.4.6 | baseline/mobile/app.json | Version 0.4.6, versionCode 10. No new permissions (no location). |
+| 2026-10-28 04:50 | v0.4.6 | baseline/mobile/package.json | Version 0.4.6. No new dependencies. |
+| 2026-10-28 04:50 | v0.4.6 | baseline/mobile/package-lock.json | Version 0.4.6 (root entry only). |
+| 2026-10-28 04:50 | v0.4.6 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.6. |
+| 2026-10-28 04:50 | v0.4.6 | baseline/mobile/ui-tests/vinPrice.test.js | Recall text now reads "recall for your model". |
+| 2026-10-28 04:50 | v0.4.6 | baseline/mobile/ui-tests/v046.test.js | New: 7 render tests (no-sensor note before the first check; Watch how + nearest store on code detail, with and without a vehicle; setup no-adapter/mechanic/year-make-model; setup VIN path; skip all; Home first-run open + Tools button). |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
@@ -171,3 +183,12 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - `POST /api/v1/voice/ask` accepts a question with no scan when `LYLO_HACK_NO_ADAPTER=1`, using the same symptom-only ledger. It still returns 400 without a scan when the flag is off.
 - Bluetooth: checked that it is never prompted at launch. Runtime permissions are requested only on ConnectScreen, and BleManager is created lazily. A UI test asserts there is no prompt and no BleManager at launch. No baseline Bluetooth change.
 - Build flag: `EXPO_PUBLIC_LYLO_NO_ADAPTER=1` (ON in the test build; build with `--clear`).
+
+## v0.4.6 Watch how, nearest store, first-run setup (Oct 28)
+- `hackathon/mobile-bridge/src/priceLinks.js`: `youtubeUrl()` (plain `youtube.com/results?search_query=` URL, no API or key), `NEARBY` (Google Maps `?api=1&query=AutoZone near me`, O'Reilly, NAPA; no location permission, LYLO never sees the location), `forCodeDetail()`. Every price card now carries `watch` and `nearby`; the existing store buttons are unchanged.
+- `PriceButtons.js`: "Watch how: videos for your <year make model>" and "Find nearest store" buttons (repair screens: SimpleResults, Photo Helper, No adapter codes). Recall line says "These are recalls for your model."
+- `RepairLinks.js`: the same buttons on the baseline Code detail screen, using the remembered vehicle (`lylo.vehicle`).
+- `NoAdapterScreen.js`: "less accurate without live sensor data" note in the top card, before the first check.
+- `setup.js` + `SetupScreen.js`: first-run setup (adapter yes/no, Simple/Mechanic, VIN via the existing lookup or year/make/model). Shown once (`lylo.setupDone`), every question skippable, re-open from Home > Tools. Saves to `lylo.viewMode` and `lylo.vehicle`; new key `lylo.hasAdapter`. "No adapter" goes to the No adapter screen. Flag `EXPO_PUBLIC_LYLO_FIRST_RUN=1`.
+- `vin.js`: recall text "N recalls for your model (year make model)", never implying the exact VIN.
+- Tests: `test/v046.test.js` (Node), `baseline/mobile/ui-tests/v046.test.js` (jest UI). No server code changed.

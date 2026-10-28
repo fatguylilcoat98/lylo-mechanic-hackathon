@@ -87,3 +87,15 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
   - Text + P0300 (Accord shakes at idle, "no smoke"): INSPECT_SOON. The answer is verified with 9 cites and mentions the lower confidence. The negation worked (no smoke floor). 21.1 s.
   - No-scan voice question ("burning smell, brakes grinding, can I drive to work?"): DO_NOT_DRIVE from the rule floors. The answer is verified, says do not drive, and has no unverified claims. 20.9 s.
 - Not tested yet: a real phone (Say it instead, the mic prompt, the Home card in an APK).
+
+## 2026-10-28, ~3:50–4:55 AM PDT: v0.4.6, Watch how, nearest store, first-run setup (Grok Bot)
+- Chris: "you're the lead… I'm the idea guy, you're my builder." Built from the demo-script gap check.
+- Fixed: NEW_WORK.md had combined rows (two files in one row), so `scripts/check-baseline-integrity.sh` failed on `noAdapterHome.test.js`. Now one file per row; the script passes.
+- Watch how: a YouTube search for "<year make model> <repair or part>" from the remembered vehicle. No API or key. Shown on Code detail and on every repair price card.
+- Find nearest store: Google Maps searches for AutoZone, O'Reilly and NAPA "near me". No location permission; the store price buttons are kept.
+- No adapter screen: the "less accurate without live sensor data" note is now in the top card, before the first check.
+- First-run setup: 3 skippable questions, shown once, re-open from Home > Tools. Flag `EXPO_PUBLIC_LYLO_FIRST_RUN=1`. Uses the existing `lylo.viewMode` and `lylo.vehicle` keys.
+- Recalls: wording is "recalls for your model" everywhere; never implies the exact VIN.
+- No server code changed, so no restart.
+- Tests: Node 99/99, jest UI 44/44 (box), baseline node 16 and 19. `expo export --platform android --clear` with first-run, no-adapter, dash and voice flags on: a 2.31 MB Hermes bundle that contains the new screens.
+- Not tested yet: a real phone (YouTube and Maps opening in their apps, the setup flow on an install).

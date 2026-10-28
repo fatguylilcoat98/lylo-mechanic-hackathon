@@ -6,6 +6,7 @@ import { View, Text, ScrollView, Share } from 'react-native';
 import { buildCodeResult } from '../engine/diagnose';
 import { Button, Card, Badge, Bullet, LEVEL_COLORS, u } from '../components/ui';
 import { C } from '../constants/colors';
+import RepairLinks from '../../../../hackathon/mobile-bridge/src/RepairLinks'; // hackathon v0.4.6: Watch how + nearest store
 
 export default function CodeDetailScreen({ route }) {
   const r = useMemo(() => route.params?.result || buildCodeResult(route.params?.code), [route.params]);
@@ -40,6 +41,8 @@ export default function CodeDetailScreen({ route }) {
         <Text style={[u.small, { marginTop: 6 }]}>Difficulty: {r.difficulty.level} — {r.difficulty.label}</Text>
         {r.laborHours ? <Text style={u.small}>Typical shop labor: {r.laborHours[0]}–{r.laborHours[1]} hours</Text> : null}
       </Card>
+
+      <RepairLinks result={r} />
 
       <Card title="Fair price range (estimate)">
         <Row label="Do it yourself (parts)" value={r.priceText.diy} />
