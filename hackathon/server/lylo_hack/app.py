@@ -18,6 +18,7 @@ from . import muse, vision, voice, helper, symptoms
 from . import vin as vinmod
 from .safety import apply_floor, higher
 from . import security
+from . import netpref
 
 log = logging.getLogger("lylo_hack")
 
@@ -55,6 +56,7 @@ def load_env_file(path=None):
 
 def create_app():
     load_env_file()
+    netpref.apply()  # LYLO_HACK_FORCE_IPV4=1 only; unset = unchanged
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024  # photo (5 MB) + scan field; JSON route checks its own 256 KB cap
     limiter = security.Limiter()

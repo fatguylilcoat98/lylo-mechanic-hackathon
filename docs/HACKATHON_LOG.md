@@ -105,3 +105,9 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 - README.md for judges (new). docs/DEMO_SCRIPT.md replaced with script v2. Truck numbers come only from evidence/detective_cold_engine_truck_like.json (muse-spark-1.3, 7429 ms, 15 of 19 ledger items cited, SAFE_TO_DRIVE, agreed). The synthetic test fixture's numbers are not quoted.
 - v0.4.7: Try a demo scan (flag EXPO_PUBLIC_LYLO_DEMO on the phone, LYLO_HACK_DEMO=1 on the server; both default off, and the routes return 503 when off). It replays the truck, cleared-codes used car and 260 °F overheat scans through the real pipeline. The AI-vs-rules proof uses a labeled simulated AI answer (no model call) fed into the real merge code; the rules win.
 - Vera fixes (prior commit): "parts searches for your model", "videos for your model", https-only store/video links, and the flag docs corrected.
+
+## 2026-10-28 ~05:45 PT: VIN lookup timeout fix (first real-phone test)
+- v0.4.7 test APK: https://zion.thegoodneighborguard.com/lylo-047-366e5aeb54.apk (70,149,550 bytes; built on the box with Gradle assembleRelease, script `/workspace/androidsetup/build047.sh`, all v0.4.7 flags on).
+- Chris installed it on his phone. "Look up my car" failed: the app gives up at 12 s. Cause: the Dell's outbound calls tried a broken IPv6 route first and stalled 12-40 s before falling back to IPv4. Forcing IPv4 brought the NHTSA lookup from ~24 s to under 0.5 s.
+- Fix: `lylo_hack/netpref.py`, enabled with `LYLO_HACK_FORCE_IPV4=1` (unset = unchanged). `gunicorn.conf.py` switches to gthread with 8 threads so a slow photo call cannot block a VIN lookup.
+- Verified on Chris's phone afterwards: the lookup returned the 1998 Ford E-450 and 2 recalls for the model.

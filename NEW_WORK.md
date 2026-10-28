@@ -124,6 +124,11 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-28 04:02 | v0.4.7 docs | README.md | New top-level README for judges: story, what it does, rules-decide-safety design, Meta models, privacy, verify, tests, try with no car, limits. |
 | 2026-10-28 04:02 | v0.4.7 docs | docs/DEMO_SCRIPT.md | Replaced the stale v0.3 script with demo script v2; truck numbers only from the real recorded run. |
 | 2026-10-28 04:02 | v0.4.7 docs | docs/HACKATHON_LOG.md | Session log for the v0.4.7 docs, demo flag and APK. |
+| 2026-10-28 05:45 | net fix | hackathon/server/lylo_hack/netpref.py | New: IPv4 preference for outbound calls, only when LYLO_HACK_FORCE_IPV4=1 (unset = nothing patched). Fixes 12-40 s IPv6 stalls on NHTSA/Meta calls. |
+| 2026-10-28 05:45 | net fix | hackathon/server/lylo_hack/app.py | Calls netpref.apply() in create_app (2 lines; no-op unless LYLO_HACK_FORCE_IPV4=1). |
+| 2026-10-28 05:45 | net fix | hackathon/server/tests/test_netpref.py | New: tests that flag off patches nothing and flag on keeps only IPv4 results. |
+| 2026-10-28 05:45 | net fix | hackathon/server/gunicorn.conf.py | New: gthread worker, 8 threads, so one slow Muse call cannot block quick lookups. Delete the file to revert. |
+| 2026-10-28 05:45 | net fix | docs/HACKATHON_LOG.md | Session log for the VIN-lookup timeout fix and the v0.4.7 APK URL. |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
