@@ -70,7 +70,9 @@ test('results v2: AI tries to lower a red level, banner says Pull over now and r
   expect(ui.getByText(/Coolant 260 F/)).toBeTruthy();
   expect(ui.getByTestId('safety-red')).toBeTruthy();
   expect(ui.getByTestId('prediction-held')).toBeTruthy();
-  expect(ui.getByTestId('replay-badge')).toBeTruthy();
+  expect(ui.getByTestId('replay-badge')).toBeTruthy(); // getByTestId throws if there are two badges
+  expect(ui.getByTestId('replay-pin')).toBeTruthy(); // pinned as a sticky header
+  expect(ui.queryByText(/REPLAY \u00B7 REPLAY/)).toBeNull();
 });
 
 test('components render with synthetic data', async () => {

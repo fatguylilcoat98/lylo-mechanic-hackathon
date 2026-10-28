@@ -251,3 +251,8 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
   - Demo scans: truck = readings from Chris's own truck scan (STFT 27.3 %, LTFT 6.3 %, coolant 79 °F, 984 rpm, no codes), vehicle details removed; usedcar = LYLO's built-in used-car demo (not a real car); overheat = made-up 260 °F test scan.
 - Phone (flag `EXPO_PUBLIC_LYLO_DEMO=1`): `hackathon/mobile-bridge/src/demo.js` (client + view models, Node-tested) and `DemoScreen.js`. Shows only numbers the server returned; the receipt line appears only when Muse actually ran.
 - Tests: `hackathon/server/tests/test_demo.py` (5), `hackathon/mobile-bridge/test/demo.test.js` (4), `baseline/mobile/ui-tests/demo.test.js` (5).
+
+## UI v2 (ui-polish branch, flag EXPO_PUBLIC_LYLO_UI_V2=1): baseline changes logged (2026-10-28)
+- `baseline/mobile/ui-tests/uiV2.test.js` (new jest UI test file from commit 6b1aaf6, now extended): synthetic-data render tests for the UI v2 components and the results screen (overruled-AI red banner, prediction states, evidence summary, replay badge). It's test-only and no baseline app code changed.
+- `hackathon/mobile-bridge/src/ui2/ResultsV2.js`: on a replay, ReplayBadge is the ScrollView's sticky header (`stickyHeaderIndices=[0]`, testID `replay-pin`), so it can't scroll out of view. It renders exactly once. `ResultsV2Body` takes `pinnedReplay` so it doesn't render a second badge.
+- `ui2/model.js` (eb33b9f): prediction status is matched case-insensitively, so the server's LOCKED/HELD/FAILED work.

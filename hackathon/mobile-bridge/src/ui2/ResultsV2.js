@@ -13,7 +13,7 @@ import { PriceButtons, VehicleLine } from '../PriceButtons';
 import DashVoicePanel from '../DashVoicePanel';
 import { MechanicView } from '../SimpleResults';
 
-export function ResultsV2Body({ m }) {
+export function ResultsV2Body({ m, pinnedReplay = false }) {
   const [open, setOpen] = useState(() => new Set(m.causes.length ? [m.causes[0].key] : []));
   const [details, setDetails] = useState(false);
   const [readings, setReadings] = useState(false);
@@ -21,7 +21,7 @@ export function ResultsV2Body({ m }) {
   const c = m.evidenceCounts;
   return (
     <>
-      <ReplayBadge label={m.replay} />
+      {pinnedReplay ? null : <ReplayBadge label={m.replay} />}
       <VehicleLine v={m.vehicle} />
       <SafetyBanner tone={m.tone} title={m.verdict.title} why={m.verdict.why} safety={m.safety} />
       {m.clearedWarning ? <View style={st.warn}><Text style={st.warnText}>{m.clearedWarning}</Text></View> : null}
@@ -80,8 +80,10 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
   const m = buildV2(scan, { codes, screen, baselineCleared, vehicle });
   if (!m) return null;
   return (
-    <ScrollView style={st.screen} contentContainerStyle={st.scroll}>
-      <ResultsV2Body m={m} />
+    // A replay badge is a sticky header so it never scrolls out of view.
+    <ScrollView style={st.screen} contentContainerStyle={st.scroll} stickyHeaderIndices={m.replay ? [0] : undefined}>
+      {m.replay ? <View style={st.pin} testID="replay-pin"><ReplayBadge label={m.replay} /></View> : null}
+      <ResultsV2Body m={m} pinnedReplay={!!m.replay} />
       <DashVoicePanel scan={scan} onScan={(next) => setRaised({ base: scanIn, scan: next })} {...(dashVoice || {})} />
       <View style={{ marginTop: space.xl }}>{footer}</View>
     </ScrollView>
@@ -90,6 +92,7 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
 
 const st = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
+  pin: { backgroundColor: color.bg, paddingBottom: space.sm, zIndex: 2 },
   scroll: { padding: space.lg, paddingBottom: 56 },
   warn: { backgroundColor: color.surface, borderColor: color.red, borderWidth: 2, borderRadius: radius.md, padding: space.lg, marginTop: space.lg },
   warnText: { color: color.red, ...type.h },
