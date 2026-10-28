@@ -81,3 +81,9 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 - Built: a no-adapter screen and Home entry (flag `EXPO_PUBLIC_LYLO_NO_ADAPTER`). Server `POST /api/v1/noadapter/check` (flag `LYLO_HACK_NO_ADAPTER`). No-scan voice questions when that flag is on. An OBDLink card using facts from obdlink.com. Details are in NEW_WORK.md under v0.4.5.
 - Safety: rule floors on the owner's words (regex with simple negation), applied before AI. The phone runs the same rules offline. Never "safe to drive" without sensor data. AI can only raise the level. Citations are checked and unverified claims withheld.
 - Bluetooth is not prompted at launch (verified in code plus a UI test). No change was needed.
+- Tests: Python 117/117, Node 92/92, jest UI 37/37 (box), baseline node 16 and 19. `expo export --platform android --clear` with no-adapter, dash and voice flags on: a 2.29 MB Hermes bundle that contains the screen and the three OBDLink links.
+- Deployed at about 4:10 AM PDT. Added `LYLO_HACK_NO_ADAPTER=1` to the gitignored hackathon/server/.env, then ran `pm2 restart lylo-hack` only (no --update-env, no save). PM2 env keys are identical (25) and the other apps are unchanged. Health: :5088/healthz 200 (no_adapter on), :3000 200, :8010/ 200 (/health 404 as expected), :8798 200.
+- Live (in-process test client on the Dell): 2 Muse calls, about $0.012, 0 429s.
+  - Text + P0300 (Accord shakes at idle, "no smoke"): INSPECT_SOON. The answer is verified with 9 cites and mentions the lower confidence. The negation worked (no smoke floor). 21.1 s.
+  - No-scan voice question ("burning smell, brakes grinding, can I drive to work?"): DO_NOT_DRIVE from the rule floors. The answer is verified, says do not drive, and has no unverified claims. 20.9 s.
+- Not tested yet: a real phone (Say it instead, the mic prompt, the Home card in an APK).
