@@ -75,3 +75,9 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 - Not yet tested: a real phone (camera, mic permission prompts, actual AAC from the device's MediaRecorder, cellular through the tunnel).
 - Deployed Oct 28 ~3:25 AM PDT: `pm2 restart lylo-hack` only (no --update-env, no save); env keys identical (25), every other PM2 app same PID and restart count. :5088/healthz 200 (muse, vision, voice on), :3000/health 200, :8010/ 200 (/health 404 as expected), :8798/health 200.
 - Live (in-process test client on the Dell, phone-shaped requests): 3 Muse calls, about $0.014, 0 429s. Dash photo (detective=0): 200, 3 findings, DO_NOT_DRIVE, 29.5 s. Voice with ffmpeg-made ADTS AAC (what Android records): 200, transcript correct, answer verified with 9 cites, safety notice, 33.6 s. Both slower than Oct 26 (3–10 s) but under the 45/50 s client and 60 s gunicorn limits; if Meta stays this slow, consider gunicorn --timeout 90 and client 75 s.
+
+## 2026-10-28, ~3:35–4:15 AM PDT: v0.4.5, No adapter? Start here (Grok Bot)
+- Chris: the app should work without the OBD sensor for everyday people, and should have a suggestion box for OBDLink adapters.
+- Built: a no-adapter screen and Home entry (flag `EXPO_PUBLIC_LYLO_NO_ADAPTER`). Server `POST /api/v1/noadapter/check` (flag `LYLO_HACK_NO_ADAPTER`). No-scan voice questions when that flag is on. An OBDLink card using facts from obdlink.com. Details are in NEW_WORK.md under v0.4.5.
+- Safety: rule floors on the owner's words (regex with simple negation), applied before AI. The phone runs the same rules offline. Never "safe to drive" without sensor data. AI can only raise the level. Citations are checked and unverified claims withheld.
+- Bluetooth is not prompted at launch (verified in code plus a UI test). No change was needed.

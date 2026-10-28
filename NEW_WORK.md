@@ -96,6 +96,12 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-28 03:15 | v0.4.4 | baseline/mobile/src/screens/HomeScreen.js | Build label v0.4.4. |
 | 2026-10-28 03:15 | v0.4.4 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.4. |
 | 2026-10-28 03:15 | v0.4.4 | baseline/mobile/ui-tests/dashVoice.test.js | New: 6 render tests (flags unset = no buttons; dash photo raises the verdict; never lowers; camera denied, offline, 503; voice transcript + notice + cited answer; mic denied; unverified answer withheld). |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/src/App.js | Registers the `NoAdapter` route (hackathon NoAdapterScreen). |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/src/screens/HomeScreen.js | "No adapter? Start here" card when EXPO_PUBLIC_LYLO_NO_ADAPTER=1 (hidden otherwise); build label v0.4.5. |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/app.json, package.json, package-lock.json | Version 0.4.5, versionCode 9. No new permissions or dependencies. |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/ui-tests/testUtils.js | Adds getByTestId/queryByTestId helpers (test-only). |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.5. |
+| 2026-10-28 04:00 | v0.4.5 | baseline/mobile/ui-tests/noAdapter.test.js, noAdapterHome.test.js | New: 7 render tests (flag off = nothing; offline rule floor; typed code meaning + price links; server cannot lower; OBDLink links; no Bluetooth prompt or BleManager at launch; Home entry opens the screen). |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
@@ -147,3 +153,21 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - Results screen (SimpleResults, server answered) gets "Add more to this check": **Snap the dash** (camera or gallery -> /api/v1/vision/dash with the scan) and **Ask out loud** (record -> /api/v1/voice/ask with the scan and any dash-photo evidence).
 - Build flags: `EXPO_PUBLIC_LYLO_DASH_PHOTO=1`, `EXPO_PUBLIC_LYLO_VOICE_ASK=1` (and `EXPO_PUBLIC_LYLO_SERVER_URL`). Unset = panel not rendered, no request, results screen exactly as v0.4.3. Build with `--clear` after changing them.
 - Timeouts: the phone asks for detective=0 on the dash call (one model call, ~3 s live) and gives up at 45 s (dash) / 50 s (voice), under gunicorn `--timeout 60`, showing "Meta AI took too long... your scan result above still stands". No server-side timeout change was needed.
+
+## v0.4.5 No adapter? Start here (Oct 28)
+- Everyday drivers can use LYLO with no OBD adapter. A new Home card, **No adapter? Start here**, opens `hackathon/mobile-bridge/src/NoAdapterScreen.js` with:
+  - **What's happening?** Type it, or **Say it instead** (recorded, sent to the server, transcribed, never stored). Fixed safety rules run on the phone first (`noAdapter.js`), work offline, and match the server's rules (shared sentences in `mobile-bridge/test/fixtures/symptom_cases.json`).
+  - **Trouble code** typed by hand: offline meaning from the baseline dtcCodes library, a LYLO estimate, Check the price buttons and Full details.
+  - **Snap the dash** with no scan (the same panel, photo floor applied).
+  - Your car: VIN and recalls, code lookup, Photo Helper.
+  - **OBDLink suggestion card**: CX (BLE), MX+ (Bluetooth) and EX (wired USB). It shows only facts read on obdlink.com on 2026-10-28 and links to the official product pages (all HTTP 200). No prices and no affiliate links. It says clearly that the app works without an adapter, and that the app connects to CX/MX+ over Bluetooth (wired EX is not supported by the app).
+- Server: `POST /api/v1/noadapter/check` (`hackathon/server/lylo_hack/symptoms.py`, flag `LYLO_HACK_NO_ADAPTER`, default 0). It takes text and/or audio, typed codes, year/make/model and optional dash-photo evidence, and builds a symptom-only ledger:
+  - The owner's words are labeled "described by the owner, not measured", and there is a `ctx:no_adapter` item.
+  - Typed codes go through the baseline rule engine as a codes-only scan.
+  - Rule floors apply before any AI. Fire gives EMERGENCY_STOP. These give DO_NOT_DRIVE: smoke, steam, burning or fuel smell, grinding or soft brakes, brake/oil/coolant light, overheating or a hot gauge, a flashing check-engine light, steering problems, a loose wheel.
+  - With no data the base level is INSPECT_SOON, never "safe".
+  - The Meta AI answer uses the same `voice.answer` (citations checked, unverified claims withheld and counted) and can only raise.
+  - Every reply carries a lower-confidence note.
+- `POST /api/v1/voice/ask` accepts a question with no scan when `LYLO_HACK_NO_ADAPTER=1`, using the same symptom-only ledger. It still returns 400 without a scan when the flag is off.
+- Bluetooth: checked that it is never prompted at launch. Runtime permissions are requested only on ConnectScreen, and BleManager is created lazily. A UI test asserts there is no prompt and no BleManager at launch. No baseline Bluetooth change.
+- Build flag: `EXPO_PUBLIC_LYLO_NO_ADAPTER=1` (ON in the test build; build with `--clear`).

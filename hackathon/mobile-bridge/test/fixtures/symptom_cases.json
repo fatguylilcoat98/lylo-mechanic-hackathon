@@ -1,0 +1,23 @@
+{
+ "the car is on fire": "EMERGENCY_STOP_IMMEDIATELY",
+ "smoke coming from the hood": "DO_NOT_DRIVE",
+ "there's steam from the engine": "DO_NOT_DRIVE",
+ "I smell something burning": "DO_NOT_DRIVE",
+ "burning smell after driving": "DO_NOT_DRIVE",
+ "grinding noise when I brake": "DO_NOT_DRIVE",
+ "brakes are grinding": "DO_NOT_DRIVE",
+ "brake pedal goes to the floor": "DO_NOT_DRIVE",
+ "red oil light came on": "DO_NOT_DRIVE",
+ "oil pressure light is on": "DO_NOT_DRIVE",
+ "coolant light on": "DO_NOT_DRIVE",
+ "temperature gauge is in the red": "DO_NOT_DRIVE",
+ "it's overheating": "DO_NOT_DRIVE",
+ "brake light on the dash": "DO_NOT_DRIVE",
+ "check engine light is flashing": "DO_NOT_DRIVE",
+ "smell gas in the cabin": "DO_NOT_DRIVE",
+ "check engine light is on": "INSPECT_SOON",
+ "it makes a weird noise": "INSPECT_SOON",
+ "no smoke, just a rattle": "INSPECT_SOON",
+ "there isn't any smoke but brakes are grinding": "DO_NOT_DRIVE",
+ "everything seems fine": "INSPECT_SOON"
+}

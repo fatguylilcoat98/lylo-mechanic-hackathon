@@ -8,8 +8,10 @@ import OBDService from '../services/OBDService';
 import { DEMO_SCANS } from '../data/demoScans';
 import { Button, Card, u } from '../components/ui';
 import { C } from '../constants/colors';
+import { features as noAdapterFeatures } from '../../../../hackathon/mobile-bridge/src/noAdapter'; // hackathon v0.4.5
 
 export default function HomeScreen({ navigation }) {
+  const noAdapter = noAdapterFeatures().on;
   const [device, setDevice] = useState(OBDService.device);
   useFocusEffect(useCallback(() => { setDevice(OBDService.connected ? OBDService.device : null); }, []));
 
@@ -22,7 +24,7 @@ export default function HomeScreen({ navigation }) {
         <Text style={s.title}>LYLO Mechanic</Text>
         <Text style={s.tag}>Know what's wrong before you buy or walk into a shop.</Text>
         <Text style={s.powered}>Powered by Meta AI</Text>
-        <Text style={s.build}>TEST BUILD v0.4.4 · works offline · no login</Text>
+        <Text style={s.build}>TEST BUILD v0.4.5 · works offline · no login</Text>
       </View>
 
       {device ? (
@@ -39,6 +41,13 @@ export default function HomeScreen({ navigation }) {
           <Button title="Connect OBDLink adapter" onPress={() => navigation.navigate('Connect')} />
         </Card>
       )}
+
+      {noAdapter ? (
+        <Card title="No adapter? Start here" accent={C.green}>
+          <Text style={u.body}>Describe what the car is doing, type a trouble code, snap the dash, or check your car's recalls. No adapter or Bluetooth needed.</Text>
+          <Button title="No adapter? Start here" onPress={() => navigation.navigate('NoAdapter')} />
+        </Card>
+      ) : null}
 
       <Card title="No adapter? Try the demos">
         <Button title="Demo: Used-Car Check" kind="secondary" onPress={() => navigation.navigate('UsedCar', { scan: DEMO_SCANS.usedcar })} />

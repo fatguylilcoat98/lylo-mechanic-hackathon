@@ -35,6 +35,9 @@ function render(el) {
       }
       throw new Error('No placeholder ' + m);
     },
+    // v0.4.5 hackathon: find by testID (host node)
+    queryByTestId: (id) => root().findAll((n) => typeof n.type === 'string' && n.props.testID === id)[0] || null,
+    getByTestId: (id) => { const n = api.queryByTestId(id); if (!n) throw new Error('No testID ' + id); return n; },
     _pressableFor: pressableFor,
     unmount: () => act(() => { r.unmount(); }),
   };

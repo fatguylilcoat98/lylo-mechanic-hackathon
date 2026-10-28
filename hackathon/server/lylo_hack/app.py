@@ -1,4 +1,4 @@
-"""Hackathon Flask app: POST /api/v1/live/live, /api/v1/vision/dash, /api/v1/voice/ask, GET /healthz.
+"""Hackathon Flask app: POST /api/v1/live/live, /api/v1/vision/dash, /api/v1/voice/ask, /api/v1/noadapter/check, GET /healthz.
 
 Run locally:  python -m lylo_hack.app   (binds LYLO_HACK_HOST:LYLO_HACK_PORT,
 default 127.0.0.1:5088). Does not import baseline/backend/app.py, so no
@@ -14,7 +14,7 @@ from werkzeug.exceptions import HTTPException
 from .validation import validate_live_payload
 from . import live
 from . import detective
-from . import muse, vision, voice, helper
+from . import muse, vision, voice, helper, symptoms
 from . import vin as vinmod
 from .safety import apply_floor, higher
 from . import security
@@ -59,7 +59,8 @@ def create_app():
     app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024  # photo (5 MB) + scan field; JSON route checks its own 256 KB cap
     limiter = security.Limiter()
     muse_routes = {"/api/v1/live/live": detective.enabled, "/api/v1/vision/dash": vision.enabled, "/api/v1/vin/photo": vinmod.enabled,
-                   "/api/v1/voice/ask": voice.enabled, "/api/v1/photo/helper": helper.enabled}
+                   "/api/v1/voice/ask": voice.enabled, "/api/v1/photo/helper": helper.enabled,
+                   "/api/v1/noadapter/check": symptoms.enabled}
 
     @app.before_request
     def guard():
@@ -100,7 +101,7 @@ def create_app():
     def healthz():
         return jsonify({"ok": True, "external_handshake": "stubbed" if live.external_handshake_disabled() else "live",
                         "muse": "on" if detective.enabled() else "off",
-                        "vision": "on" if vision.enabled() else "off", "voice": "on" if voice.enabled() else "off",
+                        "vision": "on" if vision.enabled() else "off", "voice": "on" if voice.enabled() else "off", "no_adapter": "on" if symptoms.enabled() else "off",
                         "photo_helper": "on" if helper.enabled() else "off",
                         "vin": "on" if vinmod.enabled() else "off"})
 
@@ -253,7 +254,7 @@ def create_app():
         data, err = _scan_from_form()
         if err:
             return err
-        if data is None:
+        if data is None and not symptoms.enabled():
             return jsonify({"error": "Send the scan (form field 'scan') so the answer can cite its evidence.", "errors": []}), 400
         out = {"voice_status": "ok"}
         question = (request.form.get("question") or "").strip()
@@ -279,17 +280,84 @@ def create_app():
             out["voice_status"] = "no speech recognized"
             return jsonify(out)
         photo_items = _photo_items_from_form()
-        result = live.diagnose(data, muse=False, extra_items=photo_items)
         floor, reasons = vision.floor_for(photo_items)
-        apply_floor(result, floor, "; ".join(reasons)[:200], "photo")
-        live._det_off(data, result, photo_items)  # rebuild so rule:safety carries the photo-raised level
-        items = result["detective"]["ledger"]
-        rule_level = result["safety"]["level"]
+        if data is None:  # no adapter: symptom-only ledger from the question itself (rule floors first)
+            items, rule_level, _n, _h, _r = symptoms.build(question, [], None, photo_items, None, floor, reasons)
+            out["mode"] = "no_adapter"
+            out["confidence_note"] = symptoms.NO_SENSOR_NOTE
+        else:
+            result = live.diagnose(data, muse=False, extra_items=photo_items)
+            apply_floor(result, floor, "; ".join(reasons)[:200], "photo")
+            live._det_off(data, result, photo_items)  # rebuild so rule:safety carries the photo-raised level
+            items = result["detective"]["ledger"]
+            rule_level = result["safety"]["level"]
         out["question"] = question
         out.update(voice.answer(question, items, rule_level))
         out["final_safety_level"] = higher(rule_level, out["final_safety_level"])
         out["safety_notice"] = ("Safety level for this car: " + str(out["final_safety_level"]).replace("_", " ").lower()
                                 + ". This always outranks the spoken answer.")
+        out["ledger"] = items
+        return jsonify(out)
+
+    @app.post("/api/v1/noadapter/check")
+    def noadapter_route():
+        """No OBD adapter: symptoms (typed or spoken), typed codes, optional dash-photo items. Lower confidence, same rules."""
+        if not symptoms.enabled():
+            return jsonify({"error": "No-adapter check is off (LYLO_HACK_NO_ADAPTER is not 1).", "errors": []}), 503
+        body = request.get_json(silent=True) if request.is_json else None
+        src = body if isinstance(body, dict) else request.form
+        text = str(src.get("text") or "").strip()[:symptoms.MAX_TEXT]
+        codes, bad_codes = symptoms.parse_codes(src.get("codes") or "")
+        vehicle = {}
+        for k in ("year", "make", "model"):
+            v = src.get(k)
+            if k == "year":
+                try:
+                    v = int(v) if v not in (None, "") else None
+                except (TypeError, ValueError):
+                    v = None
+                if v is not None and not 1980 <= v <= 2100:
+                    v = None
+            elif v is not None:
+                v = str(v).strip()[:40]
+            if v:
+                vehicle[k] = v
+        out = {"check_status": "ok", "mode": "no_adapter", "confidence_note": symptoms.NO_SENSOR_NOTE, "invalid_codes": bad_codes}
+        f = request.files.get("audio") if body is None else None
+        if f:
+            try:
+                wav, secs = voice.prepare_audio(f.read(voice.MAX_AUDIO_BYTES + 1))
+                heard, meta = muse.transcribe_wav(wav, keywords=voice.KEYWORDS,
+                                                  timeout=float(os.environ.get("LYLO_HACK_VOICE_ASR_TIMEOUT_S", "10")))
+            except voice.AudioError as e:
+                return jsonify({"error": str(e), "errors": []}), 400
+            except muse.MuseError as e:
+                return _upstream_fail("noadapter", e, {"check_status": f"error: {e.code}; no transcript, nothing answered"})
+            out["transcript"] = heard.strip()
+            out["transcribe_receipt"] = {**meta, "audio_seconds": round(secs, 2), "audio_stored": False}
+            text = (text + " " + heard.strip()).strip()[:symptoms.MAX_TEXT]
+        if not text and not codes:
+            return jsonify({"error": "Tell us what is happening (text or audio) or type a trouble code.", "errors": bad_codes}), 400
+        raw_pe = src.get("photo_evidence")
+        photo_items = []
+        if raw_pe:
+            photo_items = _photo_items_from_form() if body is None else []
+        floor, reasons = vision.floor_for(photo_items)
+        diag = (lambda d: live.diagnose(d, muse=False)) if codes else None
+        items, level, notes, hits, result = symptoms.build(text, codes, vehicle, photo_items, diag, floor, reasons)
+        out.update({"rule_safety_level": level, "final_safety_level": level, "symptom_matches": hits, "codes": codes,
+                    "notes": notes, "hypotheses": [{"cause": h.get("cause"), "confidence": h.get("confidence"), "id": h["id"]}
+                                                    for h in items if h.get("type") == "rule_hypothesis"]})
+        if (detective.enabled() or voice.enabled()) and text:
+            q = text if "?" in text else ("What could be wrong, and is it safe to drive? The owner says: " + text)
+            a = voice.answer(q, items, level)
+            out.update({k: a[k] for k in ("answer_status", "answer", "follow_up_checks", "unverified_claims", "safety_action", "receipt")})
+            out["safety_opinion"] = a.get("safety_opinion")
+            out["final_safety_level"] = higher(level, a["final_safety_level"])
+        else:
+            out["answer_status"] = "skipped (no description or Meta AI off)"
+        out["safety_notice"] = ("Safety level: " + str(out["final_safety_level"]).replace("_", " ").lower()
+                                + ". Without an adapter this is a lower-confidence check. This level always outranks the written answer.")
         out["ledger"] = items
         return jsonify(out)
 

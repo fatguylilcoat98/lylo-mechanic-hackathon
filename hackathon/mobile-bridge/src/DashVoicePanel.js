@@ -40,7 +40,7 @@ function useSlow(active) {
   return slow;
 }
 
-export default function DashVoicePanel({ scan, onScan, env, enabled, picker, audio, fetchImpl, baseUrl, appKey }) {
+export default function DashVoicePanel({ scan, onScan, onDash, env, enabled, picker, audio, fetchImpl, baseUrl, appKey }) {
   const on = enabled || features(env);
   const pick = picker === undefined ? defaultPicker : picker;
   const Audio = audio === undefined ? defaultAudio : audio;
@@ -82,6 +82,7 @@ export default function DashVoicePanel({ scan, onScan, env, enabled, picker, aud
       const res = await requestDash({ baseUrl: url, appKey: key, fetchImpl, scan, photo: { uri: a.uri, type: a.mimeType || 'image/jpeg', name: a.fileName || 'dash.jpg' } });
       const v = dashView(res, level);
       setDash(v);
+      if (onDash) onDash(v); // v0.4.5 no-adapter screen: photo floor + evidence
       const next = applyDash(scan, v);
       if (next !== scan && onScan) onScan(next);
     } catch (e) {
