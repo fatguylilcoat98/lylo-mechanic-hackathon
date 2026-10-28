@@ -252,3 +252,4 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - Phone (flag `EXPO_PUBLIC_LYLO_DEMO=1`): `hackathon/mobile-bridge/src/demo.js` (client + view models, Node-tested) and `DemoScreen.js`. Shows only numbers the server returned; the receipt line appears only when Muse actually ran.
 - Tests: `hackathon/server/tests/test_demo.py` (5), `hackathon/mobile-bridge/test/demo.test.js` (4), `baseline/mobile/ui-tests/demo.test.js` (5).
 - 2026-10-28 15:50 PT: README "Try it in 2 minutes" section (docs only; no baseline files changed).
+- 2026-10-28 16:30 PT: v0.5.0 Point and prove (LYLO_HACK_PROVE / EXPO_PUBLIC_LYLO_PROVE) and SAM outline (LYLO_HACK_SAM): hackathon/ only; no baseline files changed.

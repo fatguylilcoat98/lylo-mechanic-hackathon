@@ -130,3 +130,24 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 ## 2026-10-28 ~15:50 PT: README "Try it in 2 minutes"
 - README: new "Try it in 2 minutes" section for judges (APK, then setup, then Try a demo scan, then Mechanic view, then AI vs rules; plus a no-phone path). Docs only, no code change.
 - Gap re-check at 5773f7e (verified in code): the demo script's Detective numbers already match `detective_cold_engine_truck_like.json` (7429 ms, 15 of 19 cited, 3 causes, SAFE_TO_DRIVE). First-run setup (flag `EXPO_PUBLIC_LYLO_FIRST_RUN=1`) was built in v0.4.6. The No Adapter accuracy note sits at the top of the screen, before the first check. "Recalls for your model" is in the app and script. "Circles it on your own photo" is in the script. The baseline integrity check passes.
+
+## 2026-10-28 ~16:30 PT: v0.5.0 Point and prove (flags LYLO_HACK_PROVE=1 / EXPO_PUBLIC_LYLO_PROVE=1; off = unchanged)
+- `lylo_hack/prove.py`:
+  - **Prediction first.** The Detective (Muse, when `LYLO_HACK_MUSE=1`) proposes one prediction `{hypothesis, pids, condition, threshold, window_s, if_fails}`. If it gives none, or a vague or invalid one, LYLO's rules propose instead. `validate()` rejects hedging words, unknown PIDs, missing or non-numeric thresholds, a window outside 5-600 s and an empty if_fails.
+  - **Model can't self-certify.** Any status/measured/proven/verified field the proposer sends is stripped.
+  - **Lock.** `ProveLedger` is append-only and hash-chained (seq, time, body, prev sha256 to sha256). There's no update or delete, and `verify()` detects tampering. The lock happens before any reading is accepted.
+  - **Checker.** `check()` is deterministic, not the model. Only readings with lock < t <= lock + window count. Result: HELD, FAILED, or LOCKED ("not proven yet") when there's no data for those PIDs. The first HELD/FAILED is final.
+  - **On FAILED** the tested hypothesis drops a confidence step and is marked `prediction_failed`. It's never dropped, and it's added back if it wasn't in the list.
+  - **Misfire.** P0300-P0308 from the car, plus Mode 06 per-cylinder counts when the scan has `mode06.supported`. Otherwise `"not reported by this vehicle"`. Ledger items `misfire:P030N` and `m06:misfire:cylN`. An active misfire raises the safety floor to DRIVE_SHORT_DISTANCE_ONLY (it never lowers).
+  - **Safety.** The never-lower merge and the rule override stay on top. A HELD or FAILED outcome never changes the safety level.
+  - **Output.** `detective.prediction = {text, status: LOCKED|HELD|FAILED, measured}`, plus `detective.prove` (session id, lock sha256, ledger, chain_ok).
+- Routes (503 when off):
+  - `POST /api/v1/prove/check {session_id, samples:[{dt, pid, value}|{dt, dtc}]}`. dt is seconds after the server lock, and readings dated in the future are dropped.
+  - `POST /api/v1/prove/replay {case}`.
+  - `/api/v1/live/live` locks a prediction when on.
+- **REPLAY.** Recorded sessions go through the same diagnose, lock and check code, and the server always adds `replay.badge = "REPLAY"` and a SYNTHETIC/RECORDED label. Bundled sessions (both SYNTHETIC, made-up data):
+  - `prove_misfire_synthetic`: cylinder 3, gives HELD
+  - `prove_lean_fail_synthetic`: lean prediction, gives FAILED and a downgrade
+- **SAM 3.1** (`lylo_hack/sam.py`, flag `LYLO_HACK_SAM=1`, off): on the Photo Helper, it adds `sam.boxes` (box tokens parsed from the documented stream; masks dropped). The Muse circles are unchanged, and any error just leaves the circles. `scripts/sam_probe.py` is a no-spend GET /v1/models check. Reachability with our key is UNKNOWN: the key is only on the Dell, which was out of scope.
+- Phone: `hackathon/mobile-bridge/src/prove.js` (client and view helpers). The phone never sets a status, and `asScan()` always sets the REPLAY demoLabel for a replay. No new screens; UI v2's ResultsV2 renders it.
+- Tests: server `test_prove.py` (22) and `test_sam.py` (2), adversarial cases included. mobile-bridge `prove.test.js` (5).
