@@ -6,7 +6,7 @@ server down, 401/413/429/5xx, or slower than 20 s) the app uses its on-phone eng
 exactly as v0.3.0 did.
 
 ## Path
-phone --HTTPS--> Cloudflare edge --tunnel--> cloudflared (Dell, PM2 "tunnel") --> http://127.0.0.1:5088 (PM2 "lylo-hack", gunicorn -w 2 --timeout 60)
+phone --HTTPS--> Cloudflare edge --tunnel--> cloudflared (Dell, PM2 "tunnel") --> http://127.0.0.1:5088 (PM2 "lylo-hack", gunicorn -w 2 --timeout 60; with LYLO_HACK_GTHREAD=1 in .env, `hackathon/server/gunicorn.conf.py` makes each worker gthread with LYLO_HACK_THREADS threads, default 8; unset = sync workers)
 
 TLS terminates at Cloudflare; the tunnel leg is encrypted by cloudflared. The server
 still binds loopback only.

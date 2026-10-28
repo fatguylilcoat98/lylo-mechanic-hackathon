@@ -114,10 +114,36 @@ class RouteTests(unittest.TestCase):
         dec = [i for i in led if i["id"] == "vin:decoded"][0]
         self.assertEqual(dec["engine"], "6.8L V10 Triton Gas")
         self.assertEqual(dec["engine_source"], "set by owner")
-        self.assertEqual(dec["nhtsa_engine"], "10.3L 6-cyl Diesel")
+        self.assertNotIn("nhtsa_engine", dec)
+        self.assertEqual(on["vehicle_engine"], {"engine": "6.8L V10 Triton Gas", "engine_source": "set by owner",
+                                                "nhtsa_engine": "10.3L 6-cyl Diesel"})  # phone only
         self.assertTrue(any(i["id"] == "veh:engine_user" and i["fuel"] == "gas" for i in led))
         prompt = json.dumps(seen_on, default=str)
         self.assertIn("6.8L V10 Triton", prompt)
+        self.assertIn("10.3L 6-cyl Diesel", json.dumps(seen_off, default=str))  # off: decoded engine reaches the model as before
+
+    def test_decoded_engine_never_reaches_model(self):
+        """Vera review: with the owner's engine set, the decoded engine is in no model-bound byte."""
+        scan = scan_with(engine_user="6.8L V10 Triton", fuel_user="gas", engine_source="user", engine="10.3L 6-cyl Diesel")
+        on, seen = self._live(ON, scan)
+        self.assertTrue(seen)
+        prompt = json.dumps(seen, default=str)
+        ledger = json.dumps(on["detective"]["ledger"])
+        for blob in (prompt, ledger):
+            self.assertNotIn("10.3L", blob)
+            self.assertNotIn("6-cyl Diesel", blob)
+        # unit level: apply_to_items and apply_to_decode output
+        res = {}
+        with mock.patch.dict(os.environ, ON):
+            items = E.apply_to_items([{"id": "vin:decoded", "engine": "10.3L 6-cyl Diesel"},
+                                      {"id": "veh:engine", "value": "10.3L 6-cyl Diesel"}],
+                                     {"vehicle_profile": {"engine_user": "6.8L V10", "fuel_user": "gas"}}, res)
+            dec = E.apply_to_decode({"status": "ok", "name": "1998 Ford E-450", "engine": "10.3L 6-cyl Diesel"},
+                                    E.from_fields({"engine_user": "6.8L V10", "fuel_user": "gas"}))
+        self.assertNotIn("10.3L", json.dumps(items))
+        self.assertNotIn("10.3L", json.dumps(dec))
+        self.assertNotIn("10.3L", vin.prompt_line(dec))
+        self.assertEqual(res["vehicle_engine"]["nhtsa_engine"], "10.3L 6-cyl Diesel")
 
     def test_noadapter_engine(self):
         body = {"text": "check engine light is on", "make": "Ford", "model": "E-450", "year": "1998",

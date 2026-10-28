@@ -6,7 +6,8 @@ route behaves exactly as before (the user fields are ignored).
 The owner can say the government VIN decode got the engine wrong (old Ford cutaways can
 decode as diesel when the truck runs gas, and engines get swapped). The owner's engine is
 preferred over the NHTSA decode in what Meta AI sees, and every place it is used is
-labeled "set by owner". The NHTSA decode is kept beside it, never deleted.
+labeled "set by owner". The NHTSA decode of the engine never reaches the model then; it is
+returned to the phone only (vehicle_engine.nhtsa_engine).
 """
 import os
 import re
@@ -71,24 +72,31 @@ def validation_errors(vp):
     return errs
 
 
-def apply_to_items(items, data):
-    """Prefer the owner's engine in the ledger. Mutates and returns items. No-op when off."""
+def apply_to_items(items, data, result=None):
+    """Prefer the owner's engine in the ledger. Mutates and returns items. No-op when off.
+
+    The ledger is sent to Meta AI, so when the owner set the engine the decoded engine is
+    REMOVED from every item (Vera review). It is kept only for the phone, in
+    result["vehicle_engine"]["nhtsa_engine"], when a result dict is given."""
     ov = from_fields((data or {}).get("vehicle_profile") or {})
     if not ov:
         return items
+    nhtsa = ""
     for it in items:
         if it.get("id") == "vin:decoded":
-            it["nhtsa_engine"] = it.get("engine", "")
+            nhtsa = it.get("engine", "") or nhtsa
+            it.pop("nhtsa_engine", None)
             it["engine"] = ov["label"]
             it["engine_source"] = SOURCE_USER
-            it["caveat"] = "engine set by the owner; the NHTSA decode of the engine is kept as nhtsa_engine and may be wrong"
+            it["caveat"] = "engine set by the owner; year, make and model are from the VIN decode"
         elif it.get("id") == "veh:engine":
+            nhtsa = nhtsa or str(it.get("value") or "")
             it["value"] = ov["label"]
             it["engine_source"] = SOURCE_USER
     if not any(i.get("id") == "veh:engine_user" for i in items):
-        items.append({"id": "veh:engine_user", "type": "vehicle_engine_user", "source": "owner",
-                      "engine": ov["label"], "fuel": ov["fuel"] or "unknown",
-                      "note": "The owner set this engine. Prefer it over the VIN decode's engine; do not give diesel advice unless fuel is diesel."})
+        items.extend(vehicle_items(ov))
+    if isinstance(result, dict):
+        result["vehicle_engine"] = {"engine": ov["label"], "engine_source": SOURCE_USER, "nhtsa_engine": nhtsa}
     return items
 
 
@@ -102,11 +110,12 @@ def vehicle_items(ov):
 
 
 def apply_to_decode(dec, ov):
-    """Copy of a vin.decode() result with the owner's engine preferred (photo helper prompt)."""
+    """Copy of a vin.decode() result with the owner's engine in place of the decoded one
+    (photo helper prompt). The decoded engine is NOT in the copy; the caller reads it from
+    the original dec for the phone's response only."""
     if not ov or not dec or dec.get("status") != "ok":
         return dec
     out = dict(dec)
-    out["nhtsa_engine"] = dec.get("engine", "")
     out["engine"] = ov["label"] + " (set by owner)"
     out["engine_source"] = SOURCE_USER
     return out

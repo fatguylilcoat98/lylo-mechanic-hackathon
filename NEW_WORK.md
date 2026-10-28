@@ -124,7 +124,7 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-28 04:02 | v0.4.7 docs | README.md | New top-level README for judges: story, what it does, rules-decide-safety design, Meta models, privacy, verify, tests, try with no car, limits. |
 | 2026-10-28 04:02 | v0.4.7 docs | docs/DEMO_SCRIPT.md | Replaced the stale v0.3 script with demo script v2; truck numbers only from the real recorded run. |
 | 2026-10-28 04:02 | v0.4.7 docs | docs/HACKATHON_LOG.md | Session log for the v0.4.7 docs, demo flag and APK. |
-| 2026-10-28 05:45 | net fix | hackathon/server/lylo_hack/netpref.py | New: IPv4 preference for outbound calls, only when LYLO_HACK_FORCE_IPV4=1 (unset = nothing patched). Fixes 12-40 s IPv6 stalls on NHTSA/Meta calls. |
+| 2026-10-28 05:45 | net fix | hackathon/server/lylo_hack/netpref.py | New: IPv4 preference for outbound calls, only when LYLO_HACK_FORCE_IPV4=1 (unset = nothing patched). Fixes 12-40 s IPv6 stalls on NHTSA/Meta calls (measured; see docs/HACKATHON_LOG.md "IPv6 stall evidence"). |
 | 2026-10-28 05:45 | net fix | hackathon/server/lylo_hack/app.py | Calls netpref.apply() in create_app (2 lines; no-op unless LYLO_HACK_FORCE_IPV4=1). |
 | 2026-10-28 05:45 | net fix | hackathon/server/tests/test_netpref.py | New: tests that flag off patches nothing and flag on keeps only IPv4 results. |
 | 2026-10-28 05:45 | net fix | hackathon/server/gunicorn.conf.py | New: gthread worker, 8 threads, so one slow Muse call cannot block quick lookups. Delete the file to revert. |
@@ -153,6 +153,16 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-28 06:20 | v0.4.8 | hackathon/.env.example | Documents LYLO_HACK_ENGINE_OVERRIDE and LYLO_HACK_FORCE_IPV4 (default off). |
 | 2026-10-28 06:20 | v0.4.8 | docs/HACKATHON_LOG.md | Session log for v0.4.8. |
 | 2026-10-28 06:20 | v0.4.8 | hackathon/mobile-bridge/README.md | Documents the EXPO_PUBLIC_LYLO_ENGINE_OVERRIDE flag. |
+| 2026-10-28 06:30 | Vera fix | hackathon/server/lylo_hack/engine_user.py | With the owner engine set, the decoded engine is removed from every model-bound item (no nhtsa_engine in the ledger or Photo Helper vehicle); kept only in result.vehicle_engine.nhtsa_engine for the phone. Flag only. |
+| 2026-10-28 06:30 | Vera fix | hackathon/server/lylo_hack/detective.py | Passes the result to apply_to_items so vehicle_engine (with nhtsa_engine) goes to the phone, not the prompt. Flag only. |
+| 2026-10-28 06:30 | Vera fix | hackathon/server/lylo_hack/live.py | Same for the deterministic rebuild. Flag only. |
+| 2026-10-28 06:30 | Vera fix | hackathon/server/lylo_hack/app.py | Photo Helper: decoded engine added to the response only (vehicle.nhtsa_engine, engine_source), after the prompt is built. Flag only. |
+| 2026-10-28 06:30 | Vera fix | hackathon/server/tests/test_engine_user.py | New test: decoded engine string absent from captured model messages, ledger, apply_to_items, apply_to_decode and prompt_line; live test checks vehicle_engine.nhtsa_engine. 9 tests. |
+| 2026-10-28 06:30 | Vera fix | hackathon/server/gunicorn.conf.py | Flagged: LYLO_HACK_GTHREAD=1 gives gthread with LYLO_HACK_THREADS (default 8); else sync, 1 thread (gunicorn defaults). Reads the two names from the process env, then hackathon/server/.env. |
+| 2026-10-28 06:30 | Vera fix | hackathon/.env.example | Documents LYLO_HACK_GTHREAD and LYLO_HACK_THREADS. |
+| 2026-10-28 06:30 | Vera fix | docs/PUBLIC_API.md | Path line: gunicorn -w 2 plus the optional gthread conf. |
+| 2026-10-28 06:30 | Vera fix | docs/HACKATHON_LOG.md | Vera fixes, thread-safety check, IPv6 stall evidence. |
+| 2026-10-28 06:30 | Vera fix | NEW_WORK.md | IPv6 claim now points to the measured evidence; these rows. |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).

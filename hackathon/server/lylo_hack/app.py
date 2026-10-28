@@ -242,9 +242,15 @@ def create_app():
         vehicle = None
         if vinmod.enabled() and request.form.get("vin"):
             vehicle = vinmod.decode(request.form.get("vin"))
-            vehicle = engine_user.apply_to_decode(vehicle, engine_user.from_fields(request.form))
+            ov = engine_user.from_fields(request.form)
+            nhtsa = vehicle
+            vehicle = engine_user.apply_to_decode(vehicle, ov)
         try:
-            return jsonify(helper.analyze(job, raw, vehicle=vehicle))
+            res = helper.analyze(job, raw, vehicle=vehicle)
+            if vehicle is not None and vehicle is not nhtsa and isinstance(res.get("vehicle"), dict):
+                res["vehicle"]["engine_source"] = engine_user.SOURCE_USER  # response only, never the prompt
+                res["vehicle"]["nhtsa_engine"] = nhtsa.get("engine", "")
+            return jsonify(res)
         except vision.PhotoError as e:
             return jsonify({"error": str(e), "errors": []}), 400
         except muse.MuseError as e:
