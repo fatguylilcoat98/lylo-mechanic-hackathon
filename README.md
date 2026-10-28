@@ -45,6 +45,14 @@ Recorded runs with receipts are in [`hackathon/server/evidence/`](hackathon/serv
 - No login or account is needed.
 - The app key in the APK is a public rate-limit key, not a secret; the server stores only its SHA-256 digest. Model API keys stay on the server.
 
+## Try it in 2 minutes
+No car, no adapter and no Meta key needed.
+1. **Android phone:** download the latest test APK (link in the newest entry of [docs/HACKATHON_LOG.md](docs/HACKATHON_LOG.md)), allow "install unknown apps", and open it. It's a debug-signed test build.
+2. Answer the 3 setup questions or skip them. Tap **Try a demo scan** and pick **Chris's truck**.
+3. Flip to **Mechanic view** to see Muse Detective's causes, each citing its evidence, and the receipt (model, seconds, items cited).
+4. Tap **AI vs rules: who wins?** A simulated AI answer says "safe to drive" at 260 °F. The rules say stop, and the rules win.
+5. **No phone?** Run the server (below, under "Try it with no car") and `curl` the demo routes. Then run the tests (see "Run the tests").
+
 ## Try it with no car
 1. Install the Android test APK (link in [docs/HACKATHON_LOG.md](docs/HACKATHON_LOG.md), latest entry). It's a debug-signed test build: allow "install unknown apps".
 2. Open it and tap **Try a demo scan** on Home.
