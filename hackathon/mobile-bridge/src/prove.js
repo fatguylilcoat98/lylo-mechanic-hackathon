@@ -47,7 +47,9 @@ function predictionView(det) {
 /** Server replay JSON -> a scan for the results screen. The REPLAY label is always set for a replay. */
 function asScan(j) {
   const isReplay = !!(j && (j.replay || (j.detective && j.detective.prediction_replay)));
-  const label = isReplay ? 'REPLAY \u00B7 ' + String((j.replay && j.replay.label) || 'recorded session, not live data') : null;
+  // ReplayBadge already prints "REPLAY ·", so the label is the description only (never empty for a replay).
+  const raw = String((j && j.replay && j.replay.label) || '').replace(/^\s*REPLAY\s*[\u00B7:-]?\s*/i, '').trim();
+  const label = isReplay ? (raw || 'recorded session, not live data') : null;
   return { serverDiagnosis: { result: j }, demoLabel: label, replay: isReplay };
 }
 

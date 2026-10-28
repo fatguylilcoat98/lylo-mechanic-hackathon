@@ -1,10 +1,12 @@
 """Point and prove (LYLO_HACK_PROVE / LYLO_HACK_SAM). Synthetic data only, no network."""
 import copy
+import threading
 import os
 import unittest
 from unittest import mock
 
 os.environ["LYLO_HACK_MUSE"] = "0"
+os.environ["LYLO_HACK_SAM"] = "0"
 os.environ["LYLO_HACK_ENV_FILE"] = "none"
 os.environ["LYLO_HACK_REQUIRE_APP_KEY"] = "0"
 for _k in ("LYLO_HACK_RL_IP_PER_MIN", "LYLO_HACK_RL_IP_MUSE_PER_MIN", "LYLO_HACK_RL_KEY_MUSE_PER_MIN", "LYLO_HACK_RL_KEY_MUSE_PER_DAY", "LYLO_HACK_MUSE_DAILY_CAP"):
@@ -237,6 +239,63 @@ class Routes(unittest.TestCase):
         self.assertEqual(det["prove"]["proposed_by"], "model")
         self.assertEqual(det["prediction"]["status"], "LOCKED")
         self.assertNotEqual(r["safety"]["level"], "SAFE_TO_DRIVE")  # model's lower opinion never wins over the misfire floor
+
+
+class VeraFixes(unittest.TestCase):
+    def test_concurrent_checks_record_one_outcome(self):
+        for _ in range(20):
+            st = P.Store()
+            r = live.diagnose(copy.deepcopy(SCAN), muse=False)
+            sid = P.lock(r, SCAN, proposal=GOOD, now=0, store=st)
+            held = [{"t": 5, "pid": "MISFIRE_COUNT_CYL2", "value": 40}]
+            failed = [{"t": 5, "pid": "MISFIRE_COUNT_CYL2", "value": 1}]
+            go = threading.Barrier(8)
+            out = []
+
+            def run(s):
+                go.wait()
+                out.append(P.evaluate(sid, s, store=st)["prediction"]["status"])
+            ts = [threading.Thread(target=run, args=(held if i % 2 else failed,)) for i in range(8)]
+            [t.start() for t in ts]
+            [t.join() for t in ts]
+            self.assertEqual(len(set(out)), 1, out)
+            kinds = [e["kind"] for e in st.get(sid)["ledger"].entries()]
+            self.assertEqual(kinds, ["prediction", "outcome"])
+
+    def test_tail_truncation_detected(self):
+        st = P.Store()
+        r = live.diagnose(copy.deepcopy(SCAN), muse=False)
+        sid = P.lock(r, SCAN, proposal=GOOD, now=0, store=st)
+        P.evaluate(sid, [{"t": 5, "pid": "MISFIRE_COUNT_CYL2", "value": 40}], store=st)
+        sess = st.get(sid)
+        self.assertTrue(P.chain_ok(sess))
+        sess["ledger"]._e.pop()  # remaining chain is still internally valid
+        self.assertTrue(sess["ledger"].verify())
+        self.assertFalse(P.chain_ok(sess))
+
+    def test_non_finite_threshold_rejected(self):
+        for bad in (float("nan"), float("inf"), float("-inf")):
+            with self.assertRaises(P.Rejected):
+                P.validate(dict(GOOD, threshold=[bad]))
+
+    def test_proof_claims_rejected(self):
+        for h in ("Cylinder 2 misfire confirmed by the scan", "Cylinder 2 is proven to misfire",
+                  "Cylinder 2 misfire verified by sensor data", "Cylinder 2 is definitely misfiring"):
+            with self.assertRaises(P.Rejected, msg=h):
+                P.validate(dict(GOOD, hypothesis=h))
+
+    def test_malformed_scan_lists_do_not_crash(self):
+        mf = P.misfire({"raw_dtcs": ["P0302", None, {"code": "P0302"}], "mode06": "yes"})
+        self.assertEqual([c["code"] for c in mf["codes"]], ["P0302"])
+        self.assertIsNone(P.rule_prediction({"raw_pids": [None, "x"]}, P.misfire({})))
+
+    def test_check_route_malformed_samples_400_not_500(self):
+        c = create_app().test_client()
+        with mock.patch.dict(os.environ, {"LYLO_HACK_PROVE": "1"}):
+            sid = c.post("/api/v1/live/live", json=SCAN).get_json()["detective"]["prove"]["session_id"]
+            for body in ({"session_id": sid, "samples": [{"dt": 0.1, "pid": ["x"], "value": 1}]},
+                         {"session_id": sid, "samples": "nope"}, {"session_id": sid, "samples": [None, 3, {"dt": "1"}]}):
+                self.assertIn(c.post("/api/v1/prove/check", json=body).status_code, (200, 400))
 
 
 if __name__ == "__main__":

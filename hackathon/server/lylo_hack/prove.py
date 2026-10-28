@@ -13,6 +13,7 @@
 import copy
 import hashlib
 import json
+import math
 import os
 import re
 import threading
@@ -36,6 +37,8 @@ KNOWN_PIDS = {
 } | {f"MISFIRE_COUNT_CYL{n}" for n in range(1, 13)}
 VAGUE = re.compile(r"\b(something|anything|maybe|might|possibly|perhaps|some issue|could be|various|may or may not|"
                    r"general(ly)? (problem|issue)|not sure)\b", re.I)
+CLAIMS_PROOF = re.compile(r"\b(confirmed|proven|proved|verified|certain(ly)?|definitely|guaranteed|for sure|"
+                          r"no doubt|sensor (shows|showed|confirms)|already (seen|measured))\b", re.I)
 MODEL_ONLY_FIELDS = ("status", "measured", "proven", "verified", "outcome", "checked_at", "result", "held", "failed")
 SCHEMA = {
     "type": "object", "additionalProperties": False,
@@ -58,6 +61,8 @@ class Rejected(ValueError):
 def _num(x):
     if isinstance(x, bool) or not isinstance(x, (int, float)):
         raise Rejected("threshold must be numbers")
+    if not math.isfinite(float(x)):
+        raise Rejected("threshold must be a finite number")
     return float(x)
 
 
@@ -72,6 +77,8 @@ def validate(raw):
         raise Rejected("hypothesis must be 12-240 characters")
     if VAGUE.search(hyp):
         raise Rejected("hypothesis is vague (hedging words are not testable)")
+    if CLAIMS_PROOF.search(hyp) or CLAIMS_PROOF.search(str(p.get("if_fails") or "")):
+        raise Rejected("a prediction cannot claim it is already proven; only the checker decides")
     cond = p.get("condition")
     if cond not in CONDITIONS:
         raise Rejected("condition must be one of " + ", ".join(CONDITIONS))
@@ -201,7 +208,10 @@ def downgrade(hypotheses, pred):
 def misfire(data):
     """P0300-P0308 from the car, plus Mode 06 per-cylinder counts when the vehicle reports them."""
     codes = []
-    for d in data.get("raw_dtcs", []) or []:
+    dtcs = data.get("raw_dtcs") if isinstance(data.get("raw_dtcs"), list) else []
+    for d in dtcs:
+        if not isinstance(d, dict):
+            continue
         c = str(d.get("code", "")).upper()
         if c in MISFIRE_DTCS:
             codes.append({"code": c, "status": d.get("status", "active"),
@@ -245,7 +255,10 @@ def rule_prediction(data, mf):
         return {"hypothesis": f"Cylinder {cyl} is misfiring (coil, plug, injector or wiring on cylinder {cyl})",
                 "pids": [f"P030{cyl}"], "condition": "dtc_present", "threshold": [], "window_s": 90,
                 "if_fails": f"The cylinder {cyl} code did not come back at idle; the fault may be intermittent."}
-    for p in data.get("raw_pids", []) or []:
+    pids = data.get("raw_pids") if isinstance(data.get("raw_pids"), list) else []
+    for p in pids:
+        if not isinstance(p, dict):
+            continue
         if p.get("name") in ("SHORT_TERM_FUEL_TRIM_BANK_1", "STFT_B1") and isinstance(p.get("raw_value"), (int, float)) \
                 and p["raw_value"] > 10:
             return {"hypothesis": "The engine is running lean at idle (air leak or weak fuel delivery)",
@@ -310,6 +323,7 @@ def lock(result, data, proposal=None, source="model", now=None, store=STORE):
     e = led.append("prediction", {"prediction": pred, "proposed_by": source}, now=now)
     sid = uuid.uuid4().hex[:16]
     store.put({"id": sid, "pred": pred, "locked_at": e["at"], "ledger": led, "source": source,
+               "mutex": threading.Lock(), "head_sha": e["sha256"], "n_entries": 1,
                "hypotheses": copy.deepcopy(det.get("hypotheses") or result.get("hypotheses") or []), "outcome": None})
     det["prediction"] = {"text": text_for(pred), "status": "LOCKED", "measured": None}
     prove.update({"session_id": sid, "prediction": pred, "proposed_by": source, "locked_at": e["at"],
@@ -323,16 +337,23 @@ def evaluate(sid, samples, now=None, store=STORE):
     if not sess:
         return None
     led = sess["ledger"]
-    if sess["outcome"] is None:
-        r = check(sess["pred"], sess["locked_at"], samples)
-        if r["status"] != "LOCKED":
-            e = led.append("outcome", {"status": r["status"], "measured": r["measured"], "n": r["n"],
-                                       "checked_by": "deterministic checker"}, now=now)
-            sess["outcome"] = dict(r, sha256=e["sha256"])
-        else:
-            res = dict(r, measured=r["measured"] or "not proven yet")
-            return _view(sess, res)
-    return _view(sess, sess["outcome"])
+    with sess["mutex"]:  # check + append + set outcome are one step: concurrent checks cannot record two outcomes
+        if sess["outcome"] is None:
+            r = check(sess["pred"], sess["locked_at"], samples)
+            if r["status"] != "LOCKED":
+                e = led.append("outcome", {"status": r["status"], "measured": r["measured"], "n": r["n"],
+                                           "checked_by": "deterministic checker"}, now=now)
+                sess["outcome"] = dict(r, sha256=e["sha256"])
+                sess["head_sha"], sess["n_entries"] = e["sha256"], sess["n_entries"] + 1
+            else:
+                return _view(sess, dict(r, measured=r["measured"] or "not proven yet"))
+        return _view(sess, sess["outcome"])
+
+
+def chain_ok(sess):
+    """Chain intact AND its tail matches the head this server recorded (catches tail truncation)."""
+    e = sess["ledger"].entries()
+    return sess["ledger"].verify() and len(e) == sess["n_entries"] and bool(e) and e[-1]["sha256"] == sess["head_sha"]
 
 
 def _view(sess, r):
@@ -342,7 +363,7 @@ def _view(sess, r):
     return {"prediction": {"text": text_for(sess["pred"]), "status": r["status"], "measured": r.get("measured")},
             "prove": {"session_id": sess["id"], "prediction": sess["pred"], "proposed_by": sess["source"],
                       "locked_at": sess["locked_at"], "ledger": sess["ledger"].entries(),
-                      "chain_ok": sess["ledger"].verify(), "if_fails": sess["pred"]["if_fails"] if r["status"] == "FAILED" else None},
+                      "chain_ok": chain_ok(sess), "head_sha256": sess["head_sha"], "if_fails": sess["pred"]["if_fails"] if r["status"] == "FAILED" else None},
             "hypotheses": hyps}
 
 

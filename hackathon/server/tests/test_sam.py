@@ -1,6 +1,7 @@
 """SAM 3.1 outline client (LYLO_HACK_SAM). Synthetic stream text only, no network."""
 import os
 import unittest
+from unittest import mock
 
 os.environ["HTTPS_PROXY"] = os.environ["HTTP_PROXY"] = "http://127.0.0.1:9"
 from lylo_hack import sam  # noqa: E402
@@ -27,7 +28,10 @@ class Sam(unittest.TestCase):
             raise sam.muse.MuseError("HTTP_404", "x")
         self.assertEqual(sam.outline("engine_air_filter", b"j", post=boom)["status"], "error: HTTP_404")
         self.assertEqual(sam.outline("engine_air_filter", b"j", post=lambda j, c, t: "")["status"], "no match")
-        self.assertFalse(sam.enabled())
+        with mock.patch.dict(os.environ, {"LYLO_HACK_SAM": "0"}):
+            self.assertFalse(sam.enabled())
+        with mock.patch.dict(os.environ, {"LYLO_HACK_SAM": "1"}):
+            self.assertTrue(sam.enabled())
 
 
 if __name__ == "__main__":

@@ -253,3 +253,13 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - Tests: `hackathon/server/tests/test_demo.py` (5), `hackathon/mobile-bridge/test/demo.test.js` (4), `baseline/mobile/ui-tests/demo.test.js` (5).
 - 2026-10-28 15:50 PT: README "Try it in 2 minutes" section (docs only; no baseline files changed).
 - 2026-10-28 16:30 PT: v0.5.0 Point and prove (LYLO_HACK_PROVE / EXPO_PUBLIC_LYLO_PROVE) and SAM outline (LYLO_HACK_SAM): hackathon/ only; no baseline files changed.
+
+## v0.4.8 Point and prove: fixes for Vera's NOT PASS (2026-10-28)
+- prove.evaluate holds a lock per session across the outcome check, the ledger append and setting the outcome, so concurrent checks can only record one outcome. Test: 20 rounds of 8 threads.
+- The server keeps the ledger head (sha256 and entry count) for each session. chain_ok needs the chain to verify and its tail to match that head, which catches a cut-off tail. The head_sha256 is returned.
+- Thresholds must be finite numbers: NaN and inf are rejected.
+- A hypothesis or if_fails text that claims proof ("confirmed", "proven", "verified", "definitely", "sensor shows", ...) is rejected.
+- Malformed raw_dtcs/raw_pids entries are skipped. /prove/check returns 400 with a reason instead of 500 when samples are malformed.
+- test_live, test_sam and test_prove force LYLO_HACK_PROVE/SAM off, and test_sam uses mock.patch.dict.
+- Mobile: the replay demoLabel no longer starts with "REPLAY ·", because ReplayBadge adds that prefix. This fixes "REPLAY · REPLAY".
+- README: known limit added. Client readings are trusted as measured, and the session id acts as a bearer token.

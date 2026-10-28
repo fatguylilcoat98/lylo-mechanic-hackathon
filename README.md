@@ -89,6 +89,7 @@ cd baseline/mobile && npx jest                                           # UI re
 ## Limits (honest)
 - **Not a mechanic.** It's a scan, not an inspection. Causes are suggestions with confidence levels.
 - **Real-phone testing is partial.** The v0.4.4+ screens (dash photo, voice, no adapter, Watch how, nearest store, setup, demo) pass render tests but have not all been tried on a real phone.
+- **Point and prove trusts the phone's readings.** The server checks the readings the phone sends as if they were measured, and it can't tell whether a reading was faked. Anyone who has a prove session id can submit readings for that session. The session lives in memory and expires, but treat the id like a password. The ledger is hash-chained and its head is anchored on the server, so an edited or cut-off history is detected.
 - **AI speed varies.** Live answers took 7 s to 34 s in our runs, so the app shows "Still working" on slow calls.
 - **No recorded lower AI answer.** In every recorded run the AI agreed with the rules or raised the level. The AI-vs-rules proof uses a labeled simulated answer.
 - **Recalls are by model, not by VIN.** Check your exact VIN at nhtsa.gov/recalls.

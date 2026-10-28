@@ -356,7 +356,10 @@ def create_app():
                 t = sess["locked_at"] + float(x["dt"])
                 if t <= now + 1:
                     samples.append(dict({k: v for k, v in x.items() if k in ("pid", "value", "dtc", "dtc_read")}, t=t))
-        return jsonify(prove.evaluate(sess["id"], samples))
+        try:
+            return jsonify(prove.evaluate(sess["id"], samples))
+        except (TypeError, ValueError, KeyError, AttributeError) as e:
+            return jsonify({"error": "Malformed readings.", "errors": [f"{type(e).__name__}: samples need pid+value numbers or dtc"]}), 400
 
     @app.post("/api/v1/prove/replay")
     def prove_replay():

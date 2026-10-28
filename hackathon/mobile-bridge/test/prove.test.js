@@ -32,10 +32,11 @@ test('predictionView never upgrades: unknown or self-set status -> LOCKED', () =
 
 test('replay badge cannot be hidden', () => {
   const s = p.asScan({ replay: { badge: 'REPLAY', label: 'SYNTHETIC misfire', synthetic: true }, detective: {} });
-  assert.match(s.demoLabel, /^REPLAY · SYNTHETIC/);
+  assert.strictEqual(s.demoLabel, 'SYNTHETIC misfire');
   const s2 = p.asScan({ replay: { label: '' }, detective: { prediction_replay: true } });
-  assert.match(s2.demoLabel, /^REPLAY · /);
-  const s3 = p.asScan({ detective: { prediction_replay: true } });
-  assert.match(s3.demoLabel, /^REPLAY · recorded session/);
+  assert.strictEqual(s2.demoLabel, 'recorded session, not live data');
+  const s3 = p.asScan({ replay: { label: 'REPLAY · SYNTHETIC x' } });
+  assert.strictEqual(s3.demoLabel, 'SYNTHETIC x'); // no doubled "REPLAY · REPLAY"
+  assert.ok(s3.replay);
   assert.strictEqual(p.asScan({ detective: {} }).demoLabel, null);
 });

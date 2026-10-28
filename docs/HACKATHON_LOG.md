@@ -151,3 +151,13 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 - **SAM 3.1** (`lylo_hack/sam.py`, flag `LYLO_HACK_SAM=1`, off): on the Photo Helper, it adds `sam.boxes` (box tokens parsed from the documented stream; masks dropped). The Muse circles are unchanged, and any error just leaves the circles. `scripts/sam_probe.py` is a no-spend GET /v1/models check. Reachability with our key is UNKNOWN: the key is only on the Dell, which was out of scope.
 - Phone: `hackathon/mobile-bridge/src/prove.js` (client and view helpers). The phone never sets a status, and `asScan()` always sets the REPLAY demoLabel for a replay. No new screens; UI v2's ResultsV2 renders it.
 - Tests: server `test_prove.py` (22) and `test_sam.py` (2), adversarial cases included. mobile-bridge `prove.test.js` (5).
+
+## v0.4.8 Point and prove: fixes for Vera's NOT PASS (2026-10-28)
+- prove.evaluate holds a lock per session across the outcome check, the ledger append and setting the outcome, so concurrent checks can only record one outcome. Test: 20 rounds of 8 threads.
+- The server keeps the ledger head (sha256 and entry count) for each session. chain_ok needs the chain to verify and its tail to match that head, which catches a cut-off tail. The head_sha256 is returned.
+- Thresholds must be finite numbers: NaN and inf are rejected.
+- A hypothesis or if_fails text that claims proof ("confirmed", "proven", "verified", "definitely", "sensor shows", ...) is rejected.
+- Malformed raw_dtcs/raw_pids entries are skipped. /prove/check returns 400 with a reason instead of 500 when samples are malformed.
+- test_live, test_sam and test_prove force LYLO_HACK_PROVE/SAM off, and test_sam uses mock.patch.dict.
+- Mobile: the replay demoLabel no longer starts with "REPLAY ·", because ReplayBadge adds that prefix. This fixes "REPLAY · REPLAY".
+- README: known limit added. Client readings are trusted as measured, and the session id acts as a bearer token.
