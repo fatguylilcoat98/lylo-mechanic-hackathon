@@ -6,6 +6,7 @@ import unittest
 from unittest import mock
 
 os.environ["LYLO_HACK_MUSE"] = "0"
+os.environ["LYLO_HACK_ENGINE_OVERRIDE"] = "0"  # default off; tests turn it on with mock.patch.dict (isolates from a shell with it on)
 os.environ["LYLO_HACK_ENV_FILE"] = "none"
 os.environ["LYLO_HACK_REQUIRE_APP_KEY"] = "0"
 for _k in ("LYLO_HACK_RL_IP_PER_MIN", "LYLO_HACK_RL_IP_MUSE_PER_MIN", "LYLO_HACK_RL_KEY_MUSE_PER_MIN", "LYLO_HACK_RL_KEY_MUSE_PER_DAY", "LYLO_HACK_MUSE_DAILY_CAP"):
