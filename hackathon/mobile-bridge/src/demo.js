@@ -83,4 +83,4 @@ function proofView(j) {
   };
 }
 
-module.exports = { CASES, MSG, features, replay, proof, replayView, proofView };
+module.exports = { CASES, MSG, features, replay, proof, replayView, proofView, post };
