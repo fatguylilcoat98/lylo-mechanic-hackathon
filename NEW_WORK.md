@@ -61,6 +61,7 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 
 | Date/time (PT) | Commit | File | Reason |
 |---|---|---|---|
+| 2026-10-28 | 6b1aaf6, c8d9cf1 | `baseline/mobile/ui-tests/uiV2.test.js` | New jest UI tests for UI v2 (flag EXPO_PUBLIC_LYLO_UI_V2), synthetic data, test-only. Covers the single pinned replay badge. |
 | 2026-10-26 09:30 | 1cd4918 | baseline/mobile/src/screens/ScanScreen.js | 3 lines: import `afterScan` from hackathon/mobile-bridge and pass the finished scan through it before navigating. With `EXPO_PUBLIC_LYLO_SERVER_URL` unset it returns the identical object, so the app behaves exactly as before. Needed so a phone scan can reach the Dell pipeline. |
 | 2026-10-26 09:30 | 1cd4918 | baseline/mobile/metro.config.js | New file: stock Expo Metro config plus `watchFolders` for hackathon/mobile-bridge, so Metro can bundle the import above. No other settings. |
 | 2026-10-26 09:35 | b5bb53c | baseline/mobile/src/screens/UsedCarScreen.js | 3 lines: import `ServerDiagnosisCard` and render it under the demo banner. It returns null when the scan has no serverDiagnosis, so the screen is unchanged with the flag unset. |
