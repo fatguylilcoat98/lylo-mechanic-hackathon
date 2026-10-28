@@ -65,3 +65,11 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 - Limits:
   - gunicorn `--timeout 30`. A photo call with `detective=1` makes two model calls in a row, so a slow API could hit that limit, and the client would get a 502 and keep the rule result. The live run took about 9.5 s.
   - The phone screens for taking a photo and recording a question are not built yet; only the server routes are.
+
+## 2026-10-28, ~3:00–3:30 AM PDT: v0.4.4, Snap the dash + Ask out loud on the phone (Grok Bot)
+- Phone side of the existing vision/voice routes: `hackathon/mobile-bridge/src/dashVoice.js` (logic, Node-tested) and `DashVoicePanel.js` (UI), rendered by `SimpleResults` under the verdict. Flags `EXPO_PUBLIC_LYLO_DASH_PHOTO` / `EXPO_PUBLIC_LYLO_VOICE_ASK`, unset = old behavior. A dash photo can only raise the shown verdict; voice never changes it and the safety notice is shown above every answer; unverified answers are withheld.
+- Gunicorn 30 s note above is stale: the PM2 config has used `--timeout 60` since v0.4.0. The phone uses detective=0 for the dash call and client timeouts of 45/50 s with plain fallback messages.
+- Server bug found and fixed (`voice.py`): non-WAV audio converted by ffmpeg through a pipe had a placeholder WAV size, so it read as hours long and was rejected with 400. Android records AAC, so every phone question would have failed. Re-wrapped with a correct header; WAV path unchanged.
+- Baseline edits (logged in NEW_WORK.md): expo-av dependency, RECORD_AUDIO unblocked + mic usage strings, v0.4.4 / versionCode 8, labels, new ui-test.
+- Tests: Node 81/81, jest UI 30/30, baseline node 16+19, Python 100/100. `expo export --platform android --clear` with both flags on: 2.25 MB Hermes bundle containing the new screens.
+- Not yet tested: a real phone (camera, mic permission prompts, actual AAC from the device's MediaRecorder, cellular through the tunnel).

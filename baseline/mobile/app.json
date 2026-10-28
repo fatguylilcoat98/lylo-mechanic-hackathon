@@ -2,7 +2,7 @@
   "expo": {
     "name": "LYLO Mechanic",
     "slug": "lylo-mechanic",
-    "version": "0.4.3",
+    "version": "0.4.4",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "dark",
@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.stangman1998.lylomechanic",
-      "versionCode": 7,
+      "versionCode": 8,
       "icon": "./assets/app-icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-fg.png",
@@ -29,10 +29,10 @@
         "android.permission.BLUETOOTH_SCAN",
         "android.permission.BLUETOOTH_CONNECT",
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
       "blockedPermissions": [
-        "android.permission.RECORD_AUDIO",
         "android.permission.SYSTEM_ALERT_WINDOW"
       ]
     },
@@ -40,7 +40,8 @@
       "bundleIdentifier": "com.stangman1998.lylomechanic",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "LYLO Mechanic uses Bluetooth to talk to your OBDLink adapter.",
-        "NSCameraUsageDescription": "LYLO Mechanic uses the camera for Photo Helper, to show where parts are on your car."
+        "NSCameraUsageDescription": "LYLO Mechanic uses the camera for Photo Helper, to show where parts are on your car.",
+        "NSMicrophoneUsageDescription": "LYLO Mechanic uses the microphone only after you tap \"Ask out loud\", to send your question about a scan."
       }
     },
     "plugins": [
@@ -66,7 +67,13 @@
         }
       ],
       "./plugins/withBluetoothClassic",
-      "./plugins/withAndroidBaseColors"
+      "./plugins/withAndroidBaseColors",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "LYLO Mechanic uses the microphone only after you tap \"Ask out loud\", to send your question about a scan."
+        }
+      ]
     ],
     "extra": {
       "eas": {

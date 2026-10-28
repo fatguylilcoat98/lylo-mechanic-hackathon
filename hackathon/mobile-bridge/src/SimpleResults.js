@@ -11,6 +11,7 @@ import { buildResults, formatValue } from './resultsView';
 import { MODE_LABELS, loadViewMode, saveViewMode } from './viewMode';
 import { loadVehicle } from './vin';
 import { PriceButtons, VehicleLine } from './PriceButtons';
+import DashVoicePanel from './DashVoicePanel'; // v0.4.4, renders nothing with its flags unset
 
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
@@ -145,10 +146,12 @@ export function ResultsBody({ m, mode, onMode }) {
   );
 }
 
-export default function SimpleResults({ scan, codes, screen, baselineCleared, footer, storage }) {
+export default function SimpleResults({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice }) {
   const store = storage === undefined ? defaultStorage : storage;
   const [mode, setMode] = useState('simple');
   const [vehicle, setVehicle] = useState(null);
+  const [raised, setRaised] = useState(null); // v0.4.4: scan with a photo-raised level (never lower)
+  const scan = raised && raised.base === scanIn ? raised.scan : scanIn;
   useEffect(() => { let live = true; loadViewMode(store).then((m) => { if (live) setMode(m); }); loadVehicle(store).then((v) => { if (live) setVehicle(v); }); return () => { live = false; }; }, [store]);
   const m = buildResults(scan, { codes, screen, baselineCleared, vehicle });
   if (!m) return null;
@@ -156,6 +159,7 @@ export default function SimpleResults({ scan, codes, screen, baselineCleared, fo
   return (
     <ScrollView style={s.screen} contentContainerStyle={s.scroll}>
       <ResultsBody m={m} mode={mode} onMode={change} />
+      <DashVoicePanel scan={scan} onScan={(next) => setRaised({ base: scanIn, scan: next })} {...(dashVoice || {})} />
       <View style={{ marginTop: 20 }}>{footer}</View>
     </ScrollView>
   );

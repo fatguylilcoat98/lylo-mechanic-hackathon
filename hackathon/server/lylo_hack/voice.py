@@ -55,6 +55,25 @@ class AudioError(Exception):
     pass
 
 
+def _fix_piped_wav(raw):
+    """ffmpeg writing WAV to a pipe cannot seek back, so the header's data size is a placeholder
+    (it read as hours of audio and every converted upload failed the 60 s check). Re-wrap the PCM
+    with a correct header; returns b"" if it is not readable."""
+    try:
+        with wave.open(io.BytesIO(raw)) as w:
+            params = w.getparams()
+            pcm = w.readframes(1 << 30)
+        out = io.BytesIO()
+        with wave.open(out, "wb") as o:
+            o.setnchannels(params.nchannels)
+            o.setsampwidth(params.sampwidth)
+            o.setframerate(params.framerate)
+            o.writeframes(pcm)
+        return out.getvalue()
+    except Exception:
+        return b""
+
+
 def _check_wav(raw):
     try:
         with wave.open(io.BytesIO(raw)) as w:
@@ -83,8 +102,8 @@ def prepare_audio(raw):
                                input=raw, capture_output=True, timeout=10)
         except Exception:
             raise AudioError("Could not convert the audio.")
-        raw = p.stdout
-        secs = _check_wav(raw) if p.returncode == 0 else None
+        raw = _fix_piped_wav(p.stdout) if p.returncode == 0 else b""
+        secs = _check_wav(raw) if raw else None
         if secs is None:
             raise AudioError("Could not read the audio.")
     if secs > MAX_SECONDS:

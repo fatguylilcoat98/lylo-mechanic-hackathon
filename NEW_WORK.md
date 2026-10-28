@@ -52,6 +52,9 @@ All of these live under `baseline/` at tag `baseline-pre-hackathon`, commit 867e
 | 2026-10-26 10:20 | 8839252, a639e8c | hackathon/server/tests/test_vision_voice.py, scripts/live_vision_voice_demo.py, evidence/* | 20 mocked tests (48 Python total). Live demo script and evidence (synthetic dashboard image and robot-voice WAV) |
 | 2026-10-26 10:25 | a639e8c | hackathon/server/lylo_hack/app.py, voice.py | The photo floor is applied before the ledger is built, so rule:safety shows the raised level to the Detective and voice; voice replies add safety_notice |
 | 2026-10-26 10:30 | (docs commit) | docs/DEMO_SCRIPT.md, docs/HACKATHON_LOG.md | 3-minute demo outline; a root HACKATHON_LOG.md created by mistake in eeb51a4 was merged into docs/HACKATHON_LOG.md |
+| 2026-10-28 03:15 | v0.4.4 | hackathon/mobile-bridge/src/dashVoice.js, test/dashVoice.test.js | Pure logic for "Snap the dash" and "Ask out loud": flags `EXPO_PUBLIC_LYLO_DASH_PHOTO=1` / `EXPO_PUBLIC_LYLO_VOICE_ASK=1` (plus server URL; unset = nothing shown or sent), multipart calls to /api/v1/vision/dash (photo + scan, detective=0 so one model call) and /api/v1/voice/ask (audio + scan + photo evidence), client timeouts 45/50 s (under gunicorn 60 s), plain messages for offline/timeout/503/429/424/4xx, photo can only raise the level (`applyDash`), unverified voice answers withheld, safety_notice always first, recording options (Android AAC/ADTS 16 kHz mono, iOS 16-bit WAV, 30 s cap). 8 Node tests using the real evidence files |
+| 2026-10-28 03:15 | v0.4.4 | hackathon/mobile-bridge/src/DashVoicePanel.js, SimpleResults.js | Results-screen panel: camera/gallery -> findings + "raised the safety level" banner and the verdict updates (never lower); record -> Stop and send -> transcript, safety notice, cited answer, follow-ups, receipt. Camera/mic permission denied, no picker/recorder, offline and slow (after 12 s "Still working") handled. Renders nothing with the flags unset |
+| 2026-10-28 03:15 | v0.4.4 | hackathon/server/lylo_hack/voice.py, tests/test_voice_convert.py | Bug fix found while testing phone audio: ffmpeg writing WAV to a pipe leaves a placeholder data size, so every converted (non-WAV) upload read as hours long and was rejected (400 "longer than 60 s"). The PCM is now re-wrapped with a correct header. Native WAV path unchanged. 4 new Python tests (ADTS AAC, WAV passthrough, garbage, bad input) |
 
 ## Modified baseline files
 Every file under `baseline/` changed after the tag must have a row here. The full path must appear in this section, or `scripts/check-baseline-integrity.sh` fails.
@@ -87,6 +90,12 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-26 13:00 | v0.4.3 | baseline/mobile/src/screens/HomeScreen.js | 1 line: Tools button "Your car: add your VIN"; build label v0.4.3. |
 | 2026-10-26 13:00 | v0.4.3 | baseline/mobile/package.json, app.json | version 0.4.3, versionCode 7. No new dependencies or permissions. |
 | 2026-10-26 13:00 | v0.4.3 | baseline/mobile/ui-tests/vinPrice.test.js | New: VIN screen + price button render tests. screens.test.js label v0.4.3. |
+| 2026-10-28 03:15 | v0.4.4 | baseline/mobile/package.json | Dependency `expo-av` ~14.0.7 (Expo 51 recording for "Ask out loud"); version 0.4.4. |
+| 2026-10-28 03:15 | v0.4.4 | baseline/mobile/package-lock.json | npm lockfile for expo-av; version 0.4.4. |
+| 2026-10-28 03:15 | v0.4.4 | baseline/mobile/app.json | version 0.4.4, versionCode 8; `android.permission.RECORD_AUDIO` moved from blockedPermissions to permissions; expo-av plugin with microphonePermission text; iOS NSMicrophoneUsageDescription. The mic is only opened after the user taps "Ask out loud" (flag on). |
+| 2026-10-28 03:15 | v0.4.4 | baseline/mobile/src/screens/HomeScreen.js | Build label v0.4.4. |
+| 2026-10-28 03:15 | v0.4.4 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.4. |
+| 2026-10-28 03:15 | v0.4.4 | baseline/mobile/ui-tests/dashVoice.test.js | New: 6 render tests (flags unset = no buttons; dash photo raises the verdict; never lowers; camera denied, offline, 503; voice transcript + notice + cited answer; mic denied; unverified answer withheld). |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
@@ -133,3 +142,8 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 - App: `VinScreen` (Type VIN / Photo of VIN, stored under the new key `lylo.vehicle`), the vehicle name in Simple view and Photo Helper.
 - "Check the price" (`mobile-bridge/src/priceLinks.js`, `PriceButtons.js`): AutoZone, O'Reilly, Advance Auto Parts, NAPA (local) and RockAuto (online catalog). These are public search URLs only (no scraping, APIs or affiliate tags) and open in the browser. The estimate comes from LYLO price data (baseline repair_costs.json / dtcCodes) and is labeled "Estimate". URL checks: `hackathon/server/evidence/price_links.md`.
 - Photo Helper marks: radius capped at 0.15 of the width; overlapping circles shrink apart; number badges are placed so they don't collide (same algorithm in app and mockup renderer).
+
+## v0.4.4 Snap the dash + Ask out loud (Oct 28)
+- Results screen (SimpleResults, server answered) gets "Add more to this check": **Snap the dash** (camera or gallery -> /api/v1/vision/dash with the scan) and **Ask out loud** (record -> /api/v1/voice/ask with the scan and any dash-photo evidence).
+- Build flags: `EXPO_PUBLIC_LYLO_DASH_PHOTO=1`, `EXPO_PUBLIC_LYLO_VOICE_ASK=1` (and `EXPO_PUBLIC_LYLO_SERVER_URL`). Unset = panel not rendered, no request, results screen exactly as v0.4.3. Build with `--clear` after changing them.
+- Timeouts: the phone asks for detective=0 on the dash call (one model call, ~3 s live) and gives up at 45 s (dash) / 50 s (voice), under gunicorn `--timeout 60`, showing "Meta AI took too long... your scan result above still stands". No server-side timeout change was needed.

@@ -10,3 +10,6 @@ cd hackathon/mobile-bridge && npm test    # node --test, 14 tests
 ```
 
 Not done yet: wiring `diagnoseScan` into the app's scan screen (that's a logged baseline change), and pointing it at the Dell.
+
+## v0.4.4: Snap the dash + Ask out loud
+`src/dashVoice.js` + `src/DashVoicePanel.js` (rendered by SimpleResults). Build flags `EXPO_PUBLIC_LYLO_DASH_PHOTO=1`, `EXPO_PUBLIC_LYLO_VOICE_ASK=1`; unset = nothing rendered or sent.
