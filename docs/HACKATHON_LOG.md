@@ -100,3 +100,8 @@ Each work session gets one entry: start/end time, who/what, commits, files, and 
 - No server code changed, so no restart.
 - Tests: Node 99/99, jest UI 44/44 (box), baseline node 16 and 19. `expo export --platform android --clear` with first-run, no-adapter, dash and voice flags on: a 2.31 MB Hermes bundle that contains the new screens.
 - Not tested yet: a real phone (YouTube and Maps opening in their apps, the setup flow on an install).
+
+## 2026-10-28 ~04:00 PT: v0.4.7 docs, Try a demo scan, test APK
+- README.md for judges (new). docs/DEMO_SCRIPT.md replaced with script v2. Truck numbers come only from evidence/detective_cold_engine_truck_like.json (muse-spark-1.3, 7429 ms, 15 of 19 ledger items cited, SAFE_TO_DRIVE, agreed). The synthetic test fixture's numbers are not quoted.
+- v0.4.7: Try a demo scan (flag EXPO_PUBLIC_LYLO_DEMO on the phone, LYLO_HACK_DEMO=1 on the server; both default off, and the routes return 503 when off). It replays the truck, cleared-codes used car and 260 °F overheat scans through the real pipeline. The AI-vs-rules proof uses a labeled simulated AI answer (no model call) fed into the real merge code; the rules win.
+- Vera fixes (prior commit): "parts searches for your model", "videos for your model", https-only store/video links, and the flag docs corrected.

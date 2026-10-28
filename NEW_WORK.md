@@ -114,13 +114,16 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-10-28 04:50 | v0.4.6 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.6. |
 | 2026-10-28 04:50 | v0.4.6 | baseline/mobile/ui-tests/vinPrice.test.js | Recall text now reads "recall for your model". |
 | 2026-10-28 04:50 | v0.4.6 | baseline/mobile/ui-tests/v046.test.js | New: 7 render tests (no-sensor note before the first check; Watch how + nearest store on code detail, with and without a vehicle; setup no-adapter/mechanic/year-make-model; setup VIN path; skip all; Home first-run open + Tools button). |
-| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/src/App.js | Registers the `Demo` route (hackathon DemoScreen). |
-| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/src/screens/HomeScreen.js | "No car? No adapter?" card with "Try a demo scan", only when EXPO_PUBLIC_LYLO_DEMO=1; build label v0.4.7. |
-| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/app.json | Version 0.4.7, versionCode 11. No new permissions. |
-| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/package.json | Version 0.4.7. No new dependencies. |
-| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/package-lock.json | Version 0.4.7 (root entry only). |
-| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.7. |
-| 2026-10-28 05:30 | v0.4.7 | baseline/mobile/ui-tests/demo.test.js | New: 5 render tests (three cases listed; truck replay shows server verdict, causes, receipt; AI-vs-rules proof shows the simulated label, both verdicts and "Rules won"; no-server message; Home entry). |
+| 2026-10-28 03:59 | v0.4.7 | baseline/mobile/src/App.js | Registers the `Demo` route (hackathon DemoScreen). |
+| 2026-10-28 03:59 | v0.4.7 | baseline/mobile/src/screens/HomeScreen.js | "No car? No adapter?" card with "Try a demo scan", only when EXPO_PUBLIC_LYLO_DEMO=1; build label v0.4.7. |
+| 2026-10-28 03:59 | v0.4.7 | baseline/mobile/app.json | Version 0.4.7, versionCode 11. No new permissions. |
+| 2026-10-28 03:59 | v0.4.7 | baseline/mobile/package.json | Version 0.4.7. No new dependencies. |
+| 2026-10-28 03:59 | v0.4.7 | baseline/mobile/package-lock.json | Version 0.4.7 (root entry only). |
+| 2026-10-28 03:59 | v0.4.7 | baseline/mobile/ui-tests/screens.test.js | Build label v0.4.7. |
+| 2026-10-28 03:59 | v0.4.7 | baseline/mobile/ui-tests/demo.test.js | New: 5 render tests (three cases listed; truck replay shows server verdict, causes, receipt; AI-vs-rules proof shows the simulated label, both verdicts and "Rules won"; no-server message; Home entry). |
+| 2026-10-28 04:02 | v0.4.7 docs | README.md | New top-level README for judges: story, what it does, rules-decide-safety design, Meta models, privacy, verify, tests, try with no car, limits. |
+| 2026-10-28 04:02 | v0.4.7 docs | docs/DEMO_SCRIPT.md | Replaced the stale v0.3 script with demo script v2; truck numbers only from the real recorded run. |
+| 2026-10-28 04:02 | v0.4.7 docs | docs/HACKATHON_LOG.md | Session log for the v0.4.7 docs, demo flag and APK. |
 
 ## Muse Detective (b53890c, 6137584, eeb51a4)
 - `hackathon/server/lylo_hack/{ledger,muse,detective}.py`: Evidence Ledger, Meta Model API client, and detective. Every claim cites ledger ids, and claims citing missing ids are marked unverified. Muse can only raise the safety level, never lower it, and every failure path fails closed. Behind `LYLO_HACK_MUSE` (default 0).
