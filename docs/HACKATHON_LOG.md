@@ -206,3 +206,5 @@ Context: Chris ran v0.5.0 on his 1998 Ford E-450 (6.8L V10 Triton, gas) with an 
   - Two v0.5.0 uiV2 tests that sent HELD with no prove record now include a verified record (`baseline/mobile/ui-tests/uiV2.test.js`).
 - Should-fix 2 (flaky test): 20 runs with BENIGN=0 and 20 with BENIGN=1 (190/190 each), each test file alone, and reverse file order all passed, so the failure did not reproduce. Likely cause (inferred): `test_security` rate-limit tests posted 3-4 times against per-minute fixed windows on the real clock, so a minute boundary mid-test resets the count. Those tests now pin the limiter clock 30 s into a window. No env dependence was found; BENIGN is already cleared in conftest.
 - Should-fix 3: the 58995b9 parity tests fail loudly when git history is missing. They skip only with `LYLO_ALLOW_NO_GIT=1`.
+
+- 2026-10-28: Vera r3 should-fix on box: prove.js head regex {64} (short head -> unverified), predictionView removed. Not pushed.

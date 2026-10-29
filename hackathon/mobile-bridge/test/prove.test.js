@@ -24,10 +24,12 @@ test('check/replay post to the prove routes', async () => {
   assert.strictEqual(okFetch.last.url, 'https://x/api/v1/prove/replay');
 });
 
-test('predictionView never upgrades: unknown or self-set status -> LOCKED', () => {
-  assert.strictEqual(p.predictionView({ prediction: { text: 't', status: 'PROVEN' } }).status, 'LOCKED');
-  assert.strictEqual(p.predictionView({ prediction: { text: 't', status: 'HELD', measured: 'x' } }).status, 'HELD');
-  assert.strictEqual(p.predictionView({}), null);
+test('bannerStatus never upgrades: unknown or self-set status -> pending (was predictionView, removed v0.5.1)', () => {
+  const ok = { chain_ok: true, head_sha256: 'a'.repeat(64) };
+  assert.strictEqual(p.bannerStatus({ text: 't', status: 'PROVEN' }, ok), 'pending');
+  assert.strictEqual(p.bannerStatus({ text: 't', status: 'HELD', measured: 'x' }, ok), 'held');
+  assert.strictEqual(p.bannerStatus(undefined, ok), null);
+  assert.strictEqual(p.predictionView, undefined);
 });
 
 test('replay badge cannot be hidden', () => {

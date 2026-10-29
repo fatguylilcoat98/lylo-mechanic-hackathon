@@ -37,13 +37,6 @@ function samplesSince(readings, lockedAtMs) {
 const check = (sessionId, samples, opts) => post('/api/v1/prove/check', { session_id: sessionId, samples }, opts);
 const replay = (caseId, opts) => post('/api/v1/prove/replay', { case: caseId }, opts);
 
-/** Only the server's {text, status, measured}; unknown status -> LOCKED (never upgraded on the phone). */
-function predictionView(det) {
-  const p = det && det.prediction;
-  if (!p || !p.text) return null;
-  return { text: String(p.text), status: STATUS.includes(p.status) ? p.status : 'LOCKED', measured: p.measured ? String(p.measured) : null };
-}
-
 /** Server replay JSON -> a scan for the results screen. The REPLAY label is always set for a replay. */
 function asScan(j) {
   const isReplay = !!(j && (j.replay || (j.detective && j.detective.prediction_replay)));
@@ -56,8 +49,8 @@ function asScan(j) {
 /**
  * v0.5.1: the ONE rule for the prediction banner (ui2/model.js and ProvePanel both use it).
  * -> null | 'pending' | 'held' | 'failed' | 'unverified' | 'integrity'
- * integrity  = the record check failed: prove.chain_ok === false, or a HELD/FAILED result whose prove record has no valid head.
- * unverified = HELD/FAILED but no prove record at all, or chain not confirmed (never shown as "proved").
+ * integrity  = the record check failed: prove.chain_ok === false, or a HELD/FAILED result whose prove record has no head.
+ * unverified = HELD/FAILED but no prove record at all, a head that is not a 64-hex sha256, or chain not confirmed (never shown as "proved").
  * pending    = LOCKED / not checked yet (chain fields may be absent; that is not a failure).
  */
 function bannerStatus(p, prove) {
@@ -67,7 +60,8 @@ function bannerStatus(p, prove) {
   if (pr && pr.chain_ok === false) return 'integrity';
   if (raw !== 'HELD' && raw !== 'FAILED') return 'pending';
   if (!pr) return 'unverified';
-  if (!(typeof pr.head_sha256 === 'string' && /^[0-9a-f]{8,}$/i.test(pr.head_sha256))) return 'integrity';
+  if (typeof pr.head_sha256 !== 'string' || !pr.head_sha256) return 'integrity';
+  if (!/^[0-9a-f]{64}$/i.test(pr.head_sha256)) return 'unverified'; // v0.5.1 Vera r3: a head must be a full sha256
   if (pr.chain_ok !== true) return 'unverified';
   return raw.toLowerCase();
 }
@@ -79,4 +73,4 @@ function bannerOf(p, prove) {
   return { text: String(p.text), status, measured: (status === 'held' || status === 'failed') && p.measured ? String(p.measured) : null };
 }
 
-module.exports = { bannerStatus, bannerOf, REPLAY_CASES, STATUS, features, samplesSince, check, replay, predictionView, asScan };
+module.exports = { bannerStatus, bannerOf, REPLAY_CASES, STATUS, features, samplesSince, check, replay, asScan };

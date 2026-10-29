@@ -138,7 +138,7 @@ describe('v0.5.1 Vera r2: just-locked prediction is pending, one shared banner r
     ['HELD', 'FAILED'].forEach((st) => {
       const p = { ...lockShape.prediction, status: st };
       expect(status({ prediction: p, prove: { ...lockShape.prove, head_sha256: undefined } })).toBe('integrity');
-      expect(status({ prediction: p, prove: { ...lockShape.prove, head_sha256: 'zz' } })).toBe('integrity');
+      expect(status({ prediction: p, prove: { ...lockShape.prove, head_sha256: 'zz' } })).toBe('unverified'); // present but not a sha256
     });
   });
   test('model.js and ProvePanel agree: same helper, same answer on every case', () => {
@@ -153,4 +153,16 @@ describe('v0.5.1 Vera r2: just-locked prediction is pending, one shared banner r
     expect(on.getByTestId('prediction-unverified')).toBeTruthy();
     expect(on.queryByText('The car proved it right')).toBeNull();
   });
+});
+
+test('Vera r3: short head "deadbeef" on a HELD result shows unverified, never "proved it right"', async () => {
+  const j = JSON.parse(JSON.stringify(rec)); j.detective.prove.head_sha256 = 'deadbeef';
+  const ui = render(<DemoScreen navigation={{ navigate: jest.fn() }} fetchImpl={reply(j)} baseUrl="https://x" appKey="k" />);
+  await act(async () => { fireEvent.press(ui.getByTestId('prove-prove_misfire_synthetic')); });
+  expect(ui.getByTestId('prediction-unverified')).toBeTruthy();
+  expect(ui.queryByText('The car proved it right')).toBeNull();
+  const f = reply({ prediction: { text: 'x', status: 'HELD', measured: 'm' }, prove: { chain_ok: true, head_sha256: 'deadbeef' } });
+  const on = render(<ProveCheck scan={asScan(rec)} env={{ EXPO_PUBLIC_LYLO_PROVE: '1' }} opts={{ baseUrl: 'https://x', fetchImpl: f }} />);
+  await act(async () => { fireEvent.press(on.getByTestId('prove-check-btn')); });
+  expect(on.getByTestId('prediction-unverified')).toBeTruthy();
 });

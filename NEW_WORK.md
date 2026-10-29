@@ -62,6 +62,7 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | Date/time (PT) | Commit | File | Reason |
 |---|---|---|---|
 | 2026-10-28 | v0.5.1 Vera r2 | `baseline/mobile/ui-tests/uiV2.test.js` | HELD tests now carry a verified prove record (HELD without one shows 'RESULT NOT VERIFIED'). Test-only. |
+| 2026-10-28 | v0.5.1 Vera r3 | `baseline/mobile/ui-tests/v051.test.js` | +deadbeef short-head -> unverified case; zz case now unverified. Test-only. |
 | 2026-10-28 | v0.5.1 Vera r2 | `baseline/mobile/ui-tests/v051.test.js` | Exact lock() shape -> pending; shared banner rule; unverified state. Test-only. |
 | 2026-10-28 | v0.5.1 Vera r1 | `baseline/backend/safety/safety_classifier.py` | Line 24: codes uppercased and stripped (p0310 == P0310). |
 | 2026-10-28 | v0.5.1 Vera r1 | `baseline/mobile/ui-tests/v051.test.js` | Proof record integrity tests (chain_ok / head_sha256), test-only. |
@@ -323,3 +324,8 @@ Context: Chris ran v0.5.0 on his 1998 Ford E-450 (6.8L V10 Triton, gas) with an 
   - Two v0.5.0 uiV2 tests that sent HELD with no prove record now include a verified record (`baseline/mobile/ui-tests/uiV2.test.js`).
 - Should-fix 2 (flaky test): 20 runs with BENIGN=0 and 20 with BENIGN=1 (190/190 each), each test file alone, and reverse file order all passed, so the failure did not reproduce. Likely cause (inferred): `test_security` rate-limit tests posted 3-4 times against per-minute fixed windows on the real clock, so a minute boundary mid-test resets the count. Those tests now pin the limiter clock 30 s into a window. No env dependence was found; BENIGN is already cleared in conftest.
 - Should-fix 3: the 58995b9 parity tests fail loudly when git history is missing. They skip only with `LYLO_ALLOW_NO_GIT=1`.
+
+## v0.5.1 Vera r3 should-fix (box only, not pushed)
+- prove.js bannerStatus: head must be a full 64-hex sha256. Missing/empty head on HELD/FAILED -> integrity; present but not 64-hex (e.g. 'deadbeef', 'zz') -> unverified.
+- Removed unused `predictionView` (only its own unit test used it; that test now asserts the same never-upgrade rule via bannerStatus).
+- Tests: jest 80/80 (+1 'deadbeef' case; 'zz' case now expects unverified), mobile-bridge 124/124, server 190.
