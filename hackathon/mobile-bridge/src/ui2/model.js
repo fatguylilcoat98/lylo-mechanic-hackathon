@@ -9,6 +9,7 @@
 const { buildResults } = require('../resultsView');
 const { itemLabel } = require('../detectiveView');
 const { evidenceKind } = require('./theme');
+const { bannerOf } = require('../prove');
 const { friendly } = require('../friendlyLabels');
 
 /** v0.5.1: plain words in the proof list (was raw PID names like ENGINE_COOLANT_TEMP = 88 C). */
@@ -39,14 +40,8 @@ function safetyStory(r, det) {
 
 /** Optional: det.prediction = { text, status: 'pending'|'held'|'failed', measured? } (upcoming photo+live-data proof). */
 function prediction(det) {
-  const p = det && det.prediction;
-  if (!p || !p.text) return null;
-  const raw = String(p.status || '').toLowerCase();
-  let status = ['held', 'failed'].includes(raw) ? raw : 'pending';
-  // v0.5.1: a prove record that does not verify never shows HELD/FAILED (legacy predictions without det.prove unchanged).
-  const pr = det.prove;
-  if (pr && !(pr.chain_ok === true && typeof pr.head_sha256 === 'string' && pr.head_sha256)) status = 'integrity';
-  return { text: String(p.text), status, measured: p.measured ? String(p.measured) : null };
+  // v0.5.1: one shared rule with ProvePanel (prove.bannerOf / bannerStatus).
+  return det ? bannerOf(det.prediction, det.prove) : null;
 }
 
 function buildV2(scan, opts = {}) {

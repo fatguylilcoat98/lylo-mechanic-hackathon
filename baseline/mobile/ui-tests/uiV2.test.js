@@ -63,6 +63,7 @@ test('results v2: AI tries to lower a red level, banner says Pull over now and r
   r.safety.level = 'EMERGENCY_STOP_IMMEDIATELY'; r.safety.triggering_conditions = ['Coolant 260 F (synthetic)'];
   r.detective.safety_action = 'detective_lower_ignored'; r.detective.safety_opinion.level = 'SAFE_TO_DRIVE';
   r.detective.prediction = { text: 'Coolant stays above 240 F at idle', status: 'held', measured: '258 F' };
+  r.detective.prove = { chain_ok: true, head_sha256: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }; // v0.5.1: HELD needs a verified record
   s.demoLabel = 'Synthetic overheat';
   const ui = await mount(<SimpleResults uiV2 scan={s} screen="codes" storage={memStore()} />);
   expect(ui.getByText('Pull over now')).toBeTruthy();
@@ -101,6 +102,7 @@ test('v0.5.0 wiring: a prove replay goes prove.asScan -> ReplayBadge label, and 
   const r = truck().serverDiagnosis.result;
   r.detective.prediction = { text: 'Cylinder 3 misfire count goes above 10 within 60 s', status: 'HELD', measured: 'MISFIRE_COUNT_CYL3 = 22 at +12 s' };
   r.detective.prediction_replay = true;
+  r.detective.prove = { chain_ok: true, head_sha256: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }; // v0.5.1: HELD needs a verified record
   r.replay = { badge: 'REPLAY', label: 'SYNTHETIC misfire session (made-up data)' };
   const s = P.asScan(r);
   expect(s.demoLabel).toBe('SYNTHETIC misfire session (made-up data)');

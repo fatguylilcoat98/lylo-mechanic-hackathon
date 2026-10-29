@@ -53,13 +53,10 @@ const PRED = {
   held: { word: 'PREDICTION HELD', fg: color.green, title: 'The car proved it right' },
   failed: { word: 'PREDICTION FAILED', fg: color.red, title: 'The car proved it wrong. Revising.' },
   // v0.5.1: the server's hash-chained record did not verify (chain_ok false or no head hash). No verdict is shown.
+  unverified: { word: 'RESULT NOT VERIFIED', fg: color.accent, title: 'The server sent a result without a verified record. Not shown as proof.' },
   integrity: { word: 'RECORD INTEGRITY CHECK FAILED', fg: color.red, title: "Record integrity check failed: this result can't be trusted as proof" },
 };
 
-/** v0.5.1: true only when a prove record is present and verified (chain_ok === true and a head_sha256). */
-export function proveRecordOk(prove) {
-  return !!(prove && prove.chain_ok === true && typeof prove.head_sha256 === 'string' && prove.head_sha256.length > 0);
-}
 export function PredictionBanner({ prediction }) {
   if (!prediction) return null;
   const p = PRED[prediction.status] || PRED.pending;

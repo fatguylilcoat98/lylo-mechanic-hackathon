@@ -193,3 +193,16 @@ Context: Chris ran v0.5.0 on his 1998 Ford E-450 (6.8L V10 Triton, gas) with an 
 - FLAG (BENIGN=1): a red `parking_brake` label hits the same RED_STOP floor as `brake_system` (DO_NOT_DRIVE at medium/high confidence, INSPECT_SOON at low), because the red Ford BRAKE lamp means either.
 - Proof integrity (BUG FIX): when a prove record has `chain_ok !== true` or no `head_sha256`, the banner shows "RECORD INTEGRITY CHECK FAILED" (testID prediction-integrity) and never "The car proved it right". This applies to Demo replays (ui2/model.js) and results checks (ProvePanel). Predictions with no prove record at all are unchanged.
 - BUG FIX: `baseline/backend/safety/safety_classifier.py` line 24 uppercases and strips codes, so p0310 is classified like P0310 (the test fails on the previous code).
+
+## v0.5.1: Vera round 2 fixes (2026-10-28)
+- MUST (BUG FIX, server): `prove.lock()` now writes `chain_ok` (ledger verified against the head) and `head_sha256` into `detective.prove` right after the lock entry is appended. Before, a healthy just-locked prediction had neither field, and the aa6ab82 UI showed "RECORD INTEGRITY CHECK FAILED" on every one. Test: `LockChainFields` in tests/test_v051.py.
+- MUST + should-fix 1 (UI): one shared rule `prove.bannerStatus` / `prove.bannerOf` (mobile-bridge/src/prove.js), used by both `ui2/model.js` and `ProvePanel`:
+  - LOCKED or not checked yet, with or without chain fields: pending.
+  - `chain_ok === false`: integrity failed.
+  - HELD/FAILED with a prove record but no valid hex head: integrity failed.
+  - HELD/FAILED with no prove record (missing or null), or chain not confirmed `=== true`: new "RESULT NOT VERIFIED" state, never "The car proved it right".
+  - "Measured" is shown only for a verified HELD/FAILED.
+  - Jest cases use the exact `lock()` output saved in `hackathon/server/evidence/prove/lock_shape_synthetic.json` (SYNTHETIC P0310 scan), plus a 35-case agreement check between model.js and the helper.
+  - Two v0.5.0 uiV2 tests that sent HELD with no prove record now include a verified record (`baseline/mobile/ui-tests/uiV2.test.js`).
+- Should-fix 2 (flaky test): 20 runs with BENIGN=0 and 20 with BENIGN=1 (190/190 each), each test file alone, and reverse file order all passed, so the failure did not reproduce. Likely cause (inferred): `test_security` rate-limit tests posted 3-4 times against per-minute fixed windows on the real clock, so a minute boundary mid-test resets the count. Those tests now pin the limiter clock 30 s into a window. No env dependence was found; BENIGN is already cleared in conftest.
+- Should-fix 3: the 58995b9 parity tests fail loudly when git history is missing. They skip only with `LYLO_ALLOW_NO_GIT=1`.

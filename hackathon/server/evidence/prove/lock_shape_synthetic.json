@@ -1,0 +1,63 @@
+{
+ "note": "Exact detective.prediction + detective.prove shape written by prove.lock() (v0.5.1, SYNTHETIC P0310 scan). UI test fixture.",
+ "detective": {
+  "prediction": {
+   "text": "Cylinder 10 is misfiring (coil, plug, injector or wiring on cylinder 10): P0310 will be reported within 90 s",
+   "status": "LOCKED",
+   "measured": null
+  },
+  "prove": {
+   "misfire": {
+    "codes": [
+     {
+      "code": "P0310",
+      "status": "active",
+      "cylinder": 10
+     }
+    ],
+    "per_cylinder_counts": "not reported by this vehicle",
+    "worst_cylinder": null,
+    "active": true
+   },
+   "proposal_rejected": null,
+   "session_id": "da822dbd9b1f4870",
+   "prediction": {
+    "hypothesis": "Cylinder 10 is misfiring (coil, plug, injector or wiring on cylinder 10)",
+    "pids": [
+     "P0310"
+    ],
+    "condition": "dtc_present",
+    "threshold": [],
+    "window_s": 90,
+    "if_fails": "The cylinder 10 code did not come back at idle; the fault may be intermittent."
+   },
+   "proposed_by": "rules",
+   "locked_at": 1000.0,
+   "lock_sha256": "528fce0e0487e8086cd5efd02326e301b17d08fe84a88957adb957cefdae3bf3",
+   "ledger": [
+    {
+     "seq": 0,
+     "kind": "prediction",
+     "at": 1000.0,
+     "body": {
+      "prediction": {
+       "hypothesis": "Cylinder 10 is misfiring (coil, plug, injector or wiring on cylinder 10)",
+       "pids": [
+        "P0310"
+       ],
+       "condition": "dtc_present",
+       "threshold": [],
+       "window_s": 90,
+       "if_fails": "The cylinder 10 code did not come back at idle; the fault may be intermittent."
+      },
+      "proposed_by": "rules"
+     },
+     "prev": "0000000000000000000000000000000000000000000000000000000000000000",
+     "sha256": "528fce0e0487e8086cd5efd02326e301b17d08fe84a88957adb957cefdae3bf3"
+    }
+   ],
+   "chain_ok": true,
+   "head_sha256": "528fce0e0487e8086cd5efd02326e301b17d08fe84a88957adb957cefdae3bf3"
+  }
+ }
+}

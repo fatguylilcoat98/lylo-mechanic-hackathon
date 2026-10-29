@@ -357,7 +357,9 @@ def lock(result, data, proposal=None, source="model", now=None, store=STORE):
                "hypotheses": copy.deepcopy(det.get("hypotheses") or result.get("hypotheses") or []), "outcome": None})
     det["prediction"] = {"text": text_for(pred), "status": "LOCKED", "measured": None}
     prove.update({"session_id": sid, "prediction": pred, "proposed_by": source, "locked_at": e["at"],
-                  "lock_sha256": e["sha256"], "ledger": led.entries()})
+                  "lock_sha256": e["sha256"], "ledger": led.entries(),
+                  # v0.5.1: chain fields at lock time too (the UI needs them to tell healthy from broken)
+                  "chain_ok": led.verify(head=e["sha256"], n=1), "head_sha256": e["sha256"]})
     return sid
 
 

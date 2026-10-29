@@ -37,7 +37,7 @@ test('results: ProveCheck hidden with flag off, posts /api/v1/prove/check with f
   const scan = asScan(rec);
   const off = render(<ProveCheck scan={scan} env={{}} opts={{ baseUrl: 'https://x', fetchImpl: reply({}) }} />);
   expect(off.queryByTestId('prove-check')).toBeNull();
-  const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'FAILED', measured: 'not proven yet' }, prove: { chain_ok: true, head_sha256: 'abc' } });
+  const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'FAILED', measured: 'not proven yet' }, prove: { chain_ok: true, head_sha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
   const on = render(<ProveCheck scan={scan} env={{ EXPO_PUBLIC_LYLO_PROVE: '1' }} opts={{ baseUrl: 'https://x', fetchImpl: f }} />);
   await act(async () => { fireEvent.press(on.getByTestId('prove-check-btn')); });
   expect(f.mock.calls[0][0]).toBe('https://x/api/v1/prove/check');
@@ -79,7 +79,7 @@ describe('prove record integrity (chain_ok / head_sha256)', () => {
     expect(ui.getByText('The car proved it right')).toBeTruthy();
     expect(ui.queryByText(/integrity check failed/i)).toBeNull();
   });
-  test.each([[{ chain_ok: false }], [{ head_sha256: undefined }], [{ head_sha256: '' }], [{ chain_ok: 'true' }]])('replay %j: integrity failed, never "proved it right"', async (patch) => {
+  test.each([[{ chain_ok: false }], [{ head_sha256: undefined }], [{ head_sha256: '' }]])('replay %j: integrity failed, never "proved it right"', async (patch) => {
     const ui = await runDemo(tamper(patch));
     expect(ui.queryByText('The car proved it right')).toBeNull();
     expect(ui.getAllByText(/RECORD INTEGRITY CHECK FAILED/).length).toBe(1);
@@ -92,17 +92,65 @@ describe('prove record integrity (chain_ok / head_sha256)', () => {
     expect(on.queryByText('The car proved it right')).toBeNull();
     expect(on.getByTestId('prediction-integrity')).toBeTruthy();
   });
-  test('results ProveCheck: no prove record in reply -> integrity failed', async () => {
-    const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'HELD', measured: 'x' } });
-    const on = render(<ProveCheck scan={asScan(rec)} env={{ EXPO_PUBLIC_LYLO_PROVE: '1' }} opts={{ baseUrl: 'https://x', fetchImpl: f }} />);
-    await act(async () => { fireEvent.press(on.getByTestId('prove-check-btn')); });
-    expect(on.queryByText('The car proved it right')).toBeNull();
-    expect(on.getByTestId('prediction-integrity')).toBeTruthy();
+  test('replay {"chain_ok":"true"} (not boolean true): unverified, never "proved it right"', async () => {
+    const ui = await runDemo(tamper({ chain_ok: 'true' }));
+    expect(ui.queryByText('The car proved it right')).toBeNull();
+    expect(ui.getByTestId('prediction-unverified')).toBeTruthy();
   });
   test('results ProveCheck: verified reply shows HELD', async () => {
-    const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'HELD', measured: 'x' }, prove: { chain_ok: true, head_sha256: 'abc123' } });
+    const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'HELD', measured: 'x' }, prove: { chain_ok: true, head_sha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
     const on = render(<ProveCheck scan={asScan(rec)} env={{ EXPO_PUBLIC_LYLO_PROVE: '1' }} opts={{ baseUrl: 'https://x', fetchImpl: f }} />);
     await act(async () => { fireEvent.press(on.getByTestId('prove-check-btn')); });
     expect(on.getByText('The car proved it right')).toBeTruthy();
+  });
+});
+
+describe('v0.5.1 Vera r2: just-locked prediction is pending, one shared banner rule', () => {
+  const lockShape = require('../../../hackathon/server/evidence/prove/lock_shape_synthetic.json').detective;
+  const { bannerStatus } = require('../../../hackathon/mobile-bridge/src/prove');
+  const { buildV2 } = require('../../../hackathon/mobile-bridge/src/ui2/model');
+  const scanOf = (det) => { const r = JSON.parse(JSON.stringify(truck)); r.detective = { ...r.detective, ...det }; return { serverDiagnosis: { source: 'server', result: r } }; };
+  const status = (det) => buildV2(scanOf(det), { screen: 'codes' }).prediction.status;
+
+  test('exact lock() shape -> pending (LOCKED), never integrity failure', async () => {
+    expect(lockShape.prediction.status).toBe('LOCKED');
+    expect(lockShape.prove.chain_ok).toBe(true);
+    expect(status(lockShape)).toBe('pending');
+    const ui = render(<SimpleResults uiV2 scan={scanOf(lockShape)} screen="codes" storage={memStore()} />);
+    await act(async () => {});
+    expect(ui.getByTestId('prediction-pending')).toBeTruthy();
+    expect(ui.queryByText(/INTEGRITY CHECK FAILED/)).toBeNull();
+  });
+  test('lock() shape from an older server (no chain fields) -> still pending', () => {
+    const p = { ...lockShape.prove }; delete p.chain_ok; delete p.head_sha256;
+    expect(status({ prediction: lockShape.prediction, prove: p })).toBe('pending');
+  });
+  test('chain_ok === false -> integrity, even while LOCKED', () => {
+    expect(status({ prediction: lockShape.prediction, prove: { ...lockShape.prove, chain_ok: false } })).toBe('integrity');
+  });
+  test('HELD without det.prove (missing or null) -> unverified, never "proved"', () => {
+    const held = { ...lockShape.prediction, status: 'HELD', measured: 'P0310 at +3 s' };
+    expect(status({ prediction: held, prove: undefined })).toBe('unverified');
+    expect(status({ prediction: held, prove: null })).toBe('unverified');
+    expect(status({ prediction: held, prove: { ...lockShape.prove } })).toBe('held');
+  });
+  test('HELD/FAILED with an invalid head -> integrity', () => {
+    ['HELD', 'FAILED'].forEach((st) => {
+      const p = { ...lockShape.prediction, status: st };
+      expect(status({ prediction: p, prove: { ...lockShape.prove, head_sha256: undefined } })).toBe('integrity');
+      expect(status({ prediction: p, prove: { ...lockShape.prove, head_sha256: 'zz' } })).toBe('integrity');
+    });
+  });
+  test('model.js and ProvePanel agree: same helper, same answer on every case', () => {
+    const preds = ['LOCKED', 'HELD', 'FAILED', 'weird', undefined].map((s) => ({ text: 't', status: s }));
+    const proves = [undefined, null, {}, lockShape.prove, { ...lockShape.prove, chain_ok: false }, { ...lockShape.prove, chain_ok: undefined }, { chain_ok: true }];
+    preds.forEach((p) => proves.forEach((pr) => expect(status({ prediction: p, prove: pr })).toBe(bannerStatus(p, pr))));
+  });
+  test('results ProveCheck: HELD reply without prove -> unverified banner, no "proved it right"', async () => {
+    const f = reply({ prediction: { text: 'x', status: 'HELD', measured: 'm' } });
+    const on = render(<ProveCheck scan={asScan(rec)} env={{ EXPO_PUBLIC_LYLO_PROVE: '1' }} opts={{ baseUrl: 'https://x', fetchImpl: f }} />);
+    await act(async () => { fireEvent.press(on.getByTestId('prove-check-btn')); });
+    expect(on.getByTestId('prediction-unverified')).toBeTruthy();
+    expect(on.queryByText('The car proved it right')).toBeNull();
   });
 });

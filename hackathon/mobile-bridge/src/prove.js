@@ -53,4 +53,30 @@ function asScan(j) {
   return { serverDiagnosis: { source: 'server', result: j }, demoLabel: label, replay: isReplay };
 }
 
-module.exports = { REPLAY_CASES, STATUS, features, samplesSince, check, replay, predictionView, asScan };
+/**
+ * v0.5.1: the ONE rule for the prediction banner (ui2/model.js and ProvePanel both use it).
+ * -> null | 'pending' | 'held' | 'failed' | 'unverified' | 'integrity'
+ * integrity  = the record check failed: prove.chain_ok === false, or a HELD/FAILED result whose prove record has no valid head.
+ * unverified = HELD/FAILED but no prove record at all, or chain not confirmed (never shown as "proved").
+ * pending    = LOCKED / not checked yet (chain fields may be absent; that is not a failure).
+ */
+function bannerStatus(p, prove) {
+  if (!p || !p.text) return null;
+  const raw = String(p.status || '').toUpperCase();
+  const pr = prove && typeof prove === 'object' ? prove : null;
+  if (pr && pr.chain_ok === false) return 'integrity';
+  if (raw !== 'HELD' && raw !== 'FAILED') return 'pending';
+  if (!pr) return 'unverified';
+  if (!(typeof pr.head_sha256 === 'string' && /^[0-9a-f]{8,}$/i.test(pr.head_sha256))) return 'integrity';
+  if (pr.chain_ok !== true) return 'unverified';
+  return raw.toLowerCase();
+}
+
+/** Banner model {text, status, measured} via bannerStatus. */
+function bannerOf(p, prove) {
+  const status = bannerStatus(p, prove);
+  if (!status) return null;
+  return { text: String(p.text), status, measured: (status === 'held' || status === 'failed') && p.measured ? String(p.measured) : null };
+}
+
+module.exports = { bannerStatus, bannerOf, REPLAY_CASES, STATUS, features, samplesSince, check, replay, predictionView, asScan };

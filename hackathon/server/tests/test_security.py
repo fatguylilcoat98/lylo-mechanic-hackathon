@@ -2,6 +2,7 @@ import hashlib
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 os.environ["LYLO_HACK_MUSE"] = "0"
 os.environ["LYLO_HACK_ENV_FILE"] = "none"
@@ -34,6 +35,12 @@ class SecurityTests(unittest.TestCase):
                 os.environ[k] = v
         os.unlink(self.tmp)
 
+    def _freeze_clock(self):
+        """Pin the limiter clock mid-window (30 s into a minute) so per-minute counts cannot reset during the test."""
+        p = mock.patch.object(security.time, "time", return_value=1_000_000 * 60 + 30.0)
+        p.start()
+        self.addCleanup(p.stop)
+
     def post(self, key=KEY, **kw):
         h = {"X-LYLO-App-Key": key} if key else {}
         h.update(kw.pop("headers", {}))
@@ -59,6 +66,7 @@ class SecurityTests(unittest.TestCase):
 
     def test_ip_rate_limit_429_with_retry_after(self):
         os.environ["LYLO_HACK_RL_IP_PER_MIN"] = "3"
+        self._freeze_clock()  # v0.5.1: fixed windows on the real clock flaked when a minute boundary fell mid-test
         codes = [self.post(key="wrong").status_code for _ in range(4)]
         self.assertEqual(codes[:3], [401] * 3)
         self.assertEqual(codes[3], 429)
@@ -69,6 +77,7 @@ class SecurityTests(unittest.TestCase):
 
     def test_per_ip_buckets_separate_behind_tunnel(self):
         os.environ["LYLO_HACK_RL_IP_PER_MIN"] = "2"
+        self._freeze_clock()
         a = {"CF-Connecting-IP": "203.0.113.1"}
         b = {"CF-Connecting-IP": "203.0.113.2"}
         self.assertEqual([self.post(headers=a).status_code != 429 for _ in range(3)], [True, True, False])

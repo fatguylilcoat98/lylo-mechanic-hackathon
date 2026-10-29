@@ -73,6 +73,24 @@ class V10Misfire(unittest.TestCase):
         self.assertNotEqual(lvl("P0310"), lvl("P0000"))
 
 
+class LockChainFields(unittest.TestCase):
+    def test_lock_returns_chain_fields(self):
+        r = {"safety": {"level": "SAFE_TO_DRIVE", "triggering_conditions": []}, "detective": {}}
+        sid = P.lock(r, {"raw_dtcs": [{"code": "P0310", "status": "active"}]}, now=1000.0, store=P.Store())
+        pr = r["detective"]["prove"]
+        self.assertTrue(sid)
+        self.assertIs(pr["chain_ok"], True)
+        self.assertRegex(pr["head_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual(pr["head_sha256"], pr["lock_sha256"])
+        self.assertEqual(pr["head_sha256"], pr["ledger"][-1]["sha256"])
+        self.assertEqual(r["detective"]["prediction"]["status"], "LOCKED")
+
+    def test_no_prediction_has_no_chain_fields(self):
+        r = {"safety": {"level": "SAFE_TO_DRIVE", "triggering_conditions": []}, "detective": {}}
+        self.assertIsNone(P.lock(r, {"raw_dtcs": []}, store=P.Store()))
+        self.assertNotIn("head_sha256", r["detective"]["prove"])
+
+
 def item(name, color="amber", conf="high"):
     return {"id": f"photo:{name}:{color}", "type": "photo_warning_light", "name": name, "color": color, "confidence": conf}
 
@@ -154,7 +172,9 @@ class FlagUnsetMatchesV050(unittest.TestCase):
     def test_flag_unset_matches_58995b9_exactly(self):
         old = _old_vision()
         if old is None:
-            self.skipTest("git history for 58995b9 not available")
+            if os.environ.get("LYLO_ALLOW_NO_GIT") == "1":
+                self.skipTest("git history for 58995b9 not available (LYLO_ALLOW_NO_GIT=1)")
+            self.fail("v0.5.0 parity test needs git history for 58995b9 (set LYLO_ALLOW_NO_GIT=1 to skip explicitly)")
         os.environ.pop("LYLO_HACK_BENIGN_LIGHTS", None)
         self.assertEqual(vision.LIGHTS, old.LIGHTS)
         self.assertEqual(vision.schema(), old.SCHEMA)
@@ -178,7 +198,9 @@ class FlagUnsetMatchesV050(unittest.TestCase):
     def test_analyze_output_matches_when_unset(self):
         old = _old_vision()
         if old is None:
-            self.skipTest("git history for 58995b9 not available")
+            if os.environ.get("LYLO_ALLOW_NO_GIT") == "1":
+                self.skipTest("git history for 58995b9 not available (LYLO_ALLOW_NO_GIT=1)")
+            self.fail("v0.5.0 parity test needs git history for 58995b9 (set LYLO_ALLOW_NO_GIT=1 to skip explicitly)")
         os.environ.pop("LYLO_HACK_BENIGN_LIGHTS", None)
         import io
         from PIL import Image

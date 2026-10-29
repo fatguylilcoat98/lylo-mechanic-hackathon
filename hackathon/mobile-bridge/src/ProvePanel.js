@@ -7,15 +7,15 @@
  */
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { REPLAY_CASES, replay, check, asScan, features, samplesSince } from './prove';
-import { PredictionBanner, ReplayBadge, proveRecordOk } from './ui2/components';
+import { REPLAY_CASES, replay, check, asScan, features, samplesSince, bannerOf } from './prove';
+import { PredictionBanner, ReplayBadge } from './ui2/components';
 import { buildV2 } from './ui2/model';
 import { ResultsV2Body } from './ui2/ResultsV2';
 import { configuredUrl, configuredKey } from './scanHook';
 
 const defaultOpts = () => ({ baseUrl: configuredUrl(), appKey: configuredKey() });
 
-const bannerOf = (p, prove) => (p && p.text && !proveRecordOk(prove) ? { text: String(p.text), status: 'integrity', measured: null } : p && p.text ? { text: String(p.text), status: String(p.status || '').toLowerCase() === 'held' ? 'held' : String(p.status || '').toLowerCase() === 'failed' ? 'failed' : 'pending', measured: p.measured ? String(p.measured) : null } : null);
+// bannerOf comes from ./prove (shared with ui2/model.js).
 
 export function ProveReplay({ opts }) {
   const [busy, setBusy] = useState(null);
