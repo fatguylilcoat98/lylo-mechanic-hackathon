@@ -8,14 +8,14 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { REPLAY_CASES, replay, check, asScan, features, samplesSince } from './prove';
-import { PredictionBanner, ReplayBadge } from './ui2/components';
+import { PredictionBanner, ReplayBadge, proveRecordOk } from './ui2/components';
 import { buildV2 } from './ui2/model';
 import { ResultsV2Body } from './ui2/ResultsV2';
 import { configuredUrl, configuredKey } from './scanHook';
 
 const defaultOpts = () => ({ baseUrl: configuredUrl(), appKey: configuredKey() });
 
-const bannerOf = (p) => (p && p.text ? { text: String(p.text), status: String(p.status || '').toLowerCase() === 'held' ? 'held' : String(p.status || '').toLowerCase() === 'failed' ? 'failed' : 'pending', measured: p.measured ? String(p.measured) : null } : null);
+const bannerOf = (p, prove) => (p && p.text && !proveRecordOk(prove) ? { text: String(p.text), status: 'integrity', measured: null } : p && p.text ? { text: String(p.text), status: String(p.status || '').toLowerCase() === 'held' ? 'held' : String(p.status || '').toLowerCase() === 'failed' ? 'failed' : 'pending', measured: p.measured ? String(p.measured) : null } : null);
 
 export function ProveReplay({ opts }) {
   const [busy, setBusy] = useState(null);
@@ -67,7 +67,7 @@ export function ProveCheck({ scan, opts, env }) {
       </Pressable>
       {busy ? <ActivityIndicator size="large" color="#f5c518" /> : null}
       {msg ? <Text style={s.msg} testID="prove-msg">{msg}</Text> : null}
-      {res ? <PredictionBanner prediction={bannerOf(res.prediction)} /> : null}
+      {res ? <PredictionBanner prediction={bannerOf(res.prediction, res.prove)} /> : null}
     </View>
   );
 }

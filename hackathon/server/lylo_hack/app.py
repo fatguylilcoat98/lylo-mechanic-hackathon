@@ -154,8 +154,8 @@ def create_app():
             return []
         items = []
         for i in raw if isinstance(raw, list) else []:
-            if isinstance(i, dict) and str(i.get("id", "")).startswith("photo:") and i.get("name") in vision.LIGHTS + vision.ISSUES:
-                items.append({"id": str(i["id"])[:80], "type": "photo_" + ("warning_light" if i["name"] in vision.LIGHTS else "visible_issue"),
+            if isinstance(i, dict) and str(i.get("id", "")).startswith("photo:") and i.get("name") in vision.lights() + vision.ISSUES:
+                items.append({"id": str(i["id"])[:80], "type": "photo_" + ("warning_light" if i["name"] in vision.lights() else "visible_issue"),
                               "source": "photo", "trust": "lower than sensor data", "name": i["name"],
                               "color": str(i.get("color", "unclear"))[:20],
                               "confidence": i.get("confidence") if i.get("confidence") in ("low", "medium", "high") else "low",

@@ -57,42 +57,144 @@ class V10Misfire(unittest.TestCase):
         self.assertEqual(lv9, lv1)
         self.assertNotEqual(lv1, base)
 
+    def test_lowercase_code_classified_like_uppercase(self):
+        import sys
+        from types import SimpleNamespace as NS
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "baseline", "backend"))
+        from safety.safety_classifier import classify_safety
+
+        def lvl(code):
+            st = NS(vehicle=NS(is_hybrid=False, is_ev=False, year=1998, make="FORD", model="E-450", engine="6.8L V10", fuel_type="gasoline", vin=None), dtcs=[NS(code=code, status="active", is_safety_related=False, system="powertrain",
+                                           category="SAE_standard", description="", cascade_candidate=False, freeze_frame_attached=False)],
+                    pids=[], freeze_frame=None, readiness_monitors=[], session_flags=[], connection_quality="good", read_complete=True)
+            return classify_safety(st, None).level
+        self.assertEqual(lvl("p0310"), lvl("P0310"))
+        self.assertEqual(lvl(" p0301 "), lvl("P0301"))
+        self.assertNotEqual(lvl("P0310"), lvl("P0000"))
+
 
 def item(name, color="amber", conf="high"):
     return {"id": f"photo:{name}:{color}", "type": "photo_warning_light", "name": name, "color": color, "confidence": conf}
 
 
+ON = {"LYLO_HACK_BENIGN_LIGHTS": "1"}
+
+
 class BenignDashLights(unittest.TestCase):
     def test_benign_lights_never_escalate(self):
-        for n in ("seatbelt", "door_ajar", "headlight_or_high_beam", "washer_fluid", "turn_signal", "cruise_control"):
-            for c in ("amber", "red"):
-                self.assertEqual(vision.floor_for([item(n, c)]), (None, []), (n, c))
+        with mock.patch.dict(os.environ, ON):
+            for n in ("seatbelt", "door_ajar", "headlight_or_high_beam", "washer_fluid", "turn_signal", "cruise_control"):
+                for c in ("amber", "red"):
+                    self.assertEqual(vision.floor_for([item(n, c)]), (None, []), (n, c))
 
     def test_serious_lights_still_escalate(self):
-        for n in ("check_engine", "abs", "airbag", "battery_charging", "parking_brake"):
-            self.assertEqual(vision.floor_for([item(n)])[0], "INSPECT_SOON", n)
-        for n in ("oil_pressure", "coolant_temperature", "brake_system"):
-            self.assertEqual(vision.floor_for([item(n, "red")])[0], "DO_NOT_DRIVE", n)
+        with mock.patch.dict(os.environ, ON):
+            for n in ("check_engine", "abs", "airbag", "battery_charging", "parking_brake"):
+                self.assertEqual(vision.floor_for([item(n)])[0], "INSPECT_SOON", n)
+            for n in ("oil_pressure", "coolant_temperature", "brake_system"):
+                self.assertEqual(vision.floor_for([item(n, "red")])[0], "DO_NOT_DRIVE", n)
+
+    def test_red_parking_brake_same_floor_as_brake_system(self):
+        with mock.patch.dict(os.environ, ON):
+            for conf in ("low", "medium", "high"):
+                self.assertEqual(vision.floor_for([item("parking_brake", "red", conf)])[0],
+                                 vision.floor_for([item("brake_system", "red", conf)])[0], conf)
+            self.assertEqual(vision.floor_for([item("parking_brake", "red")])[0], "DO_NOT_DRIVE")
 
     def test_benign_plus_serious_still_raises(self):
-        self.assertEqual(vision.floor_for([item("seatbelt"), item("check_engine")])[0], "INSPECT_SOON")
+        with mock.patch.dict(os.environ, ON):
+            self.assertEqual(vision.floor_for([item("seatbelt"), item("check_engine")])[0], "INSPECT_SOON")
 
-    def test_kill_switch_restores_old_behaviour(self):
-        with mock.patch.dict(os.environ, {"LYLO_HACK_BENIGN_LIGHTS": "0"}):
-            self.assertEqual(vision.floor_for([item("seatbelt")])[0], "INSPECT_SOON")
+    def test_flag_is_opt_in(self):
+        for v in (None, "0", "", "true", "yes"):
+            env = {} if v is None else {"LYLO_HACK_BENIGN_LIGHTS": v}
+            with mock.patch.dict(os.environ, env):
+                if v is None:
+                    os.environ.pop("LYLO_HACK_BENIGN_LIGHTS", None)
+                self.assertFalse(vision.benign_on(), v)
+                self.assertEqual(vision.floor_for([item("seatbelt")])[0], "INSPECT_SOON")
+                self.assertIs(vision.schema(), vision.SCHEMA)
+                self.assertNotIn("parking_brake", vision.lights())
 
     def test_benign_item_is_noted_and_labeled(self):
         out = {"is_vehicle_photo": True, "photo_kind": "dashboard", "image_quality": "good",
                "findings": [{"kind": "warning_light", "name": "seatbelt", "color": "amber", "description": "belt", "confidence": "high"}]}
-        items = vision.to_items(out)
-        self.assertEqual(len(items), 1)
-        self.assertIn("not a safety problem", items[0]["safety_note"])
+        with mock.patch.dict(os.environ, ON):
+            items = vision.to_items(out)
+            self.assertIn("not a safety problem", items[0]["safety_note"])
+            self.assertIn("parking_brake", vision.schema()["properties"]["findings"]["items"]["properties"]["name"]["enum"])
+        os.environ.pop("LYLO_HACK_BENIGN_LIGHTS", None)
+        self.assertNotIn("safety_note", vision.to_items(out)[0])
 
     def test_photo_can_raise_never_lower(self):
         from lylo_hack.safety import apply_floor
         r = {"safety": {"level": "DO_NOT_DRIVE"}}
         apply_floor(r, None, "", "photo")
         self.assertEqual(r["safety"]["level"], "DO_NOT_DRIVE")
+
+
+def _old_vision():
+    """vision.py exactly as at 58995b9 (v0.5.0), loaded as a sibling module of lylo_hack."""
+    import importlib.util, subprocess, sys
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    try:
+        src = subprocess.run(["git", "-C", root, "show", "58995b9:hackathon/server/lylo_hack/vision.py"],
+                             capture_output=True, text=True, timeout=20, check=True).stdout
+    except Exception:  # noqa: BLE001
+        return None
+    spec = importlib.util.spec_from_loader("lylo_hack._vision_v050", loader=None)
+    mod = importlib.util.module_from_spec(spec)
+    mod.__package__ = "lylo_hack"
+    sys.modules[spec.name] = mod
+    exec(compile(src, "vision_v050.py", "exec"), mod.__dict__)
+    return mod
+
+
+class FlagUnsetMatchesV050(unittest.TestCase):
+    def test_flag_unset_matches_58995b9_exactly(self):
+        old = _old_vision()
+        if old is None:
+            self.skipTest("git history for 58995b9 not available")
+        os.environ.pop("LYLO_HACK_BENIGN_LIGHTS", None)
+        self.assertEqual(vision.LIGHTS, old.LIGHTS)
+        self.assertEqual(vision.schema(), old.SCHEMA)
+        names = old.LIGHTS + old.ISSUES + vision.NEW_LIGHTS + ["bogus"]
+        n = 0
+        for name in names:
+            for kind in ("warning_light", "visible_issue"):
+                for color in ("red", "amber", "green", "blue", "white", "unclear", None):
+                    for conf in ("low", "medium", "high", "weird"):
+                        out = {"is_vehicle_photo": True, "photo_kind": "dashboard", "image_quality": "good",
+                               "findings": [{"kind": kind, "name": name, "color": color, "description": "d", "confidence": conf},
+                                            {"kind": kind, "name": name, "color": color, "description": "d2", "confidence": conf}]}
+                        a, b = vision.to_items(out), old.to_items(out)
+                        self.assertEqual(a, b, (name, color, conf))
+                        self.assertEqual(vision.floor_for(a), old.floor_for(b), (name, color, conf))
+                        n += 1
+        mixed = [item(x, c) for x in old.LIGHTS for c in ("red", "amber")]
+        self.assertEqual(vision.floor_for(mixed), old.floor_for(mixed))
+        self.assertGreater(n, 1000)
+
+    def test_analyze_output_matches_when_unset(self):
+        old = _old_vision()
+        if old is None:
+            self.skipTest("git history for 58995b9 not available")
+        os.environ.pop("LYLO_HACK_BENIGN_LIGHTS", None)
+        import io
+        from PIL import Image
+        buf = io.BytesIO(); Image.new("RGB", (64, 48), (90, 90, 90)).save(buf, "JPEG")
+        seen = []
+        out = {"is_vehicle_photo": True, "photo_kind": "dashboard", "image_quality": "good",
+               "findings": [{"kind": "warning_light", "name": "seatbelt", "color": "amber", "description": "d", "confidence": "high"},
+                            {"kind": "warning_light", "name": "parking_brake", "color": "red", "description": "d", "confidence": "high"}]}
+
+        def fake(messages, schema, **kw):
+            seen.append(schema)
+            return out, {"model": "m", "latency_ms": 1}
+        a, b = vision.analyze(buf.getvalue(), call=fake), old.analyze(buf.getvalue(), call=fake)
+        self.assertEqual(a, b)
+        self.assertEqual(seen[0], seen[1])
+        self.assertEqual(a["photo_safety_floor"], "INSPECT_SOON")  # seatbelt escalates as in v0.5.0
 
 
 VPIC_S = {"Results": [{"ModelYear": "1998", "Make": "FORD", "Model": "E-450", "DisplacementL": "10.3", "EngineCylinders": "6",

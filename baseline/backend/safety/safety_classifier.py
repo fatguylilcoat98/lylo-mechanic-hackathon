@@ -21,7 +21,7 @@ def classify_safety(
     Rules are evaluated in order from most to least severe.
     Highest match wins.
     """
-    codes = {d.code for d in state.dtcs if d.status == "active"}
+    codes = {str(d.code).strip().upper() for d in state.dtcs if d.status == "active"}  # v0.5.1: p0310 == P0310
     symptom_cat = symptoms.primary_category.lower() if symptoms else ""
     symptom_subs = [s.lower() for s in (symptoms.subcategories if symptoms else [])]
     symptom_severity = symptoms.severity if symptoms else "minor"

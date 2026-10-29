@@ -37,7 +37,7 @@ test('results: ProveCheck hidden with flag off, posts /api/v1/prove/check with f
   const scan = asScan(rec);
   const off = render(<ProveCheck scan={scan} env={{}} opts={{ baseUrl: 'https://x', fetchImpl: reply({}) }} />);
   expect(off.queryByTestId('prove-check')).toBeNull();
-  const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'FAILED', measured: 'not proven yet' } });
+  const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'FAILED', measured: 'not proven yet' }, prove: { chain_ok: true, head_sha256: 'abc' } });
   const on = render(<ProveCheck scan={scan} env={{ EXPO_PUBLIC_LYLO_PROVE: '1' }} opts={{ baseUrl: 'https://x', fetchImpl: f }} />);
   await act(async () => { fireEvent.press(on.getByTestId('prove-check-btn')); });
   expect(f.mock.calls[0][0]).toBe('https://x/api/v1/prove/check');
@@ -65,4 +65,44 @@ test('mechanic view: human causes heading, plain monitor names, value shown once
   expect(ui.queryByText(/^catalyst: /)).toBeNull();
   expect(pidText({ name: 'X', value: 190, unit: '°F' })).toBe('190 °F');
   expect(pidText({ name: 'ENGINE_COOLANT_TEMP', value: 88, unit: '°C' })).toMatch(/°F \(88 °C\)$/);
+});
+
+describe('prove record integrity (chain_ok / head_sha256)', () => {
+  const tamper = (patch) => { const j = JSON.parse(JSON.stringify(rec)); Object.assign(j.detective.prove, patch); if (patch.head_sha256 === undefined && 'head_sha256' in patch) delete j.detective.prove.head_sha256; return j; };
+  const runDemo = async (body) => {
+    const ui = render(<DemoScreen navigation={{ navigate: jest.fn() }} fetchImpl={reply(body)} baseUrl="https://x" appKey="k" />);
+    await act(async () => { fireEvent.press(ui.getByTestId('prove-prove_misfire_synthetic')); });
+    return ui;
+  };
+  test('verified record still shows HELD', async () => {
+    const ui = await runDemo(rec);
+    expect(ui.getByText('The car proved it right')).toBeTruthy();
+    expect(ui.queryByText(/integrity check failed/i)).toBeNull();
+  });
+  test.each([[{ chain_ok: false }], [{ head_sha256: undefined }], [{ head_sha256: '' }], [{ chain_ok: 'true' }]])('replay %j: integrity failed, never "proved it right"', async (patch) => {
+    const ui = await runDemo(tamper(patch));
+    expect(ui.queryByText('The car proved it right')).toBeNull();
+    expect(ui.getAllByText(/RECORD INTEGRITY CHECK FAILED/).length).toBe(1);
+    expect(ui.getByTestId('prediction-integrity')).toBeTruthy();
+  });
+  test('results ProveCheck: chain_ok false -> integrity failed', async () => {
+    const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'HELD', measured: 'x' }, prove: { chain_ok: false, head_sha256: 'abc' } });
+    const on = render(<ProveCheck scan={asScan(rec)} env={{ EXPO_PUBLIC_LYLO_PROVE: '1' }} opts={{ baseUrl: 'https://x', fetchImpl: f }} />);
+    await act(async () => { fireEvent.press(on.getByTestId('prove-check-btn')); });
+    expect(on.queryByText('The car proved it right')).toBeNull();
+    expect(on.getByTestId('prediction-integrity')).toBeTruthy();
+  });
+  test('results ProveCheck: no prove record in reply -> integrity failed', async () => {
+    const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'HELD', measured: 'x' } });
+    const on = render(<ProveCheck scan={asScan(rec)} env={{ EXPO_PUBLIC_LYLO_PROVE: '1' }} opts={{ baseUrl: 'https://x', fetchImpl: f }} />);
+    await act(async () => { fireEvent.press(on.getByTestId('prove-check-btn')); });
+    expect(on.queryByText('The car proved it right')).toBeNull();
+    expect(on.getByTestId('prediction-integrity')).toBeTruthy();
+  });
+  test('results ProveCheck: verified reply shows HELD', async () => {
+    const f = reply({ prediction: { text: 'Cylinder 3 is misfiring', status: 'HELD', measured: 'x' }, prove: { chain_ok: true, head_sha256: 'abc123' } });
+    const on = render(<ProveCheck scan={asScan(rec)} env={{ EXPO_PUBLIC_LYLO_PROVE: '1' }} opts={{ baseUrl: 'https://x', fetchImpl: f }} />);
+    await act(async () => { fireEvent.press(on.getByTestId('prove-check-btn')); });
+    expect(on.getByText('The car proved it right')).toBeTruthy();
+  });
 });

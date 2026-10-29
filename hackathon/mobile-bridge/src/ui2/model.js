@@ -42,7 +42,10 @@ function prediction(det) {
   const p = det && det.prediction;
   if (!p || !p.text) return null;
   const raw = String(p.status || '').toLowerCase();
-  const status = ['held', 'failed'].includes(raw) ? raw : 'pending';
+  let status = ['held', 'failed'].includes(raw) ? raw : 'pending';
+  // v0.5.1: a prove record that does not verify never shows HELD/FAILED (legacy predictions without det.prove unchanged).
+  const pr = det.prove;
+  if (pr && !(pr.chain_ok === true && typeof pr.head_sha256 === 'string' && pr.head_sha256)) status = 'integrity';
   return { text: String(p.text), status, measured: p.measured ? String(p.measured) : null };
 }
 

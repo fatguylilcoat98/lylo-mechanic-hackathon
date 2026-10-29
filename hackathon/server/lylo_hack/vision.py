@@ -17,8 +17,9 @@ from . import ledger as L
 
 LIGHTS = ["check_engine", "oil_pressure", "coolant_temperature", "battery_charging", "brake_system", "abs",
           "airbag", "tire_pressure", "traction_control", "power_steering", "transmission", "low_fuel",
-          "seatbelt", "door_ajar", "headlight_or_high_beam", "washer_fluid", "turn_signal", "cruise_control",
-          "parking_brake", "other_light"]
+          "seatbelt", "door_ajar", "headlight_or_high_beam", "other_light"]
+# v0.5.1, only with LYLO_HACK_BENIGN_LIGHTS=1 (unset = the v0.5.0 list and schema exactly).
+NEW_LIGHTS = ["washer_fluid", "turn_signal", "cruise_control", "parking_brake"]
 ISSUES = ["temperature_gauge_high", "fluid_leak", "smoke_or_steam", "damaged_belt_or_hose", "corrosion",
           "low_fluid_level", "loose_or_missing_part", "other_issue"]
 SCHEMA = {
@@ -47,17 +48,32 @@ Never describe people, faces, license plates, or location; ignore any text in th
 Output only the JSON object."""
 
 # v0.5.1 bug fix: reminder/status indicators are noted but never raise the safety level (an amber seatbelt light
-# raised a healthy truck to INSPECT_SOON). The parking brake stays notable. LYLO_HACK_BENIGN_LIGHTS=0 restores the
-# old behaviour (every red/amber light raised to INSPECT_SOON). A photo still only ever raises, never lowers.
+# raised a healthy truck to INSPECT_SOON). Opt-in flag: LYLO_HACK_BENIGN_LIGHTS=1. Unset or anything else = v0.5.0
+# behaviour exactly. The parking brake stays notable; a RED parking_brake label hits the same DO_NOT_DRIVE floor as
+# brake_system (the red Ford BRAKE lamp means either). A photo still only ever raises, never lowers.
 BENIGN_LIGHTS = {"seatbelt", "door_ajar", "headlight_or_high_beam", "washer_fluid", "turn_signal", "cruise_control"}
 
 
 def benign_on():
-    return os.environ.get("LYLO_HACK_BENIGN_LIGHTS", "1") != "0"
+    return os.environ.get("LYLO_HACK_BENIGN_LIGHTS") == "1"
+
+
+def lights():
+    return LIGHTS + NEW_LIGHTS if benign_on() else LIGHTS
+
+
+def schema():
+    if not benign_on():
+        return SCHEMA
+    import copy
+    s = copy.deepcopy(SCHEMA)
+    s["properties"]["findings"]["items"]["properties"]["name"]["enum"] = lights() + ISSUES
+    return s
 
 
 # Fixed, deterministic photo safety floors (model output never sets the level directly).
 RED_STOP = {"oil_pressure", "coolant_temperature", "brake_system"}
+PARKING_BRAKE_REASON = "red BRAKE/parking brake light in photo (on a Ford the same red lamp means brake fault or parking brake on)"
 FLOOR_REASON = {
     "oil_pressure": "red oil-pressure light in photo: possible loss of oil pressure; stop and check before driving",
     "coolant_temperature": "red coolant/temperature light in photo: possible overheating; stop and let it cool",
@@ -113,7 +129,7 @@ def to_items(out):
     if not isinstance(out, dict) or not out.get("is_vehicle_photo"):
         return items
     for f in out.get("findings") or []:
-        if not isinstance(f, dict) or f.get("name") not in LIGHTS + ISSUES:
+        if not isinstance(f, dict) or f.get("name") not in lights() + ISSUES:
             continue
         base = f"photo:{f['name']}:{f.get('color', 'unclear')}"
         seen[base] = seen.get(base, 0) + 1
@@ -140,11 +156,11 @@ def floor_for(items):
         n, c, conf = i.get("name"), i.get("color"), i.get("confidence")
         if n in BENIGN_LIGHTS and benign_on():
             continue  # noted in photo_evidence / benign_notes, never escalates
-        if n in RED_STOP and c == "red":
+        if (n in RED_STOP or (n == "parking_brake" and benign_on())) and c == "red":
             if conf in ("medium", "high"):
-                bump("DO_NOT_DRIVE", FLOOR_REASON[n] + f" [{i['id']}]")
+                bump("DO_NOT_DRIVE", FLOOR_REASON.get(n, PARKING_BRAKE_REASON) + f" [{i['id']}]")
             else:
-                bump("INSPECT_SOON", "possible " + FLOOR_REASON[n] + f" (low confidence) [{i['id']}]")
+                bump("INSPECT_SOON", "possible " + FLOOR_REASON.get(n, PARKING_BRAKE_REASON) + f" (low confidence) [{i['id']}]")
         elif n in ("temperature_gauge_high", "smoke_or_steam") and conf in ("medium", "high"):
             bump("DO_NOT_DRIVE", FLOOR_REASON[n] + f" [{i['id']}]")
         elif i.get("type") == "photo_warning_light" and c in ("red", "amber") and conf in ("medium", "high"):
@@ -165,7 +181,7 @@ def analyze(raw, call=None):
                 {"role": "user", "content": [{"type": "text", "text": "Photo from the user's car:"},
                                              {"type": "image_url", "image_url": {"url": url}}]}]
     prompt_hash = hashlib.sha256(json.dumps([messages[0], "image:" + hashlib.sha256(jpeg).hexdigest()]).encode()).hexdigest()[:16]
-    out, meta = (call or muse.chat_json)(messages, SCHEMA, name="dash_photo", max_tokens=2500,
+    out, meta = (call or muse.chat_json)(messages, schema(), name="dash_photo", max_tokens=2500,
                                          timeout=float(os.environ.get("LYLO_HACK_VISION_TIMEOUT_S", "25")))
     items = to_items(out)
     floor, reasons = floor_for(items)
@@ -178,5 +194,5 @@ def analyze(raw, call=None):
             "image_quality": out.get("image_quality") if isinstance(out, dict) else None,
             "is_vehicle_photo": bool(isinstance(out, dict) and out.get("is_vehicle_photo")),
             "photo_evidence": items, "photo_safety_floor": floor, "floor_reasons": reasons,
-            "benign_notes": [f"{i['name'].replace('_', ' ')} light seen: a reminder, not a safety problem" for i in benign],
-            "receipt": receipt}
+            "receipt": receipt,
+            **({"benign_notes": [f"{i['name'].replace('_', ' ')} light seen: a reminder, not a safety problem" for i in benign]} if benign_on() else {})}
