@@ -70,7 +70,8 @@ def classify_safety(
     tow_conditions = []
 
     flashing_mil = "FLASHING_MIL" in state.session_flags
-    has_misfire = any(c.startswith("P030") for c in codes)
+    # P0300-P0312 (V10/V12 need P0309-P0312; "P031x" was missed by a "P030" prefix check)
+    has_misfire = any(len(c) == 5 and c[:3] == "P03" and c[3:].isdigit() and 0 <= int(c[3:]) <= 12 for c in codes)
     has_p0420 = "P0420" in codes
 
     if flashing_mil or (has_misfire and has_p0420):

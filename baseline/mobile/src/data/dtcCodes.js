@@ -28,7 +28,7 @@ const C = (code, t, plain, causes, check, diff, urg, fix, parts, hrs, flag) =>
 const MISFIRE_CAUSES = ['Worn spark plug', 'Bad ignition coil', 'Clogged or leaking fuel injector', 'Vacuum leak near that cylinder', 'Low compression (valve or ring problem)'];
 const MISFIRE_CHECK = ['Swap the coil with a neighboring cylinder and see if the misfire moves', 'Look at the spark plug for wear, oil or carbon'];
 const MISFIRE_FLAG = 'Ask them to confirm WHICH part is bad (coil swap test) before replacing all coils or plugs. A flashing check-engine light means stop driving — it can ruin the catalytic converter.';
-const misfire = (n) => C('P030' + n, 'Cylinder ' + n + ' Misfire Detected',
+const misfire = (n) => C('P03' + String(n).padStart(2, '0'), 'Cylinder ' + n + ' Misfire Detected',
   'Cylinder ' + n + ' is not firing properly, so the engine may shake, idle rough or feel weak.',
   MISFIRE_CAUSES, MISFIRE_CHECK, 'easy', 'soon', 'Replace spark plug and/or ignition coil on cylinder ' + n, [40, 180], [0.5, 1.5], MISFIRE_FLAG);
 
@@ -110,7 +110,7 @@ const CODES = [
 
   // ── Ignition / misfire ─────────────────────────────────────────
   C('P0300', 'Random / Multiple Cylinder Misfire', 'The engine is misfiring on more than one cylinder. It may shake, idle rough or lose power.', ['Worn spark plugs', 'Vacuum leak', 'Low fuel pressure', 'Bad ignition coils', 'Dirty MAF sensor'], ['When were the plugs last changed?', 'Check for vacuum leaks'], 'moderate', 'soon', 'Replace spark plugs (and fix vacuum leak if found)', [40, 200], [1.0, 2.5], MISFIRE_FLAG),
-  misfire(1), misfire(2), misfire(3), misfire(4), misfire(5), misfire(6), misfire(7), misfire(8),
+  misfire(1), misfire(2), misfire(3), misfire(4), misfire(5), misfire(6), misfire(7), misfire(8), misfire(9), misfire(10), misfire(11), misfire(12),
   C('P0325', 'Knock Sensor 1 Circuit (Bank 1)', 'The knock sensor (which listens for engine pinging) has an electrical problem.', ['Faulty knock sensor', 'Damaged wiring (often under the intake)'], ['Use the right octane fuel'], 'pro', 'ok', 'Replace knock sensor', [40, 150], [1.0, 4.0], 'On some V6/V8 engines the sensor is under the intake manifold — labor is the big cost.'),
   C('P0327', 'Knock Sensor 1 Circuit Low (Bank 1)', 'The knock sensor signal is too low.', ['Faulty knock sensor', 'Wiring or connector'], ['Inspect the connector'], 'pro', 'ok', 'Replace knock sensor', [40, 150], [1.0, 4.0]),
   C('P0335', 'Crankshaft Position Sensor "A" Circuit', 'The engine computer can\'t see crankshaft position. The car may stall or not start.', ['Faulty crankshaft position sensor', 'Wiring or connector', 'Damaged reluctor ring'], ['Inspect the sensor connector'], 'moderate', 'stop', 'Replace crankshaft position sensor', [30, 120], [0.5, 2.0], 'The car can stall without warning — avoid highway driving until fixed.'),

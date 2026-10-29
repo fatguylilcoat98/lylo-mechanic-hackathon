@@ -24,7 +24,12 @@ from . import safety as S
 
 CONDITIONS = ("above", "below", "between", "outside", "dtc_present")
 STATUSES = ("LOCKED", "HELD", "FAILED")
-MISFIRE_DTCS = tuple(f"P030{n}" for n in range(0, 9))  # P0300 random/multiple, P0301..P0308 cylinder N
+MAX_CYL = 12  # V10 (P0309/P0310) and V12 (P0311/P0312)
+MISFIRE_DTCS = tuple(f"P03{n:02d}" for n in range(0, MAX_CYL + 1))  # P0300 random/multiple, P0301..P0312 cylinder N
+
+
+def misfire_code(cyl):
+    return f"P03{int(cyl):02d}"
 NOT_REPORTED = "not reported by this vehicle"
 MISFIRE_FLOOR = "DRIVE_SHORT_DISTANCE_ONLY"
 MODE06_MISFIRE_COUNT = 10  # per-cylinder count above this in the window = misfire seen
@@ -231,7 +236,7 @@ def downgrade(hypotheses, pred):
 
 
 def misfire(data):
-    """P0300-P0308 from the car, plus Mode 06 per-cylinder counts when the vehicle reports them."""
+    """P0300-P0312 from the car (P0309/P0310 for V10s), plus Mode 06 per-cylinder counts when the vehicle reports them."""
     codes = []
     dtcs = data.get("raw_dtcs") if isinstance(data.get("raw_dtcs"), list) else []
     for d in dtcs:
@@ -240,14 +245,14 @@ def misfire(data):
         c = str(d.get("code", "")).upper()
         if c in MISFIRE_DTCS:
             codes.append({"code": c, "status": d.get("status", "active"),
-                          "cylinder": int(c[-1]) if c != "P0300" else None})
+                          "cylinder": int(c[3:]) if c != "P0300" else None})  # P0310 -> 10 (not c[-1])
     m6 = data.get("mode06") if isinstance(data.get("mode06"), dict) else {}
     counts = m6.get("misfire_counts") if m6.get("supported") and isinstance(m6.get("misfire_counts"), dict) else None
     per_cyl = None
     if counts:
         per_cyl = {}
         for k, v in counts.items():
-            if str(k).isdigit() and isinstance(v, (int, float)) and not isinstance(v, bool):
+            if str(k).isdigit() and 1 <= int(k) <= MAX_CYL and isinstance(v, (int, float)) and not isinstance(v, bool):
                 per_cyl[int(k)] = v
     worst = max(per_cyl, key=per_cyl.get) if per_cyl else None
     return {"codes": codes,
@@ -278,7 +283,7 @@ def rule_prediction(data, mf):
                     "pids": [f"MISFIRE_COUNT_CYL{cyl}"], "condition": "above", "threshold": [MODE06_MISFIRE_COUNT],
                     "window_s": 90, "if_fails": f"Cylinder {cyl} is not misfiring now; the stored code may be old or intermittent."}
         return {"hypothesis": f"Cylinder {cyl} is misfiring (coil, plug, injector or wiring on cylinder {cyl})",
-                "pids": [f"P030{cyl}"], "condition": "dtc_present", "threshold": [], "window_s": 90,
+                "pids": [misfire_code(cyl)], "condition": "dtc_present", "threshold": [], "window_s": 90,
                 "if_fails": f"The cylinder {cyl} code did not come back at idle; the fault may be intermittent."}
     pids = data.get("raw_pids") if isinstance(data.get("raw_pids"), list) else []
     for p in pids:

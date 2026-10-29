@@ -110,7 +110,8 @@ export function MechanicView({ m }) {
       ))}
       {x.unverified.map((u) => <Text key={u.key} style={[s.small, { color: '#ffb020' }]}>Unverified {u.kind}: {u.text}</Text>)}
       {x.vehicle ? <><Text style={s.h2}>Vehicle (VIN decode)</Text><Row label="Vehicle" value={x.vehicle.name} />
-        {x.vehicle.engine ? <Row label="Engine (factory)" value={x.vehicle.engine} /> : null}
+        {x.vehicle.ownerEngine ? <Row label="Engine" value={x.vehicle.ownerEngine + ' (set by owner)'} /> : null}
+        {x.vehicle.engine ? <Row label={x.vehicle.ownerEngine ? 'VIN decoder' : 'Engine'} value={'VIN decoder says (unverified): ' + x.vehicle.engine} /> : null}
         <Text style={s.small}>{x.vehicle.source}; {x.vehicle.caveat}</Text></> : null}
       {x.prices.length ? <Text style={s.h2}>Check the price</Text> : null}
       {x.prices.map((p) => <PriceButtons key={p.query} p={p} />)}

@@ -15,6 +15,7 @@ import urllib.request
 VPIC = "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{vin}?format=json"
 RECALLS = "https://api.nhtsa.gov/recalls/recallsByVehicle?make={make}&model={model}&modelYear={year}"
 CAVEAT = "assumes the factory engine (not swapped)"
+ENGINE_LABEL = "VIN decoder says (unverified)"  # v0.5.1: the vPIC engine is a lookup, not a reading from the car
 RECALL_SOURCE = "NHTSA recalls by year/make/model (not checked against this exact VIN)"
 DECODE_SOURCE = "NHTSA vPIC VIN decoder"
 TRANSLIT = dict(zip("ABCDEFGHJKLMNPRSTUVWXYZ", [1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 7, 9, 2, 3, 4, 5, 6, 7, 8, 9]))
@@ -91,6 +92,9 @@ def decode(vin, fetch=None, timeout=None):
     engine = " ".join(x for x in [f"{disp:.1f}L" if disp else "", f"{cyl}-cyl" if cyl else "", fuel] if x)
     out = {"status": "ok", "year": int(year) if str(year).isdigit() else year, "make": make, "model": model,
            "trim": r.get("Trim") or "", "engine": engine, "electrification": r.get("ElectrificationLevel") or "",
+           "engine_label": ENGINE_LABEL,
+           "engine_maker": " ".join(x for x in [r.get("EngineManufacturer") or "", r.get("EngineModel") or ""] if x)[:60],
+           "engine_code": v[7] if len(v) == 17 else "",  # 8th VIN character (the maker's engine code), not the VIN
            "name": f"{year} {make} {model}", "caveat": CAVEAT, "source": DECODE_SOURCE, "vin_masked": v[:3] + "*" * 14}
     _cache[v] = (time.time(), out)
     return out
@@ -120,13 +124,13 @@ def ledger_items(data, fetch=None):
     if dec.get("status") != "ok":
         return []
     return [{"id": "vin:decoded", "type": "vehicle_decoded", "source": "vin_decode", "year": dec["year"],
-             "make": dec["make"], "model": dec["model"], "engine": dec["engine"], "caveat": CAVEAT}]
+             "make": dec["make"], "model": dec["model"], "engine": dec["engine"], "engine_label": ENGINE_LABEL, "caveat": CAVEAT}]
 
 
 def prompt_line(dec):
     if not dec or dec.get("status") != "ok":
         return ""
-    eng = f", {dec['engine']}" if dec.get("engine") else ""
+    eng = f", engine per the {ENGINE_LABEL}: {dec['engine']}" if dec.get("engine") else ""
     return f"Vehicle (decoded from VIN; {CAVEAT}): {dec['name']}{eng}."
 
 

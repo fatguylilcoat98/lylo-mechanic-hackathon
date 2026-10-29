@@ -124,6 +124,11 @@ def apply_to_decode(dec, ov):
 _LIGHT_FORD = re.compile(r"^\s*(E|F)[\s-]?(150|250|350|450|550)\b", re.I)
 
 
+HINT_FORD_S = ("The government VIN decoder lists a 10.3L Caterpillar diesel for this truck, but on {year} Ford E/F-series "
+               "trucks engine code S (the 8th VIN character) is the 6.8L V10 Triton gas engine. Check the engine label "
+               "and tap \"Not my engine?\" to set Gas / 6.8L V10 Triton.")
+
+
 def decode_hint(dec):
     """Cautious 'double-check your engine' hint. Only when on, vPIC says diesel, and it's a Ford E/F-series."""
     if not enabled() or not dec or dec.get("status") != "ok":
@@ -132,4 +137,7 @@ def decode_hint(dec):
         return None
     if "diesel" not in str(dec.get("engine", "")).lower():
         return None
+    y = dec.get("year")
+    if str(dec.get("engine_code", "")).upper() == "S" and isinstance(y, int) and 1997 <= y <= 2004:
+        return HINT_FORD_S.format(year=y)  # v0.5.1: known vPIC mis-map (code S -> Caterpillar 3176)
     return HINT

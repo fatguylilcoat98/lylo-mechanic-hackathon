@@ -99,9 +99,9 @@ export default function VinScreen({ navigation, storage, picker, fetchImpl, base
     <ScrollView style={s.screen} contentContainerStyle={s.scroll}>
       <Text style={s.h}>Your car</Text>
       <Text style={s.body}>Your VIN tells LYLO the exact year, make, model and engine, so the help fits your car. It's 17 characters, on the dashboard by the windshield (driver side) or on the driver door frame sticker.</Text>
-      {vehicle && !myEo ? <VehicleLine v={{ name: vehicle.name, caveat: `${vehicle.engine ? vehicle.engine + ', ' : ''}${vehicle.caveat}. Source: ${vehicle.source}.`, recalls: vehicle.recalls }} /> : null}
+      {vehicle && !myEo ? <VehicleLine v={{ name: vehicle.name, caveat: `${vehicle.engine ? 'Engine: VIN decoder says (unverified) ' + vehicle.engine + ', ' : ''}${vehicle.caveat}. Source: ${vehicle.source}.`, recalls: vehicle.recalls }} /> : null}
       {vehicle && myEo ? <VehicleLine v={{ name: vehicle.name, caveat: `Engine set by you: ${EO.label(myEo)}`, recalls: vehicle.recalls }} /> : null}
-      {vehicle && myEo ? <Text style={s.fine2} testID="eo-nhtsa">NHTSA decode: {vehicle.engine || 'no engine listed'} (may be wrong for this VIN). Source: {vehicle.source}.</Text> : null}
+      {vehicle && myEo ? <Text style={s.fine2} testID="eo-nhtsa">VIN decoder says (unverified): {vehicle.engine || 'no engine listed'}. Your engine above is used instead. Source: {vehicle.source}.</Text> : null}
       {vehicle && eoOn && hint && !myEo ? <Text style={s.msg} testID="eo-hint">{hint}</Text> : null}
       {vehicle && eoOn ? <EngineEditor vin={vehicle.vin} current={myEo} onSave={async (o) => { await EO.save(store, o); setEo(o); }} /> : null}
       <Text style={s.label}>Type VIN</Text>

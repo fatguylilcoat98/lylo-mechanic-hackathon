@@ -139,7 +139,8 @@ function buildResults(scan, opts = {}) {
     .map((p) => ({ ...p, title: stripCodes(p.title) }));
   mechanic.prices = prices.concat((Array.isArray(det.hypotheses) ? det.hypotheses : []).slice(0, 4)
     .map((h) => priceLinks(partFromCause(h.cause), vehicle, null)).filter(uniq));
-  mechanic.vehicle = vehicle ? { name: vehicle.name, engine: vehicle.engine, caveat: vehicle.caveat, source: vehicle.source } : null;
+  const ve = r.vehicle_engine && typeof r.vehicle_engine.engine === 'string' ? r.vehicle_engine : null; // v0.5.1: owner-set engine from the server
+  mechanic.vehicle = vehicle ? { name: vehicle.name, engine: vehicle.engine, ownerEngine: ve ? ve.engine : null, caveat: vehicle.caveat, source: vehicle.source } : null;
 
   return {
     vehicle: vehicle ? { name: vehicle.name, caveat: `Based on your VIN (${vehicle.caveat}).`, recalls: vehicle.recalls || null } : null,
