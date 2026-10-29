@@ -122,9 +122,9 @@ function buildResults(scan, opts = {}) {
     explanation: dv && dv.explanation ? dv.explanation.text : null,
     clearedText: dv && dv.clearedWarning ? dv.clearedWarning.text : null,
     unverified: dv ? dv.unverified : [],
-    pids: Object.values(pids).map((i) => ({ name: i.name, value: i.value, unit: i.unit || '' })),
+    pids: Object.values(pids).map((i) => ({ name: i.name, label: labelFor(i.name), value: i.value, unit: i.unit || '' })),
     dtcs: ledger.filter((i) => String(i.id).startsWith('dtc:')).map((i) => `${i.code} (${i.status})`),
-    monitors: ledger.filter((i) => String(i.id).startsWith('mon:')).map((i) => `${String(i.id).slice(4)}: ${i.status || (i.complete ? 'complete' : 'incomplete')}`),
+    monitors: ledger.filter((i) => String(i.id).startsWith('mon:')).map((i) => `${monitorLabel(i.id)}: ${i.status || (i.complete ? 'complete' : 'incomplete')}`), // v0.5.1 plain names
     freezeFrame: scan.freezeFrame || null,
     receipt: dv ? dv.receipt : null,
     museStatus: det.muse_status || 'off',

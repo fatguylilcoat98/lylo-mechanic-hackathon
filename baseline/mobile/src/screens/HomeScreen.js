@@ -29,7 +29,7 @@ function HomeScreenV1({ navigation }) {
         <Text style={s.title}>LYLO Mechanic</Text>
         <Text style={s.tag}>Know what's wrong before you buy or walk into a shop.</Text>
         <Text style={s.powered}>Powered by Meta AI</Text>
-        <Text style={s.build}>TEST BUILD v0.5.0 · works offline · no login</Text>
+        <Text style={s.build}>TEST BUILD v0.5.1 · works offline · no login</Text>
       </View>
 
       {device ? (

@@ -12,6 +12,7 @@ import { loadVehicle } from '../vin';
 import { PriceButtons, VehicleLine } from '../PriceButtons';
 import DashVoicePanel from '../DashVoicePanel';
 import { MechanicView } from '../SimpleResults';
+import { ProveCheck } from '../ProvePanel'; // v0.5.1, renders nothing unless EXPO_PUBLIC_LYLO_PROVE=1
 
 export function ResultsV2Body({ m, pinnedReplay = false }) {
   const [open, setOpen] = useState(() => new Set(m.causes.length ? [m.causes[0].key] : []));
@@ -35,7 +36,7 @@ export function ResultsV2Body({ m, pinnedReplay = false }) {
       </Section>
 
       {m.causes.length ? (
-        <Section title="THE PROOF \u00B7 MUSE DETECTIVE">
+        <Section title={'THE PROOF \u00B7 MUSE DETECTIVE'}>
           <View style={st.legend} testID="evidence-summary">
             <View style={st.legendItem}><EvidenceBadge kind="car" /><Text style={st.legendN}>{c.car}</Text></View>
             <View style={st.legendItem}><EvidenceBadge kind="guess" /><Text style={st.legendN}>{c.guess}</Text></View>
@@ -60,7 +61,7 @@ export function ResultsV2Body({ m, pinnedReplay = false }) {
       <Pressable onPress={() => setDetails(!details)} accessibilityRole="button" style={[st.disclose, { marginTop: space.xl }]}>
         <Text style={cs.link}>{details ? 'Hide mechanic details \u25B2' : 'Mechanic details \u25BC'}</Text>
       </Pressable>
-      {details ? <MechanicView m={m} /> : null}
+      {details ? <MechanicView m={m} hideCauses /> : null}
 
       <Text style={st.powered}>{m.poweredBy}</Text>
       {m.receipt ? <Text style={st.mono}>{m.receipt}</Text> : null}
@@ -71,7 +72,7 @@ export function ResultsV2Body({ m, pinnedReplay = false }) {
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
 
-export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice }) {
+export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove }) {
   const store = storage === undefined ? defaultStorage : storage;
   const [vehicle, setVehicle] = useState(null);
   const [raised, setRaised] = useState(null);
@@ -84,6 +85,7 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
     <ScrollView style={st.screen} contentContainerStyle={st.scroll} stickyHeaderIndices={m.replay ? [0] : undefined}>
       {m.replay ? <View style={st.pin} testID="replay-pin"><ReplayBadge label={m.replay} /></View> : null}
       <ResultsV2Body m={m} pinnedReplay={!!m.replay} />
+      <ProveCheck scan={scan} {...(prove || {})} />
       <DashVoicePanel scan={scan} onScan={(next) => setRaised({ base: scanIn, scan: next })} {...(dashVoice || {})} />
       <View style={{ marginTop: space.xl }}>{footer}</View>
     </ScrollView>

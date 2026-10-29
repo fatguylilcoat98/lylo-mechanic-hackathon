@@ -8,6 +8,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { C } from '../../../baseline/mobile/src/constants/colors';
 import { configuredUrl, configuredKey } from './scanHook';
 import { CASES, replay, proof, replayView, proofView } from './demo';
+import { ProveReplay } from './ProvePanel'; // v0.5.1 'Run the proof'
 
 const Y = '#f5c518';
 const TONE = { SAFE_TO_DRIVE: '#2a9d8f', INSPECT_SOON: '#f5c518', DRIVE_SHORT_DISTANCE_ONLY: '#f4a261', DO_NOT_DRIVE: '#e5383b', TOW_RECOMMENDED: '#e5383b', EMERGENCY_STOP_IMMEDIATELY: '#ff1f3d' };
@@ -92,6 +93,7 @@ export default function DemoScreen({ navigation, fetchImpl, baseUrl, appKey }) {
           <Text style={s.small}>Merge result: {pv.action}</Text>
         </View>
       ) : null}
+      <ProveReplay opts={opts} />
       <Big title="Home" onPress={() => navigation && navigation.navigate('Home')} kind="secondary" />
     </ScrollView>
   );

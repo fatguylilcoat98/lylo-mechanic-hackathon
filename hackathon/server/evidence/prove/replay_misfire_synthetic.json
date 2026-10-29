@@ -1,0 +1,273 @@
+{
+ "note": "Recorded from the local test server (Muse off, SYNTHETIC case). v0.5.1 UI test fixture.",
+ "response": {
+  "confidence": {
+   "blocked_outputs": [],
+   "codes_possibly_cleared": false,
+   "connection_valid": true,
+   "limit_reason": null,
+   "manufacturer_specific_unknowns": false,
+   "monitors_incomplete": false,
+   "overall": 1.0,
+   "pid_coverage": "full",
+   "read_complete": true,
+   "symptom_alignment": "no_symptoms",
+   "unstable_session": false
+  },
+  "cost_estimates": [],
+  "detective": {
+   "final_safety_level": "DRIVE_SHORT_DISTANCE_ONLY",
+   "ledger": [
+    {
+     "code": "P0303",
+     "id": "dtc:P0303:pending",
+     "status": "pending",
+     "type": "dtc"
+    },
+    {
+     "id": "pid:ENGINE_RPM",
+     "name": "ENGINE_RPM",
+     "type": "pid",
+     "unit": "rpm",
+     "value": 690
+    },
+    {
+     "id": "pid:ENGINE_COOLANT_TEMP",
+     "name": "ENGINE_COOLANT_TEMP",
+     "type": "pid",
+     "unit": "\u00b0F",
+     "value": 188
+    },
+    {
+     "id": "rule:safety",
+     "level": "SAFE_TO_DRIVE",
+     "triggers": [
+      "No safety-critical fault codes detected",
+      "No drivability symptoms reported"
+     ],
+     "type": "rule_safety"
+    },
+    {
+     "code": "P0303",
+     "cylinder": 3,
+     "id": "misfire:P0303",
+     "source": "car",
+     "status": "pending",
+     "type": "misfire"
+    },
+    {
+     "count": 0,
+     "cylinder": 1,
+     "id": "m06:misfire:cyl1",
+     "source": "car",
+     "type": "mode06_misfire"
+    },
+    {
+     "count": 1,
+     "cylinder": 2,
+     "id": "m06:misfire:cyl2",
+     "source": "car",
+     "type": "mode06_misfire"
+    },
+    {
+     "count": 3,
+     "cylinder": 3,
+     "id": "m06:misfire:cyl3",
+     "source": "car",
+     "type": "mode06_misfire"
+    },
+    {
+     "count": 0,
+     "cylinder": 4,
+     "id": "m06:misfire:cyl4",
+     "source": "car",
+     "type": "mode06_misfire"
+    },
+    {
+     "count": 0,
+     "cylinder": 5,
+     "id": "m06:misfire:cyl5",
+     "source": "car",
+     "type": "mode06_misfire"
+    },
+    {
+     "count": 0,
+     "cylinder": 6,
+     "id": "m06:misfire:cyl6",
+     "source": "car",
+     "type": "mode06_misfire"
+    },
+    {
+     "count": 1,
+     "cylinder": 7,
+     "id": "m06:misfire:cyl7",
+     "source": "car",
+     "type": "mode06_misfire"
+    },
+    {
+     "count": 0,
+     "cylinder": 8,
+     "id": "m06:misfire:cyl8",
+     "source": "car",
+     "type": "mode06_misfire"
+    }
+   ],
+   "muse_status": "skipped (deterministic rebuild)",
+   "prediction": {
+    "measured": "MISFIRE_COUNT_CYL3 = 17 at +25 s",
+    "status": "HELD",
+    "text": "Cylinder 3 is misfiring (coil, plug, injector or wiring on cylinder 3): MISFIRE_COUNT_CYL3 will read above 10 within 90 s"
+   },
+   "prediction_replay": true,
+   "prove": {
+    "chain_ok": true,
+    "head_sha256": "21cb58445c52a1ded122f930f57c627b2d08b2498a9a4acd9f9e7ae363e42ddd",
+    "hypotheses_after": [],
+    "if_fails": null,
+    "ledger": [
+     {
+      "at": 1793235604.7235446,
+      "body": {
+       "prediction": {
+        "condition": "above",
+        "hypothesis": "Cylinder 3 is misfiring (coil, plug, injector or wiring on cylinder 3)",
+        "if_fails": "Cylinder 3 is not misfiring now; the stored code may be old or intermittent.",
+        "pids": [
+         "MISFIRE_COUNT_CYL3"
+        ],
+        "threshold": [
+         10.0
+        ],
+        "window_s": 90
+       },
+       "proposed_by": "rules"
+      },
+      "kind": "prediction",
+      "prev": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seq": 0,
+      "sha256": "c5c56eab015f273924d4149ca18798eb7eace17ee7477494c1ed531cb2593729"
+     },
+     {
+      "at": 1793235604.7237744,
+      "body": {
+       "checked_by": "deterministic checker",
+       "measured": "MISFIRE_COUNT_CYL3 = 17 at +25 s",
+       "n": 4,
+       "status": "HELD"
+      },
+      "kind": "outcome",
+      "prev": "c5c56eab015f273924d4149ca18798eb7eace17ee7477494c1ed531cb2593729",
+      "seq": 1,
+      "sha256": "21cb58445c52a1ded122f930f57c627b2d08b2498a9a4acd9f9e7ae363e42ddd"
+     }
+    ],
+    "lock_sha256": "c5c56eab015f273924d4149ca18798eb7eace17ee7477494c1ed531cb2593729",
+    "locked_at": 1793235604.7235446,
+    "misfire": {
+     "active": true,
+     "codes": [
+      {
+       "code": "P0303",
+       "cylinder": 3,
+       "status": "pending"
+      }
+     ],
+     "per_cylinder_counts": {
+      "1": 0,
+      "2": 1,
+      "3": 3,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 1,
+      "8": 0
+     },
+     "worst_cylinder": null
+    },
+    "prediction": {
+     "condition": "above",
+     "hypothesis": "Cylinder 3 is misfiring (coil, plug, injector or wiring on cylinder 3)",
+     "if_fails": "Cylinder 3 is not misfiring now; the stored code may be old or intermittent.",
+     "pids": [
+      "MISFIRE_COUNT_CYL3"
+     ],
+     "threshold": [
+      10.0
+     ],
+     "window_s": 90
+    },
+    "proposal_rejected": null,
+    "proposed_by": "rules",
+    "session_id": "110053ed466b478f"
+   },
+   "recently_cleared": false,
+   "rule_safety_level": "SAFE_TO_DRIVE",
+   "safety_action": "kept_rule_level"
+  },
+  "diy_eligibility": null,
+  "hackathon": {
+   "build": "lylo-mechanic-hackathon",
+   "codes_cleared_evidence": [],
+   "conversion_notes": [],
+   "external_handshake": "stubbed",
+   "vehicle_received": {
+    "model": null,
+    "odometer": null,
+    "vin": null
+   }
+  },
+  "handshake_api": null,
+  "handshake_reason": null,
+  "handshake_required": false,
+  "hypotheses": [],
+  "professional_help_triggers": [
+   "If symptoms worsen or a new warning light appears, stop driving and seek professional inspection"
+  ],
+  "replay": {
+   "badge": "REPLAY",
+   "case": "prove_misfire_synthetic",
+   "label": "SYNTHETIC misfire replay: cylinder 3 (made-up data)",
+   "note": "Recorded readings played back through the live pipeline. Not live data.",
+   "synthetic": true
+  },
+  "safety": {
+   "level": "DRIVE_SHORT_DISTANCE_ONLY",
+   "reasoning": "No safety-critical conditions detected. Monitor for changes and schedule routine service as needed.",
+   "rule_level": "SAFE_TO_DRIVE",
+   "symptom_overrides_sensor": false,
+   "triggering_conditions": [
+    "No safety-critical fault codes detected",
+    "No drivability symptoms reported",
+    "misfire_rule raised the level: the car reports an active misfire"
+   ],
+   "user_must_acknowledge": false
+  },
+  "session_flags": [],
+  "session_id": "B778A94F",
+  "tutorial_available": false,
+  "tutorial_blocked_reason": "No DIY assessment available.",
+  "vehicle": {
+   "drive_type": null,
+   "engine": null,
+   "engine_type": null,
+   "enhanced_protocol": false,
+   "is_ev": false,
+   "is_hybrid": false,
+   "make": null,
+   "model": null,
+   "odometer": null,
+   "supported_pids": [],
+   "transmission": null,
+   "trim": null,
+   "vin": null,
+   "year": null
+  },
+  "veracore_flags": [],
+  "what_this_might_mean": "No diagnostic data is available to form a conclusion. A physical inspection is recommended.",
+  "what_to_check_first": [],
+  "what_we_know": [
+   "Pending fault (not yet confirmed): P0303 \u2014 Cylinder 3 Misfire Detected",
+   "Coolant temperature: 188\u00b0F \u2014 normal"
+  ]
+ }
+}

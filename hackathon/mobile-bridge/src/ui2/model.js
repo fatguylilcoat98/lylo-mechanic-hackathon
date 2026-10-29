@@ -9,6 +9,14 @@
 const { buildResults } = require('../resultsView');
 const { itemLabel } = require('../detectiveView');
 const { evidenceKind } = require('./theme');
+const { friendly } = require('../friendlyLabels');
+
+/** v0.5.1: plain words in the proof list (was raw PID names like ENGINE_COOLANT_TEMP = 88 C). */
+function plainLabel(it) {
+  if (it && it.type === 'dtc') { const f = friendly(it); return `Code ${it.code}: ${f.label.replace(/^Warning: /, '')} (${f.value})`; }
+  const f = it && String(it.id || '').match(/^(pid|mon|photo|clr):/) ? friendly(it) : null;
+  return f && f.label ? (f.value ? `${f.label}: ${f.value}` : f.label) : itemLabel(it);
+}
 
 const ORDER = ['SAFE_TO_DRIVE', 'INSPECT_SOON', 'DRIVE_SHORT_DISTANCE_ONLY', 'DO_NOT_DRIVE', 'TOW_RECOMMENDED', 'EMERGENCY_STOP_IMMEDIATELY'];
 const rank = (lv) => ORDER.indexOf(lv);
@@ -54,7 +62,7 @@ function buildV2(scan, opts = {}) {
     nextCheck: h.next_check ? String(h.next_check) : null,
     evidence: (Array.isArray(h.cites) ? h.cites : []).map((id) => {
       const it = byId[id];
-      return { id, kind: evidenceKind(it), label: it ? itemLabel(it) : 'Not in this scan' };
+      return { id, kind: evidenceKind(it), label: it ? plainLabel(it) : 'Not in this scan' };
     }),
   })) : [];
   const counts = { car: 0, guess: 0, unknown: 0 };

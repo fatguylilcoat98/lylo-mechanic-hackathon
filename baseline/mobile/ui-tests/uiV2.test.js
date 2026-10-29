@@ -23,7 +23,7 @@ afterEach(() => { mockV2 = false; });
 
 test('flag off: old home; flag on: v2 home with one primary action and three choices', async () => {
   let ui = await mount(<App />);
-  expect(ui.getByText(/TEST BUILD v0.5.0/)).toBeTruthy();
+  expect(ui.getByText(/TEST BUILD v0.5.1/)).toBeTruthy();
   expect(ui.queryByTestId('primary-action')).toBeNull();
   mockV2 = true;
   ui = await mount(<App />);

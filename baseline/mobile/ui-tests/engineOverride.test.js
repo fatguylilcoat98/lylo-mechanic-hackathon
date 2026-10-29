@@ -38,7 +38,7 @@ test('flag on: hint shown, owner picks Gas + 6.8L V10 Triton, card says Engine s
   await act(async () => { fireEvent.press(ui.getByText('Save my engine')); });
   await settle();
   expect(ui.getByText('Engine set by you: 6.8L V10 Triton (Gas)')).toBeTruthy();
-  expect(ui.getByText(/NHTSA decode: 10.3L 6-cyl Diesel \(may be wrong for this VIN\)/)).toBeTruthy();
+  expect(ui.getByText(/VIN decoder says \(unverified\): 10.3L 6-cyl Diesel\. Your engine above is used instead/)).toBeTruthy();
   const saved = JSON.parse(st.m['lylo.engineOverride']);
   expect(saved).toMatchObject({ vin: VIN, fuel: 'gas', engine: '6.8L V10 Triton' });
   expect(JSON.parse(st.m['lylo.vehicle']).engine).toBe('10.3L 6-cyl Diesel'); // the decode itself is kept

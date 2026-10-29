@@ -69,7 +69,7 @@ export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp }) 
           <Link title="Debug log" onPress={() => go('Log')} />
         </View>
       ) : null}
-      <Text style={st.foot}>Repair prices are LYLO estimates, not quotes. v0.5.0</Text>
+      <Text style={st.foot}>Repair prices are LYLO estimates, not quotes. v0.5.1</Text>
     </ScrollView>
   );
 }

@@ -12,6 +12,7 @@ import { MODE_LABELS, loadViewMode, saveViewMode } from './viewMode';
 import { loadVehicle } from './vin';
 import { PriceButtons, VehicleLine } from './PriceButtons';
 import DashVoicePanel from './DashVoicePanel'; // v0.4.4, renders nothing with its flags unset
+import { ProveCheck } from './ProvePanel'; // v0.5.1, renders nothing unless EXPO_PUBLIC_LYLO_PROVE=1
 import { uiV2On } from './ui2/theme'; // UI v2, flag EXPO_PUBLIC_LYLO_UI_V2=1 (off = this screen)
 
 let defaultStorage = null;
@@ -87,7 +88,14 @@ function SimpleView({ m }) {
   );
 }
 
-export function MechanicView({ m }) {
+/** v0.5.1: '190 °F (190 °F)' -> '190 °F'; the raw reading is added only when it differs. */
+export function pidText(p) {
+  const raw = `${p.value} ${p.unit}`.trim();
+  const nice = formatValue(p.name, p.value, p.unit);
+  return nice === raw || !nice ? raw : `${nice} (${raw})`;
+}
+
+export function MechanicView({ m, hideCauses = false }) {
   const x = m.mechanic;
   return (
     <View>
@@ -98,8 +106,8 @@ export function MechanicView({ m }) {
       {x.safetyNote ? <Text style={s.small}>{x.safetyNote}</Text> : null}
       {x.triggers.map((t) => <Text key={t} style={s.small}>{'\u2022 '}{t}</Text>)}
       {x.clearedText ? <><Text style={s.h2}>Codes cleared</Text><Text style={s.body}>{x.clearedText}</Text></> : null}
-      <Text style={s.h2}>Hypotheses (Meta AI, {x.museStatus})</Text>
-      {x.hypotheses.map((h) => (
+      {hideCauses ? null : <Text style={s.h2}>{x.museStatus === 'ok' ? 'Possible causes (Meta AI)' : x.museStatus === 'off' ? 'Possible causes (Meta AI not used)' : "Possible causes (Meta AI didn't answer)"}</Text>}
+      {hideCauses ? null : x.hypotheses.map((h) => (
         <View key={h.key} style={s.cause}>
           <Text style={s.causeTitle}>{h.rank}. {h.cause}</Text>
           <Text style={s.small}>{h.confidenceLabel}</Text>
@@ -118,7 +126,7 @@ export function MechanicView({ m }) {
       <Text style={s.h2}>Trouble codes</Text>
       <Text style={s.body}>{x.dtcs.length ? x.dtcs.join(', ') : 'None'}</Text>
       <Text style={s.h2}>Live data</Text>
-      {x.pids.map((p) => <Row key={p.name} label={p.name} value={`${p.value} ${p.unit}`.trim() + ' (' + formatValue(p.name, p.value, p.unit) + ')'} />)}
+      {x.pids.map((p) => <Row key={p.name} label={p.name} value={pidText(p)} />)}
       <Text style={s.h2}>Readiness monitors</Text>
       {x.monitors.map((t) => <Text key={t} style={s.small}>{t}</Text>)}
       <Text style={s.h2}>Freeze frame</Text>
@@ -148,7 +156,7 @@ export function ResultsBody({ m, mode, onMode }) {
   );
 }
 
-function SimpleResultsV1({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice }) {
+function SimpleResultsV1({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove }) {
   const store = storage === undefined ? defaultStorage : storage;
   const [mode, setMode] = useState('simple');
   const [vehicle, setVehicle] = useState(null);
@@ -161,6 +169,7 @@ function SimpleResultsV1({ scan: scanIn, codes, screen, baselineCleared, footer,
   return (
     <ScrollView style={s.screen} contentContainerStyle={s.scroll}>
       <ResultsBody m={m} mode={mode} onMode={change} />
+      <ProveCheck scan={scan} {...(prove || {})} />
       <DashVoicePanel scan={scan} onScan={(next) => setRaised({ base: scanIn, scan: next })} {...(dashVoice || {})} />
       <View style={{ marginTop: 20 }}>{footer}</View>
     </ScrollView>
@@ -190,8 +199,8 @@ const s = StyleSheet.create({
   cause: { marginBottom: 14 },
   causeTitle: { color: '#ffffff', fontSize: 17, fontWeight: '700', lineHeight: 24 },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#1e2a38' },
-  rowLabel: { color: '#c5d1dc', fontSize: 16, flex: 1, paddingRight: 10 },
-  rowValue: { color: '#ffffff', fontSize: 16, fontWeight: '700', flexShrink: 1, textAlign: 'right' },
+  rowLabel: { color: '#c5d1dc', fontSize: 16, flexShrink: 0, minWidth: 90, maxWidth: '50%', paddingRight: 10 }, // v0.5.1: no 'Serve r' wrap
+  rowValue: { color: '#ffffff', fontSize: 16, fontWeight: '700', flex: 1, flexWrap: 'wrap', textAlign: 'right' },
   receipt: { marginTop: 32, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#1e2a38' },
   powered: { color: '#c5d1dc', fontSize: 14, fontWeight: '700' },
   mono: { color: '#8a99a8', fontSize: 12, fontFamily: 'monospace', marginTop: 4 },
