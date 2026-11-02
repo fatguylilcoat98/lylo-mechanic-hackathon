@@ -23,6 +23,7 @@ from . import security
 from . import netpref
 from . import engine_user
 from . import prove
+from . import webdemo
 
 log = logging.getLogger("lylo_hack")
 
@@ -146,12 +147,14 @@ def create_app():
             return None, (jsonify({"error": "Invalid scan payload.", "errors": errors}), 400)
         return data, None
 
-    def _photo_items_from_form():
-        """Optional 'photo_evidence' field (items returned by /vision/dash). Re-typed: source=photo, lower trust."""
-        try:
-            raw = json.loads(request.form.get("photo_evidence") or "[]")
-        except ValueError:
-            return []
+    def _photo_items_from_form(raw=None):
+        """Optional 'photo_evidence' field (items returned by /vision/dash). Re-typed: source=photo, lower trust.
+        raw: an already-parsed list (JSON body, flag LYLO_HACK_JSON_PHOTO=1); None = read the multipart form field."""
+        if raw is None:
+            try:
+                raw = json.loads(request.form.get("photo_evidence") or "[]")
+            except ValueError:
+                return []
         items = []
         for i in raw if isinstance(raw, list) else []:
             if isinstance(i, dict) and str(i.get("id", "")).startswith("photo:") and i.get("name") in vision.lights() + vision.ISSUES:
@@ -438,7 +441,10 @@ def create_app():
         raw_pe = src.get("photo_evidence")
         photo_items = []
         if raw_pe:
-            photo_items = _photo_items_from_form() if body is None else []
+            if body is None:
+                photo_items = _photo_items_from_form()
+            elif webdemo.json_photo_on() and isinstance(raw_pe, list):  # v0.6 flag: JSON clients keep photo items too
+                photo_items = _photo_items_from_form(raw_pe)
         floor, reasons = vision.floor_for(photo_items)
         diag = (lambda d: live.diagnose(d, muse=False)) if codes else None
         items, level, notes, hits, result = symptoms.build(text, codes, vehicle, photo_items, diag, floor, reasons)
@@ -460,6 +466,8 @@ def create_app():
                                 + ". Without an adapter this is a lower-confidence check. This level always outranks the written answer.")
         out["ledger"] = items
         return jsonify(out)
+
+    webdemo.install(app, limiter, noadapter_route, vision_route)
 
     @app.errorhandler(HTTPException)
     def http_error(e):  # keep 4xx as 4xx (baseline turned them into 500)

@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LYLO Mechanic: try it, no adapter needed</title>
+<style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;max-width:640px;margin:auto;padding:16px}
+h1{margin:.2em 0}textarea,input{width:100%;box-sizing:border-box;padding:10px;font-size:16px;border-radius:8px;border:1px solid #444;background:#161b22;color:#e6edf3}
+button{font-size:17px;padding:12px 16px;border-radius:10px;border:0;margin:6px 6px 6px 0;cursor:pointer;background:#f5c518;color:#000;font-weight:700}
+button.s{background:#30363d;color:#e6edf3}.card{background:#161b22;border-radius:12px;padding:14px;margin:12px 0}
+.lv{font-size:22px;font-weight:800}.note{color:#9da7b3;font-size:14px}.guess{color:#f0b429}</style></head><body>
+<h1>LYLO Mechanic</h1><p class="note">Powered by Meta AI. No adapter needed. Describe what your car is doing, add a trouble code or a dash photo.</p>
+<div class="card"><label>What is the car doing?</label>
+<textarea id="t" rows="4" placeholder="e.g. Rough idle when cold, check engine light on, smells like gas at startup"></textarea>
+<button class="s" id="mic" type="button">Speak (browser dictation)</button>
+<label>Trouble code (optional)</label><input id="c" placeholder="P0171">
+<label>Year / make / model (optional)</label><input id="v" placeholder="2012 Honda Civic">
+<label>Dash photo (optional)</label><input id="p" type="file" accept="image/*" capture="environment">
+<button id="go">Check it</button><span id="busy" class="note"></span></div>
+<div id="out"></div>
+<p class="note">Web demo of the LYLO Android app. Without live sensor data this is a lower-confidence check and never says "safe to drive".
+Causes are the AI's guesses, labeled as guesses. The safety level comes from fixed rules and the AI can only raise it.
+Photos are sent to Meta AI to be read and are not stored. Limited uses per day.</p>
+<script>
+const $=id=>document.getElementById(id);let photoItems=[];const extra=[];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR)$('mic').style.display='none';else $('mic').onclick=()=>{const r=new SR();r.lang='en-US';r.onresult=e=>{$('t').value+=(($('t').value?' ':'')+e.results[0][0].transcript)};r.start()};
+async function dash(){const f=$('p').files[0];if(!f)return null;const fd=new FormData();fd.append('photo',f);
+ const r=await fetch('/try/dash',{method:'POST',body:fd});const b=await r.json();if(!r.ok)throw new Error(b.error||'photo failed');return b}
+async function run(){$('busy').textContent=' Asking Meta AI...';$('go').disabled=true;let html='';
+ try{let d=null;if($('p').files[0]&&!photoItems.length){d=await dash();photoItems=(d&&d.photo_evidence)||[]}
+  const m=($('v').value||'').match(/^\s*(\d{4})\s+(\S+)\s*(.*)$/);const body={text:[$('t').value].concat(extra).join(' ').trim(),codes:$('c').value,photo_evidence:photoItems};
+  if(m){body.year=m[1];body.make=m[2];body.model=m[3]}
+  const r=await fetch('/try/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const b=await r.json();
+  if(!r.ok)throw new Error(b.error||('error '+r.status));
+  html+=`<div class="card"><div class="lv">${esc(String(b.final_safety_level).replace(/_/g,' '))}</div><p>${esc(b.safety_notice)}</p>`;
+  (b.symptom_matches||[]).forEach(h=>html+=`<p>Rule: ${esc(h.reason)}</p>`);
+  if(photoItems.length)html+=`<p>From your photo: ${photoItems.map(i=>esc(i.name.replace(/_/g,' '))).join(', ')}</p>`;
+  const a=b.answer;if(a&&a.text&&a.status==='verified')html+=`<p><b>Meta AI (guess, backed by what you told us):</b> ${esc(a.text)}</p>`;
+  else html+=`<p class="note">Meta AI's answer is not shown because it could not be backed by what you told us.</p>`;
+  const hy=b.hypotheses||[];if(hy.length){html+='<p><b>Possible causes, all guesses:</b></p><ul>';hy.forEach(h=>html+=`<li class="guess">${esc(h.cause)} (${esc(h.confidence)})</li>`);html+='</ul>'}
+  const fu=(b.follow_up_checks||[]).filter(x=>x&&x.text);if(fu.length){html+='<p><b>Help narrow it down:</b></p>';fu.slice(0,3).forEach((x,i)=>html+=`<p>${esc(x.text)}<br><button class="s" data-q="${i}" data-a="yes">Yes</button><button class="s" data-q="${i}" data-a="no">No</button></p>`)}
+  if(b.receipt&&b.receipt.model)html+=`<p class="note">Receipt: ${esc(b.receipt.model)} · ${(b.receipt.latency_ms/1000).toFixed(1)} s</p>`;
+  html+=`<p class="note">${esc(b.confidence_note)}</p></div>`;$('out').innerHTML=html;
+  document.querySelectorAll('[data-q]').forEach(btn=>btn.onclick=()=>{const q=fu[+btn.dataset.q].text;extra.push(`Asked "${q}" the owner answered ${btn.dataset.a}.`);run()});
+ }catch(e){$('out').innerHTML=`<div class="card">${esc(e.message)}</div>`}finally{$('busy').textContent='';$('go').disabled=false}}
+$('go').onclick=()=>{extra.length=0;photoItems=[];run()};
+</script></body></html>
