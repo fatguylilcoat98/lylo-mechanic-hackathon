@@ -79,6 +79,6 @@ class CrashCapTests(CrashTests):
 
     def test_needs_dedicated_sender(self):
         env = {k: v for k, v in SMTP.items() if k != "LYLO_HACK_ALERT_FROM"}
-        c = self.client({"LYLO_HACK_CRASH_ALERT": "1", "LYLO_HACK_SMTP_FROM": "x@example.com", **env})
+        c = self.client({"LYLO_HACK_CRASH_ALERT": "1", **env})
         os.environ.pop("LYLO_HACK_ALERT_FROM", None)
         self.assertEqual(c.post("/api/v1/crash/alert", json={"emails": ["a@b.co"]}).status_code, 503)

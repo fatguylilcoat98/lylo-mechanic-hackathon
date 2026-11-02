@@ -49,6 +49,18 @@ class WebDemo(unittest.TestCase):
             self.assertNotEqual(b["final_safety_level"], "INSPECT_SOON")
             self.assertTrue(any(i.get("source") == "photo" for i in b["ledger"]))
 
+    def test_web_demo_photo_path_without_json_photo_flag(self):
+        """Vera: WEB_DEMO=1, JSON_PHOTO unset -> /try/check uses photo_evidence; the keyed API route still drops it."""
+        c, env = app({"LYLO_HACK_WEB_DEMO": "1", "LYLO_HACK_REQUIRE_APP_KEY": "0"}, self.db)
+        with mock.patch.dict(os.environ, env):
+            os.environ.pop("LYLO_HACK_JSON_PHOTO", None)
+            t = c.post("/try/check", json={"codes": "P0171", "photo_evidence": PE}).get_json()
+            self.assertNotEqual(t["final_safety_level"], "INSPECT_SOON")
+            self.assertTrue(any(i.get("source") == "photo" for i in t["ledger"]))
+            k = c.post("/api/v1/noadapter/check", json={"codes": "P0171", "photo_evidence": PE}).get_json()
+            self.assertEqual(k["final_safety_level"], "INSPECT_SOON")
+            self.assertFalse(any(i.get("source") == "photo" for i in k["ledger"]))
+
     def test_page_has_no_key_and_check_works_without_key(self):
         c, env = app({"LYLO_HACK_WEB_DEMO": "1"}, self.db)
         with mock.patch.dict(os.environ, env):

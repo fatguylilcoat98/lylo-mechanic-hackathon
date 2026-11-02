@@ -5,7 +5,7 @@ POST /api/v1/crash/alert (JSON, app key required like every /api route):
 The message text is FIXED and built here (no free text from the phone), so the route cannot be used to send spam content.
 Own limits: 3 per IP per hour, 20 per day server-wide (LYLO_HACK_CRASH_PER_HOUR / LYLO_HACK_CRASH_PER_DAY).
 Sender: SMTP from env names LYLO_HACK_SMTP_HOST, LYLO_HACK_SMTP_PORT (587), LYLO_HACK_SMTP_USER, LYLO_HACK_SMTP_PASS,
-LYLO_HACK_SMTP_FROM. Missing config = 503 "not configured" (phone then falls back to the SMS app). Values never logged.
+LYLO_HACK_ALERT_FROM (dedicated sender). Per-recipient cap LYLO_HACK_CRASH_PER_RECIPIENT_DAY (3, hashed). Missing config = 503 "not configured" (phone then falls back to the SMS app). Values never logged.
 NOT an emergency service.
 """
 import os

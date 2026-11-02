@@ -26,6 +26,13 @@ Chris (the builder) borrowed $2,000 for a used car. It looked and drove fine. Tw
 - **Price help:** LYLO's own DIY, shop and dealer estimate ranges; buttons that open AutoZone, O'Reilly, Advance, NAPA and RockAuto searches; **Find nearest store** (opens Google Maps; LYLO asks for no location permission); **Watch how** (a YouTube search for videos for your model).
 - **Try a demo scan:** no car needed (see below).
 - First-run setup: do you have an adapter, Simple or Mechanic view, your vehicle.
+- **Tell LYLO what's wrong** (v0.6): the first button on Home. Likely causes, up to 3 follow-up questions, and a fix-it card. Your answers to follow-ups never rewrite what you said, and a "no" never changes the safety level.
+
+**Web demo, no install:** https://lylo-api.thegoodneighborguard.com/try (describe the problem, type a code, add a dash photo; rate-limited).
+
+**Crash Guard (experimental, v0.6):** turn it on for a drive. A hard jolt starts a 30-second "I'm OK" countdown; if you don't answer, your contacts get your time and approximate location by email from the LYLO server, or the phone opens a prefilled text for one tap. The detection thresholds are unvalidated: it can miss a crash and it can go off when there was none. **It is not a replacement for 911 or OnStar.**
+
+**Collision report (v0.6):** after "I'm OK", LYLO asks "Were you in a collision?" and walks you through safety steps, photos and the other driver's details, with time and GPS filled in. It sends the report through your phone's own mail app. Not legal or insurance advice.
 
 ## Real-car test (Nov 2, 2026)
 Chris scanned his 1998 Ford E-450 (6.8L V10 gas) with an OBDLink LX. It worked end to end: VIN decoded, 2 recalls for the model, **Good to drive**, and Muse Detective (`muse-spark-1.3`) answered in about 7.1 s. What he saw led to the v0.5.2 fixes:
@@ -110,5 +117,6 @@ cd baseline/mobile && npx jest                                           # UI re
 - **Recalls are by model, not by VIN.** Check your exact VIN at nhtsa.gov/recalls.
 - **Searches and estimates only.** Store buttons and Watch how open searches: LYLO doesn't check fitment, stock or video quality. Prices are LYLO estimates, not quotes.
 - **Muse Detective needs the server.** Offline, only the on-phone rules run.
+- **Crash Guard is unvalidated.** Thresholds have not been tested on real crashes; it can miss one or false-alarm. Not a 911 or OnStar replacement. Server alert email needs SMTP settings; without them the phone falls back to a prefilled text.
 - **Android only.** There is no iOS build.
 

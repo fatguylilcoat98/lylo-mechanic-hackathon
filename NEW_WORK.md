@@ -66,6 +66,8 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 | 2026-11-02 15:30 | v0.6 (local) | baseline/mobile/app.json | ACCESS_COARSE_LOCATION + expo-location plugin (when-in-use text) for Crash Guard. |
 | 2026-11-02 15:45 | v0.6 (local) | baseline/mobile/ui-tests/v06.test.js | UI tests for v0.6 (no-sensor home, Crash Guard simulate, collision report, show-me follow-ups); stubs only. |
 | 2026-11-02 15:45 | v0.6 (local) | baseline/mobile/package-lock.json | Lock update for the five new expo modules. |
+| 2026-11-02 15:10 | v0.6 | baseline/mobile/app.json | Version 0.6.0, versionCode 16. package.json / package-lock.json: version 0.6.0. |
+| 2026-11-02 15:10 | v0.6 | baseline/mobile/ui-tests/v06.test.js | Follow-up answers test: owner text unchanged, answers sent as structured followup_answers. |
 | 2026-11-02 | v0.5.2 | `baseline/mobile/src/data/dtcCodes.js` | FLAG EXPO_PUBLIC_LYLO_DTC_EXTRA=1: curated P0037 (Bank 1 Sensor 2) and P2241 (Bank 2 Sensor 1) entries; never override existing ones. Flag off = old library. |
 | 2026-11-02 | v0.5.2 | `baseline/mobile/src/engine/diagnose.js` | FLAG EXPO_PUBLIC_LYLO_DTC_EXTRA=1: unknown codes show the generic SAE title from dtcTitles.json ("standard meaning is ..."), still known:false with the same check/shop steps. Flag off = identical output (officialTitle null). |
 | 2026-11-02 | v0.5.2 | `baseline/mobile/src/data/dtcTitles.json` | New data: 9,415 generic titles (P/B/C/U) from Wal33D/dtc-database (MIT); titles only. |
@@ -351,3 +353,12 @@ Context: Chris ran v0.5.0 on his 1998 Ford E-450 (6.8L V10 Triton, gas) with an 
 ## v0.5.2 (2026-11-02): fixes from Chris's real LX scan (1998 E-450)
 - `baseline/mobile/android/` is gitignored: AndroidManifest.xml on the build box had `RECORD_AUDIO tools:node="remove"`, so every APK since v0.4.4 shipped without the mic permission and "Ask out loud" was always denied (verified: no RECORD_AUDIO in the v0.5.1 fd355e5 APK manifest). Now a plain uses-permission. build.gradle versionCode 15 / versionName 0.5.2 by hand.
 - 2026-11-02 v0.5.2 build gate: new `scripts/check-apk-manifest.sh` (+ tests/test_build_gate.py). Not a baseline file; build-time check only.
+
+## v0.6 (2026-11-02): no-sensor experience, Crash Guard, collision report, judge web demo
+All behind flags. Phone: EXPO_PUBLIC_LYLO_NOSENSOR_HOME, _SHOWME, _CRASH_GUARD, _COLLISION. Server: LYLO_HACK_WEB_DEMO, LYLO_HACK_JSON_PHOTO (independent, set each explicitly), LYLO_HACK_CRASH_ALERT.
+- No-sensor Home: "Tell LYLO what's wrong" first; Show me: likely causes, up to 3 AI follow-up questions (Yes / No / Not sure), fix-it card.
+- Follow-up safety (Vera MUST): answers go in a separate `followup_answers` field and never into the owner's text. Only "yes" counts, and only when the question names a fixed safety rule; the fact reads "Owner confirmed: <fixed rule reason>" and can only raise the level. "No" / "not sure" are dropped (`symptoms.parse_followups`, `followup_facts`).
+- Crash Guard (hackathon/mobile-bridge/src/crashGuard.js, CrashGuardScreen.js): phone accelerometer, on for one drive, 30 s "I'm OK" countdown, then emails up to 5 contacts with time and approximate location through `/api/v1/crash/alert` (server SMTP, sender LYLO_HACK_ALERT_FROM, 3/IP/hour, 20/day, 3/recipient/day hashed). If the server can't send (503), the phone opens a prefilled SMS for one tap. Thresholds are unvalidated: it can miss a crash or false-alarm. Not a 911 or OnStar replacement.
+- Collision report (collision.js, CollisionScreen.js): after "I'm OK", "Were you in a collision?" safety steps, photo prompts, fields, auto time and GPS, "Send to my email" through the phone's mail app. Not legal or insurance advice.
+- Web demo `/try` (lylo_hack/webdemo.py, static/try.html): no key, no install; text, dictation, codes, vehicle, dash photo. Own limits 4/IP/min, 25/IP/day, 150/day, plus the global Muse cap.
+- Tests: server tests/test_webdemo.py, tests/test_crash.py; bridge test/crashGuard.test.js, test/showMeCollision.test.js; baseline/mobile/ui-tests/v06.test.js.
