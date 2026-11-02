@@ -91,7 +91,7 @@ function codeFloor(urgency) {
 const label = (lv) => (LEVELS[lv] ? LEVELS[lv].label : String(lv || '').replace(/_/g, ' ').toLowerCase());
 
 /** POST /api/v1/noadapter/check (multipart: text, codes, year/make/model, optional audio, photo_evidence). */
-async function requestCheck({ baseUrl, appKey, fetchImpl, text, codes, vehicle, audio, photoEvidence, timeoutMs = CHECK_TIMEOUT_MS }) {
+async function requestCheck({ baseUrl, appKey, fetchImpl, text, codes, vehicle, audio, photoEvidence, followupAnswers, timeoutMs = CHECK_TIMEOUT_MS }) {
   const f = fetchImpl || (typeof fetch === 'function' ? fetch : null);
   if (!baseUrl || !f) return { ok: false, error: MSG.offline, offline: true };
   const form = new FormData();
@@ -100,6 +100,7 @@ async function requestCheck({ baseUrl, appKey, fetchImpl, text, codes, vehicle, 
   const v = vehicle || {};
   ['year', 'make', 'model'].forEach((k) => { if (v[k]) form.append(k, String(v[k])); });
   if (Array.isArray(photoEvidence) && photoEvidence.length) form.append('photo_evidence', JSON.stringify(photoEvidence));
+  if (Array.isArray(followupAnswers) && followupAnswers.length) form.append('followup_answers', JSON.stringify(followupAnswers)); // v0.6 SHOWME
   if (EO.features().on) { await EO.ensureLoaded(); EO.appendTo(form, v.vin); } // v0.4.8 owner-set engine
   if (audio) form.append('audio', { uri: audio.uri, type: audio.type || 'audio/aac', name: audio.name || 'symptoms.aac' });
   const ctrl = typeof AbortController === 'function' ? new AbortController() : null;

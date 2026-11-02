@@ -10,7 +10,12 @@ global:muse:day bucket, so judges can never push total spend past LYLO_HACK_MUSE
 Limits (env, defaults): LYLO_HACK_WEB_IP_PER_MIN=4, LYLO_HACK_WEB_IP_PER_DAY=25, LYLO_HACK_WEB_DAILY_CAP=150.
 No audio upload on the web page (keeps cost down); the page uses the browser's own dictation if it has one.
 
-Flag LYLO_HACK_JSON_PHOTO=1 (separate): /api/v1/noadapter/check also accepts photo_evidence as a JSON list
+Rate-limit DB: security.Limiter reads LYLO_HACK_RATELIMIT_DB (default /tmp/..., wiped on reboot). Deploy sets it in .env to a
+persistent path, e.g. LYLO_HACK_RATELIMIT_DB=/home/chris/lylo-data/ratelimit.sqlite, so daily caps survive restarts.
+The keyless /try IP limit trusts CF-Connecting-IP only from loopback (security.client_ip): cloudflared must be the only
+loopback forwarder to :5088 (deploy check: ss -ltnp; ps).
+
+Flag LYLO_HACK_JSON_PHOTO=1 (separate, NOT turned on by LYLO_HACK_WEB_DEMO; set both explicitly): /api/v1/noadapter/check also accepts photo_evidence as a JSON list
 (before, a JSON body silently dropped it; the phone uses multipart and was not affected).
 """
 import os
@@ -20,7 +25,7 @@ from flask import jsonify, request, send_from_directory
 from . import security
 
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-CHECK_FIELDS = {"text", "codes", "year", "make", "model", "photo_evidence"}
+CHECK_FIELDS = {"text", "codes", "year", "make", "model", "photo_evidence", "followup_answers"}
 
 
 def enabled():
@@ -28,7 +33,7 @@ def enabled():
 
 
 def json_photo_on():
-    return os.environ.get("LYLO_HACK_JSON_PHOTO") == "1" or enabled()
+    return os.environ.get("LYLO_HACK_JSON_PHOTO") == "1"  # independent of LYLO_HACK_WEB_DEMO (set each explicitly)
 
 
 def _int(name, default):
@@ -70,6 +75,7 @@ def install(app, limiter, check_handler, dash_handler):
         extra = set(body) - CHECK_FIELDS
         if extra:
             return jsonify({"error": "Unknown fields: " + ", ".join(sorted(extra))[:200], "errors": []}), 400
+        request.lylo_web_demo = True  # /try/check uses the photo path itself; LYLO_HACK_JSON_PHOTO stays as set
         return limited() or check_handler()
 
     @app.post("/try/dash")

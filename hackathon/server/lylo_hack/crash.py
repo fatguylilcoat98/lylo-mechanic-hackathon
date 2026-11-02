@@ -24,7 +24,7 @@ def enabled():
 
 
 def configured():
-    return all(os.environ.get(k) for k in ("LYLO_HACK_SMTP_HOST", "LYLO_HACK_SMTP_USER", "LYLO_HACK_SMTP_PASS", "LYLO_HACK_SMTP_FROM"))
+    return all(os.environ.get(k) for k in ("LYLO_HACK_SMTP_HOST", "LYLO_HACK_SMTP_USER", "LYLO_HACK_SMTP_PASS", "LYLO_HACK_ALERT_FROM"))
 
 
 def _int(name, d):
@@ -32,6 +32,13 @@ def _int(name, d):
         return int(os.environ.get(name, d))
     except ValueError:
         return d
+
+
+def recipient_rule(email):
+    """Per-recipient daily cap; address stored only as a sha256 hash in the limiter DB."""
+    import hashlib
+    h = hashlib.sha256(email.strip().lower().encode()).hexdigest()[:32]
+    return [(f"crash:to:{h}:day", _int("LYLO_HACK_CRASH_PER_RECIPIENT_DAY", 3), 86400)]
 
 
 def rules(ip):
@@ -80,7 +87,7 @@ def message(p):
 def send(p, smtp_factory=None):
     subject, body = message(p)
     m = EmailMessage()
-    m["From"] = os.environ["LYLO_HACK_SMTP_FROM"]
+    m["From"] = os.environ["LYLO_HACK_ALERT_FROM"]  # dedicated alert sender (not the general SMTP_FROM)
     m["To"] = ", ".join(p["emails"])
     m["Subject"] = subject
     m.set_content(body)
@@ -109,6 +116,9 @@ def install(app, limiter):
         hit = limiter.hit(rules(security.client_ip(request.remote_addr, request.headers)))
         if hit:
             return jsonify({"error": "Alert limit reached.", "sent": 0}), 429
+        p["emails"] = [e for e in p["emails"] if not limiter.hit(recipient_rule(e))]
+        if not p["emails"]:
+            return jsonify({"error": "Alert limit reached for these contacts today.", "sent": 0}), 429
         try:
             n = send(p)
         except Exception as e:  # never log addresses or credentials

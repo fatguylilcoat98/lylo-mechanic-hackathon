@@ -65,7 +65,7 @@ export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp, en
       {hero && !device ? null : (
       <BigActionButton kind="secondary" title="No adapter? Start here" subtitle="Describe it, type a code, or snap the dash"
         onPress={() => (noAdapter ? go('NoAdapter') : go('Lookup'))} />)}
-      {crashOn ? <BigActionButton kind="secondary" title="Crash Guard" subtitle="Turn on for this drive. Not a replacement for 911" onPress={() => go('CrashGuard')} /> : null}
+      {crashOn ? <BigActionButton kind="secondary" title="Crash Guard" subtitle="Turn on for this drive. Not a replacement for 911. Can miss a crash or false-alarm; untested on real crashes" onPress={() => go('CrashGuard')} /> : null}
       {colOn ? <BigActionButton kind="secondary" title="I was in a collision" subtitle="Step-by-step checklist and photos for your insurer" onPress={() => go('Collision')} /> : null}
       <BigActionButton kind="secondary" title="Try a demo" subtitle="No car needed. Clearly marked as a replay"
         onPress={() => (demoOn ? go('Demo') : go('Codes', { scan: DEMO_SCANS.checkengine }))} />

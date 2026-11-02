@@ -76,7 +76,32 @@ def parse_codes(raw):
     return list(dict.fromkeys(good))[:MAX_CODES], bad[:MAX_CODES]
 
 
-def build(text, codes, vehicle=None, photo_items=None, diagnose=None, photo_floor=None, photo_reasons=()):
+MAX_FOLLOWUPS = 3
+
+
+def parse_followups(raw):
+    """followup_answers: [{question, answer}] (v0.6). Only answer == 'yes' is kept; 'no' / 'not sure' / anything else is
+    dropped entirely (never scanned, never sent to the AI as a fact). Questions are AI text: kept for reference only."""
+    out = []
+    for a in raw if isinstance(raw, list) else []:
+        if isinstance(a, dict) and str(a.get("answer", "")).strip().lower() == "yes" and str(a.get("question", "")).strip():
+            out.append({"question": str(a["question"]).strip()[:200]})
+    return out[:MAX_FOLLOWUPS]
+
+
+def followup_facts(yes_answers):
+    """A 'yes' to an AI follow-up becomes an owner-confirmed fact ONLY when the question names one of the fixed safety
+    rules; the fact wording is the rule's fixed reason, never the AI's text. Rules are matched on the question alone,
+    without the negation filter's context from owner text. Questions that match no rule add nothing."""
+    facts = []
+    for i, a in enumerate(yes_answers):
+        for h in match_rules(a["question"]):
+            facts.append({"id": f"owner:confirmed:{h['id']}:{i}", "type": "owner_confirmed", "source": "owner answered yes",
+                          "rule": h["id"], "floor": h["floor"], "reason": "Owner confirmed: " + h["reason"]})
+    return facts
+
+
+def build(text, codes, vehicle=None, photo_items=None, diagnose=None, photo_floor=None, photo_reasons=(), followups=None):
     """Deterministic part. Returns (items, rule_level, notes). `diagnose(data)` runs the baseline
     pipeline for typed codes (rule safety + hypotheses); with no codes the base level is INSPECT_SOON."""
     vehicle = {k: v for k, v in (vehicle or {}).items() if k in ("year", "make", "model") and v not in (None, "")}
@@ -109,6 +134,12 @@ def build(text, codes, vehicle=None, photo_items=None, diagnose=None, photo_floo
             triggers.append(f"{h['reason']} [{h['id']}]")
         level = new
     items += hits
+    for f in followup_facts(followups or []):  # v0.6: only owner 'yes' answers, fixed rule wording, can only raise
+        new = higher(level, f["floor"])
+        if new != level or f["floor"] == level:
+            triggers.append(f"{f['reason']} [followup:{f['rule']}]")
+        level = new
+        items.append(f)
     items += list(photo_items or [])
     if photo_floor in L.SAFETY_ORDER and higher(level, photo_floor) != level:
         level = photo_floor

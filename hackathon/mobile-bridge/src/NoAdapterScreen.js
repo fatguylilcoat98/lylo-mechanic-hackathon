@@ -56,6 +56,7 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
   const [view, setView] = useState(null);
   const [note, setNote] = useState(null);
   const [rec, setRec] = useState(null);
+  const [answers, setAnswers] = useState([]); // v0.6 showMe: structured follow-up answers
   const [causes, setCauses] = useState([]); // v0.6 showMe: guesses from the server reply
   const [photo, setPhoto] = useState(null); // dash-photo view: { level, photoEvidence, reasons }
   const recRef = useRef(null);
@@ -75,15 +76,16 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
     return c;
   }
 
-  async function check(audioFileObj, textOverride) {
+  async function check(audioFileObj, answersOverride) {
     setNote(null); setView(null); setCauses([]);
-    const text = textOverride === undefined ? textState : textOverride;
+    const fu = answersOverride === undefined ? [] : answersOverride;
+    if (answersOverride === undefined) setAnswers([]);
     if (!text.trim() && !codesText.trim() && !audioFileObj) { setNote(MSG.empty); return; }
     const c = runLocal(text);
     if (!f.server) return;
     setBusy(true);
     try {
-      const res = await requestCheck({ baseUrl: url, appKey: key, fetchImpl, text: text.trim(), codes: c.good, vehicle, audio: audioFileObj, photoEvidence: photo && photo.ok ? photo.photoEvidence : [] });
+      const res = await requestCheck({ baseUrl: url, appKey: key, fetchImpl, text: text.trim(), codes: c.good, vehicle, audio: audioFileObj, photoEvidence: photo && photo.ok ? photo.photoEvidence : [], followupAnswers: fu });
       const v = checkView(res, c.level);
       if (sm && res && res.ok) setCauses(SM.causesFrom(res.body));
       setView(v);
@@ -121,7 +123,7 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
   let level = view && view.ok ? view.level : (checked ? checked.level : null);
   if (photo && photo.ok && photo.findings.length) level = higher(level || 'INSPECT_SOON', photo.level);
 
-  const answerFollowUp = (q, a) => { const t = SM.appendAnswer(textState, q, a); setText(t); check(null, t); };
+  const answerFollowUp = (q, a) => { const n = SM.addAnswer(answers, q, a); setAnswers(n); check(null, n); };
   const fix = sm && view && view.ok ? SM.fixIt(causes, vehicle) : null;
   const dashPanel = dv.dash ? <DashVoicePanel scan={null} onDash={setPhoto} enabled={{ dash: true, voice: false }} env={env} fetchImpl={fetchImpl} baseUrl={url} appKey={key} /> : null;
 

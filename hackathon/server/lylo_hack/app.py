@@ -444,11 +444,18 @@ def create_app():
         if raw_pe:
             if body is None:
                 photo_items = _photo_items_from_form()
-            elif webdemo.json_photo_on() and isinstance(raw_pe, list):  # v0.6 flag: JSON clients keep photo items too
+            elif (webdemo.json_photo_on() or getattr(request, "lylo_web_demo", False)) and isinstance(raw_pe, list):  # v0.6 flag: JSON clients keep photo items too
                 photo_items = _photo_items_from_form(raw_pe)
         floor, reasons = vision.floor_for(photo_items)
         diag = (lambda d: live.diagnose(d, muse=False)) if codes else None
-        items, level, notes, hits, result = symptoms.build(text, codes, vehicle, photo_items, diag, floor, reasons)
+        raw_fu = src.get("followup_answers")
+        if isinstance(raw_fu, str):
+            try:
+                raw_fu = json.loads(raw_fu)
+            except ValueError:
+                raw_fu = None
+        followups = symptoms.parse_followups(raw_fu)
+        items, level, notes, hits, result = symptoms.build(text, codes, vehicle, photo_items, diag, floor, reasons, followups)
         if ov:
             items += engine_user.vehicle_items(ov)
             out["vehicle_engine"] = {"engine": ov["label"], "engine_source": ov["engine_source"]}

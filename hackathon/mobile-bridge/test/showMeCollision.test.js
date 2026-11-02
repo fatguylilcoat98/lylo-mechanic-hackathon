@@ -12,12 +12,17 @@ test('causes sorted and labeled as guesses', () => {
   const c = S.causesFrom({ hypotheses: [{ cause: 'x', confidence: 'low' }, { cause: 'faulty mass air flow sensor', confidence: 'medium' }] });
   assert.strictEqual(c[0].confidence, 'medium'); assert.match(c[0].label, /^Guess/);
 });
-test('follow-up answer appended in owner words, capped', () => {
-  const t = S.appendAnswer('rough idle', 'Does it happen when cold?', 'yes');
-  assert.match(t, /Asked: "Does it happen when cold\?" Owner answered: yes/);
-  assert.ok(S.appendAnswer('x'.repeat(2000), 'q', 'no').length <= 1000);
+test('follow-up answers are structured, not appended to owner text; capped at 3', () => {
+  let l = S.addAnswer([], 'Do you smell fuel or see smoke?', 'no');
+  assert.deepStrictEqual(l, [{ question: 'Do you smell fuel or see smoke?', answer: 'no' }]);
+  l = S.addAnswer(l, 'Do you smell fuel or see smoke?', 'unsure');
+  assert.strictEqual(l.length, 1); assert.strictEqual(l[0].answer, 'not sure');
+  ['a', 'b', 'c'].forEach((q) => { l = S.addAnswer(l, q, 'yes'); });
+  assert.strictEqual(l.length, 3);
   assert.strictEqual(S.followUps({ followUps: ['a', 'b', 'c', 'd'] }).length, 3);
+  assert.strictEqual(S.appendAnswer, undefined);
 });
+
 test('fix-it: part named -> links + DIY hint; vague cause -> diagnose search only', () => {
   const f = S.fixIt([{ cause: 'clogged air filter', label: 'Guess (medium confidence)' }], { year: 2012, make: 'Honda', model: 'Civic' });
   assert.strictEqual(f.part, 'air filter'); assert.ok(f.links.buttons.length); assert.match(f.diy, /do-it-yourself/);

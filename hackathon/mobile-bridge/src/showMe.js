@@ -28,10 +28,14 @@ function causesFrom(body) {
 
 function followUps(view) { return (view && Array.isArray(view.followUps) ? view.followUps : []).slice(0, MAX_FOLLOW); }
 
-/** Owner's answer to a follow-up, appended in their own words (quoted question, plain answer). */
-function appendAnswer(text, question, answer) {
+/**
+ * Owner's answer to a follow-up -> structured entry for the server field followup_answers (NOT appended to the owner's
+ * text, so the symptom rules never scan AI question text). Server keeps only 'yes', mapped to fixed rule wording.
+ */
+function addAnswer(list, question, answer) {
   const a = { yes: 'yes', no: 'no', unsure: 'not sure' }[answer] || 'not sure';
-  return `${String(text || '').trim()} (Asked: "${String(question).slice(0, 160)}" Owner answered: ${a}.)`.trim().slice(0, 1000);
+  const rest = (Array.isArray(list) ? list : []).filter((x) => x.question !== question);
+  return [...rest, { question: String(question).slice(0, 200), answer: a }].slice(-MAX_FOLLOW);
 }
 
 /** Fix-it card for the top cause: price + store links + Watch how + Photo Helper + DIY hint. Null when no part is named. */
@@ -51,4 +55,4 @@ function fixIt(causes, vehicle) {
   };
 }
 
-module.exports = { features, causesFrom, followUps, appendAnswer, fixIt, DIY_EASY, MAX_FOLLOW };
+module.exports = { features, causesFrom, followUps, addAnswer, fixIt, DIY_EASY, MAX_FOLLOW };

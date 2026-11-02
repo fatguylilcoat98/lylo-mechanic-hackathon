@@ -21,7 +21,7 @@ const T = {
   MOVING_MPH: 15, MOVING_WINDOW_MS: 10000, GPS_FROM_MPH: 30, GPS_TO_MPH: 2, GPS_DROP_MS: 2000,
   PROMPT_MS: 30000, PROMPTS: 2,
 };
-const NOT_911 = 'Crash Guard is NOT a replacement for 911, OnStar or any emergency service. It can miss a crash, and it can go off when there was none. If you are hurt, call 911.';
+const NOT_911 = 'Crash Guard is NOT a replacement for 911, OnStar or any emergency service. It can miss a crash, and it can go off when there was none. Its detection settings have not been tested on real crashes. If you are hurt, call 911.';
 const MAX_CONTACTS = 5;
 
 function flagOn(v) { return String(v || '').trim() === '1'; }

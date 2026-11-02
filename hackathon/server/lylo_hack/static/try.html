@@ -18,7 +18,7 @@ button.s{background:#30363d;color:#e6edf3}.card{background:#161b22;border-radius
 Causes are the AI's guesses, labeled as guesses. The safety level comes from fixed rules and the AI can only raise it.
 Photos are sent to Meta AI to be read and are not stored. Limited uses per day.</p>
 <script>
-const $=id=>document.getElementById(id);let photoItems=[];const extra=[];
+const $=id=>document.getElementById(id);let photoItems=[];const answers=[];
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SR)$('mic').style.display='none';else $('mic').onclick=()=>{const r=new SR();r.lang='en-US';r.onresult=e=>{$('t').value+=(($('t').value?' ':'')+e.results[0][0].transcript)};r.start()};
@@ -26,7 +26,7 @@ async function dash(){const f=$('p').files[0];if(!f)return null;const fd=new For
  const r=await fetch('/try/dash',{method:'POST',body:fd});const b=await r.json();if(!r.ok)throw new Error(b.error||'photo failed');return b}
 async function run(){$('busy').textContent=' Asking Meta AI...';$('go').disabled=true;let html='';
  try{let d=null;if($('p').files[0]&&!photoItems.length){d=await dash();photoItems=(d&&d.photo_evidence)||[]}
-  const m=($('v').value||'').match(/^\s*(\d{4})\s+(\S+)\s*(.*)$/);const body={text:[$('t').value].concat(extra).join(' ').trim(),codes:$('c').value,photo_evidence:photoItems};
+  const m=($('v').value||'').match(/^\s*(\d{4})\s+(\S+)\s*(.*)$/);const body={text:$('t').value.trim(),codes:$('c').value,photo_evidence:photoItems,followup_answers:answers};
   if(m){body.year=m[1];body.make=m[2];body.model=m[3]}
   const r=await fetch('/try/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const b=await r.json();
   if(!r.ok)throw new Error(b.error||('error '+r.status));
@@ -39,7 +39,7 @@ async function run(){$('busy').textContent=' Asking Meta AI...';$('go').disabled
   const fu=(b.follow_up_checks||[]).filter(x=>x&&x.text);if(fu.length){html+='<p><b>Help narrow it down:</b></p>';fu.slice(0,3).forEach((x,i)=>html+=`<p>${esc(x.text)}<br><button class="s" data-q="${i}" data-a="yes">Yes</button><button class="s" data-q="${i}" data-a="no">No</button></p>`)}
   if(b.receipt&&b.receipt.model)html+=`<p class="note">Receipt: ${esc(b.receipt.model)} · ${(b.receipt.latency_ms/1000).toFixed(1)} s</p>`;
   html+=`<p class="note">${esc(b.confidence_note)}</p></div>`;$('out').innerHTML=html;
-  document.querySelectorAll('[data-q]').forEach(btn=>btn.onclick=()=>{const q=fu[+btn.dataset.q].text;extra.push(`Asked "${q}" the owner answered ${btn.dataset.a}.`);run()});
+  document.querySelectorAll('[data-q]').forEach(btn=>btn.onclick=()=>{const q=fu[+btn.dataset.q].text;answers.push({question:q,answer:btn.dataset.a});run()});
  }catch(e){$('out').innerHTML=`<div class="card">${esc(e.message)}</div>`}finally{$('busy').textContent='';$('go').disabled=false}}
-$('go').onclick=()=>{extra.length=0;photoItems=[];run()};
+$('go').onclick=()=>{answers.length=0;photoItems=[];run()};
 </script></body></html>

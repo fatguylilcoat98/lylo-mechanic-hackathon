@@ -6,7 +6,7 @@ os.environ["LYLO_HACK_ENV_FILE"] = "none"
 from lylo_hack.app import create_app  # noqa: E402
 from lylo_hack import crash  # noqa: E402
 
-SMTP = {"LYLO_HACK_SMTP_HOST": "smtp.invalid", "LYLO_HACK_SMTP_USER": "u", "LYLO_HACK_SMTP_PASS": "p", "LYLO_HACK_SMTP_FROM": "lylo@example.com"}
+SMTP = {"LYLO_HACK_SMTP_HOST": "smtp.invalid", "LYLO_HACK_SMTP_USER": "u", "LYLO_HACK_SMTP_PASS": "p", "LYLO_HACK_ALERT_FROM": "alerts@example.com"}
 
 
 class Stub:
@@ -61,3 +61,24 @@ class CrashTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CrashCapTests(CrashTests):
+    def test_per_recipient_daily_cap_and_sender(self):
+        c = self.client({"LYLO_HACK_CRASH_ALERT": "1", "LYLO_HACK_CRASH_PER_HOUR": "50", **SMTP})
+        Stub.sent.clear()
+        with mock.patch("smtplib.SMTP", lambda *a, **k: Stub()):
+            codes = [c.post("/api/v1/crash/alert", json={"emails": ["A@b.co"], "test": True}).status_code for _ in range(4)]
+            self.assertEqual(codes, [200, 200, 200, 429])
+            r = c.post("/api/v1/crash/alert", json={"emails": ["a@b.co", "z@b.co"], "test": True})
+            self.assertEqual(r.get_json()["sent"], 1)
+        self.assertEqual(Stub.sent[-1]["To"], "z@b.co")
+        self.assertEqual(Stub.sent[-1]["From"], "alerts@example.com")
+        db = os.environ["LYLO_HACK_RATELIMIT_DB"]
+        self.assertNotIn(b"a@b.co", open(db, "rb").read())
+
+    def test_needs_dedicated_sender(self):
+        env = {k: v for k, v in SMTP.items() if k != "LYLO_HACK_ALERT_FROM"}
+        c = self.client({"LYLO_HACK_CRASH_ALERT": "1", "LYLO_HACK_SMTP_FROM": "x@example.com", **env})
+        os.environ.pop("LYLO_HACK_ALERT_FROM", None)
+        self.assertEqual(c.post("/api/v1/crash/alert", json={"emails": ["a@b.co"]}).status_code, 503)

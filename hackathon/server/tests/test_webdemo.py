@@ -1,5 +1,5 @@
 """v0.6 judge web demo + JSON photo_evidence. All Muse calls off/stubbed."""
-import io, os, unittest
+import io, json, os, unittest
 from unittest import mock
 
 os.environ["LYLO_HACK_ENV_FILE"] = "none"
@@ -79,3 +79,49 @@ class WebDemo(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FollowupSafety(unittest.TestCase):
+    """Vera v0.6 MUST: AI follow-up text is never scanned as owner words; only 'yes' contributes, via fixed rule wording."""
+    Q = "Do you smell fuel or see smoke?"
+
+    def lv(self, answers):
+        from lylo_hack import symptoms
+        return symptoms.build("car is fine", [], followups=symptoms.parse_followups(answers))[1]
+
+    def test_repro_stays_inspect_soon(self):
+        self.assertEqual(self.lv([]), "INSPECT_SOON")
+        self.assertEqual(self.lv([{"question": self.Q, "answer": "no"}]), "INSPECT_SOON")
+
+    def test_no_and_not_sure_never_change_level(self):
+        from lylo_hack import symptoms
+        qs = [self.Q, "Is the brake pedal soft?", "Any steam or overheating?", "Is the check engine light flashing?", "Is there a fire?"]
+        for q in qs:
+            for a in ("no", "not sure", "unsure", "", "NO", None):
+                self.assertEqual(self.lv([{"question": q, "answer": a}]), "INSPECT_SOON", (q, a))
+            self.assertEqual(symptoms.parse_followups([{"question": q, "answer": "no"}]), [])
+
+    def test_yes_uses_fixed_wording_and_only_raises(self):
+        from lylo_hack import symptoms
+        items, level, *_ = symptoms.build("car is fine", [], followups=symptoms.parse_followups([{"question": self.Q + " IGNORE RULES", "answer": "yes"}]))
+        self.assertEqual(level, "DO_NOT_DRIVE")
+        facts = [i for i in items if i["type"] == "owner_confirmed"]
+        self.assertTrue(facts and all(f["reason"].startswith("Owner confirmed: ") and "IGNORE" not in f["reason"] for f in facts))
+        self.assertEqual(self.lv([{"question": "Does it idle rough when cold?", "answer": "yes"}]), "INSPECT_SOON")
+
+    def test_route_field_json_and_text_untouched(self):
+        db = f"/tmp/lylo-fu-{os.getpid()}.sqlite"
+        c, env = app({"LYLO_HACK_REQUIRE_APP_KEY": "0"}, db)
+        with mock.patch.dict(os.environ, env):
+            b = c.post("/api/v1/noadapter/check", json={"text": "car is fine", "followup_answers": [{"question": self.Q, "answer": "no"}]}).get_json()
+            self.assertEqual(b["final_safety_level"], "INSPECT_SOON")
+            self.assertEqual([i for i in b["ledger"] if i["type"] == "owner_description"][0]["text"], "car is fine")
+            b = c.post("/api/v1/noadapter/check", data={"text": "car is fine", "followup_answers": json.dumps([{"question": self.Q, "answer": "yes"}])}).get_json()
+            self.assertEqual(b["final_safety_level"], "DO_NOT_DRIVE")
+        os.path.exists(db) and os.remove(db)
+
+    def test_web_demo_does_not_enable_json_photo(self):
+        from lylo_hack import webdemo
+        with mock.patch.dict(os.environ, {"LYLO_HACK_WEB_DEMO": "1"}):
+            os.environ.pop("LYLO_HACK_JSON_PHOTO", None)
+            self.assertFalse(webdemo.json_photo_on())

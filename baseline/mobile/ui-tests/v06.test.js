@@ -91,6 +91,7 @@ test('show-me: causes labeled guesses, follow-up tap re-runs with the owner answ
   expect(ui.getByTestId('sm-fixit')).toBeTruthy();
   await act(async () => { fireEvent.press(ui.getByText('Yes')); await new Promise((r) => setTimeout(r, 10)); });
   expect(fetchImpl).toHaveBeenCalledTimes(2);
-  const sent = bodies[1]._parts ? bodies[1]._parts.find((p) => p[0] === 'text')[1] : String(bodies[1].get && bodies[1].get('text'));
-  expect(sent).toMatch(/Asked: "Is it worse at high speed\?" Owner answered: yes/);
+  const field = (b, k) => (b._parts ? (b._parts.find((p) => p[0] === k) || [])[1] : b.get && b.get(k));
+  expect(field(bodies[1], 'text')).toBe('sluggish when I speed up');
+  expect(JSON.parse(field(bodies[1], 'followup_answers'))).toEqual([{ question: 'Is it worse at high speed?', answer: 'yes' }]);
 });
