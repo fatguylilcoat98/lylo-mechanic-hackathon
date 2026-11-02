@@ -4,7 +4,7 @@
 
 Built for the Meta Global AI Developer Hackathon (Oct 26 – Nov 4, 2026). Everything new is listed file by file in [NEW_WORK.md](NEW_WORK.md).
 
-**Download (Android):** [lylo-052-93eb955c2a.apk](https://zion.thegoodneighborguard.com/lylo-052-93eb955c2a.apk). v0.5.2, versionCode 15, sha256 `97f1069318f07aa3c6dfd27a55b53235aa2b6be7b9ff0a563b78eb5a2feab61e`. It's a debug-signed test build, so allow "install unknown apps".
+**Download (Android):** [lylo-06-bb9f6ed5a0.apk](https://zion.thegoodneighborguard.com/lylo-06-bb9f6ed5a0.apk). v0.6.0, versionCode 16, sha256 `33f72a1bfef3b9e773957c70197918f0514679acfa6e90b0838f3b0bfc905e26`. It's a debug-signed test build (same key as earlier versions, so it installs over them), so allow "install unknown apps".
 
 ## Why
 Chris (the builder) borrowed $2,000 for a used car. It looked and drove fine. Two weeks later the check-engine light came on (P0300, misfire). He replaced the coil pack and cleared the code, and two days later it was back. Three weeks after that the transmission failed, stuck in reverse. The seller had a shop and most likely cleared the codes before the sale. Chris had no proof. LYLO is meant to give buyers and drivers that proof.
@@ -69,14 +69,14 @@ Recorded runs with receipts are in [`hackathon/server/evidence/`](hackathon/serv
 
 ## Try it in 2 minutes
 No car, no adapter and no Meta key needed.
-1. **Android phone:** download the [v0.5.2 APK](https://zion.thegoodneighborguard.com/lylo-052-93eb955c2a.apk), allow "install unknown apps", and open it. It's a debug-signed test build.
+1. **Android phone:** download the [v0.6.0 APK](https://zion.thegoodneighborguard.com/lylo-06-bb9f6ed5a0.apk), allow "install unknown apps", and open it. It's a debug-signed test build.
 2. Answer the 3 setup questions or skip them. Tap **Try a demo scan** and pick **Chris's truck**.
 3. Flip to **Mechanic view** to see Muse Detective's causes, each citing its evidence, and the receipt (model, seconds, items cited).
 4. Tap **AI vs rules: who wins?** A simulated AI answer says "safe to drive" at 260 °F. The rules say stop, and the rules win.
 5. **No phone?** Run the server (below, under "Try it with no car") and `curl` the demo routes. Then run the tests (see "Run the tests").
 
 ## Try it with no car
-1. Install the [v0.5.2 APK](https://zion.thegoodneighborguard.com/lylo-052-93eb955c2a.apk). It's a debug-signed test build: allow "install unknown apps".
+1. Install the [v0.6.0 APK](https://zion.thegoodneighborguard.com/lylo-06-bb9f6ed5a0.apk). It's a debug-signed test build: allow "install unknown apps".
 2. Open it and tap **Try a demo scan** on Home.
 3. Pick a scan:
    - **Chris's truck** (his real readings: cold engine, fuel trim 27.3 %)
