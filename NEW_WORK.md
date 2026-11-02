@@ -345,3 +345,4 @@ Context: Chris ran v0.5.0 on his 1998 Ford E-450 (6.8L V10 Triton, gas) with an 
 
 ## v0.5.2 (2026-11-02): fixes from Chris's real LX scan (1998 E-450)
 - `baseline/mobile/android/` is gitignored: AndroidManifest.xml on the build box had `RECORD_AUDIO tools:node="remove"`, so every APK since v0.4.4 shipped without the mic permission and "Ask out loud" was always denied (verified: no RECORD_AUDIO in the v0.5.1 fd355e5 APK manifest). Now a plain uses-permission. build.gradle versionCode 15 / versionName 0.5.2 by hand.
+- 2026-11-02 v0.5.2 build gate: new `scripts/check-apk-manifest.sh` (+ tests/test_build_gate.py). Not a baseline file; build-time check only.

@@ -220,3 +220,4 @@ Context: the scan worked end to end (VIN, 2 recalls, Good to drive, muse-spark-1
 7. Access log (FLAG LYLO_HACK_ACCESSLOG=1 in gunicorn.conf.py): `%(t)s "%(m)s %(U)s" %(s)s %(D)sus` to stdout (PM2 out log). Path without query string; no headers or bodies.
 - Tests: hackathon/server/tests/test_v052.py, hackathon/mobile-bridge/test/v052.test.js, baseline/mobile/src/__tests__/dtcExtra.test.js, baseline/mobile/ui-tests/v052.test.js.
 - Version 0.5.2, versionCode 15.
+- Build gate (Vera v0.5.2 condition 4): `scripts/check-apk-manifest.sh [apk]` fails if the generated (gitignored) `baseline/mobile/android/app/src/main/AndroidManifest.xml` lacks RECORD_AUDIO or marks it `tools:node="remove"`, and with an APK path, if the APK does not request RECORD_AUDIO. Run it after `expo prebuild` and after every APK build (build052.sh does). Test: hackathon/server/tests/test_build_gate.py. No app behaviour change.
