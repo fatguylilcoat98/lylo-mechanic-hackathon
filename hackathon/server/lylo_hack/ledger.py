@@ -41,6 +41,7 @@ def build_ledger(data, result):
             t = dtc_titles.lookup(code)["title"]
             if t:
                 item["title"] = t
+                item["title_note"] = dtc_titles.TITLE_NOTE
         add(item)
     for p in data.get("raw_pids", []):
         if p.get("raw_value") is None:

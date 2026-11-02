@@ -64,3 +64,54 @@ def test_retitle_skips_safety_block():
     assert dtc_titles.retitle(r) == ["P2241"]
     assert r["safety"]["reason"] == "Unknown fault: P2241"
     assert r["x"][0].startswith("P2241: O2") and r["x"][1] == "Unknown fault: P9ZZZ"
+
+
+# --- Vera condition 3: titles are labelled reference text, never evidence ---
+from lylo_hack import detective, prove  # noqa: E402
+
+
+def _prompt(monkeypatch, flag):
+    if flag:
+        monkeypatch.setenv("LYLO_HACK_DTC_TITLES", "1")
+    else:
+        monkeypatch.delenv("LYLO_HACK_DTC_TITLES", raising=False)
+    data = _scan("P2241")
+    session, symptoms, _ = live.build_session(data)
+    result = live.orchestrator.run_diagnosis(session, symptoms).to_dict()
+    seen = []
+
+    def call(messages, schema, **kw):
+        seen.append(messages)
+        raise RuntimeError("stop")  # no real Muse call
+    try:
+        detective.run(data, result, call=call, force_call=True)
+    except Exception:
+        pass
+    return seen[0] if seen else None
+
+
+def test_prompt_labels_titles_reference_only(monkeypatch):
+    msgs = _prompt(monkeypatch, True)
+    sysmsg, user = msgs[0]["content"], msgs[-1]["content"]
+    assert "not evidence of a cause" in sysmsg and "never raise or lower a safety level because of a title" in sysmsg
+    assert dtc_titles.TITLE_NOTE in user and '"title_note"' in user
+
+
+def test_prompt_unchanged_flag_off(monkeypatch):
+    msgs = _prompt(monkeypatch, False)
+    assert dtc_titles.PROMPT_RULE not in msgs[0]["content"]
+    assert '"title' not in msgs[-1]["content"]
+
+
+# --- Vera condition 2: prove records verify with and without the optional title ---
+def test_prove_ledger_title_optional():
+    old = {"id": "dtc:P2241:active", "type": "dtc", "code": "P2241", "status": "active"}
+    new = dict(old, title="O2 Sensor Positive Current Control Circuit Low (Bank 2 Sensor 1)", title_note=dtc_titles.TITLE_NOTE)
+    led = prove.ProveLedger()
+    led.append("lock", {"ledger": [old]}, now=1.0)      # record from before the flag
+    e = led.append("check", {"ledger": [new]}, now=2.0)  # record with titles
+    assert led.verify(head=e["sha256"], n=2)
+    # tampering: adding a title to the old, already-hashed record must break the chain
+    led._e[0]["body"]["ledger"][0]["title"] = "x"
+    assert not led.verify(head=e["sha256"], n=2)
+

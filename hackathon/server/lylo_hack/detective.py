@@ -12,6 +12,7 @@ import json
 import os
 
 from . import ledger as L
+from . import dtc_titles as DT
 from . import muse, wiring
 from . import vin as V
 from . import engine_user as E
@@ -187,6 +188,8 @@ def run(data, result, call=None, extra_items=None, force_call=False):
         schema["properties"]["prediction"] = P.SCHEMA
         schema["required"] = schema["required"] + ["prediction"]
         instructions = INSTRUCTIONS + PROVE_RULE
+    if any(isinstance(i, dict) and i.get("type") == "dtc" and i.get("title") for i in items):
+        instructions = instructions + DT.PROMPT_RULE  # v0.5.2: only present when LYLO_HACK_DTC_TITLES=1 added titles
     messages = [{"role": "system", "content": instructions},
                 {"role": "user", "content": "EVIDENCE LEDGER:\n" + ledger_json}]
     prompt_hash = hashlib.sha256(json.dumps(messages, sort_keys=True).encode()).hexdigest()[:16]

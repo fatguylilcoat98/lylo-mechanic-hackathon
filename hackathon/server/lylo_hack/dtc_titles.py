@@ -47,6 +47,10 @@ def describe(code):
     return f"{r['code']}: unknown code, not in the generic list. The rules still check the rest of the scan."
 
 
+TITLE_NOTE = "generic SAE meaning of this code number; reference text, not evidence of which part failed"
+PROMPT_RULE = """
+Note on code titles: a "dtc" item's "title" is the generic SAE meaning of the code number (reference text only). You may use it to say what the code means, but it is not evidence of a cause: cite readings or rules for causes, and never raise or lower a safety level because of a title."""
+
 _UNKNOWN = re.compile(r"Unknown fault: ([PBCU][0-9A-F]{4})\b")
 
 
