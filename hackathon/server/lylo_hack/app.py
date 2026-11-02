@@ -24,6 +24,7 @@ from . import netpref
 from . import engine_user
 from . import prove
 from . import webdemo
+from . import crash
 
 log = logging.getLogger("lylo_hack")
 
@@ -468,6 +469,7 @@ def create_app():
         return jsonify(out)
 
     webdemo.install(app, limiter, noadapter_route, vision_route)
+    crash.install(app, limiter)
 
     @app.errorhandler(HTTPException)
     def http_error(e):  # keep 4xx as 4xx (baseline turned them into 500)
