@@ -36,13 +36,14 @@ export function ResultsV2Body({ m, pinnedReplay = false }) {
       </Section>
 
       {m.causes.length ? (
-        <Section title={'THE PROOF \u00B7 MUSE DETECTIVE'}>
+        <Section title="THE PROOF · MUSE DETECTIVE">
+          <Text style={cs.small} testID="causes-count">{`${m.causes.length} possible ${m.causes.length === 1 ? 'cause' : 'causes'}, all AI's guesses. The counts below are the evidence behind them:`}</Text>
           <View style={st.legend} testID="evidence-summary">
             <View style={st.legendItem}><EvidenceBadge kind="car" /><Text style={st.legendN}>{c.car}</Text></View>
             <View style={st.legendItem}><EvidenceBadge kind="guess" /><Text style={st.legendN}>{c.guess}</Text></View>
             <View style={st.legendItem}><EvidenceBadge kind="unknown" /><Text style={st.legendN}>{c.unknown}</Text></View>
           </View>
-          <Text style={cs.small}>Causes are the AI's guesses. Tap one to see the readings from your car that back it up.</Text>
+          <Text style={cs.small}>Tap a cause to see the readings from your car that back it up.</Text>
           {m.causes.map((x) => <CauseCard key={x.key} cause={x} open={open.has(x.key)} onToggle={() => toggle(x.key)} />)}
         </Section>
       ) : null}

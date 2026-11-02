@@ -61,6 +61,19 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 
 | Date/time (PT) | Commit | File | Reason |
 |---|---|---|---|
+| 2026-11-02 | v0.5.2 | `baseline/mobile/src/data/dtcCodes.js` | FLAG EXPO_PUBLIC_LYLO_DTC_EXTRA=1: curated P0037 (Bank 1 Sensor 2) and P2241 (Bank 2 Sensor 1) entries; never override existing ones. Flag off = old library. |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/src/engine/diagnose.js` | FLAG EXPO_PUBLIC_LYLO_DTC_EXTRA=1: unknown codes show the generic SAE title from dtcTitles.json ("standard meaning is ..."), still known:false with the same check/shop steps. Flag off = identical output (officialTitle null). |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/src/data/dtcTitles.json` | New data: 9,415 generic titles (P/B/C/U) from Wal33D/dtc-database (MIT); titles only. |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/src/data/DTC_TITLES_LICENSE.txt` | MIT notice for dtcTitles.json. |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/src/__tests__/dtcExtra.test.js` | New node tests for the flag (off/on, corrected wording, unknown fallback). Test-only. |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/ui-tests/v052.test.js` | New jest tests: proof header dot, causes/evidence counts label, in-app mic request + Open settings. Test-only. |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/ui-tests/v051.test.js` | Header assertion written with the literal middle dot (same string). Test-only. |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/app.json` | Version 0.5.2, versionCode 15. package.json / package-lock.json: version 0.5.2. No new permissions in app.json (RECORD_AUDIO was already listed). |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/package.json` | Version 0.5.2. |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/package-lock.json` | Version 0.5.2. |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/src/screens/HomeScreen.js` | Build label v0.5.2 (screens.test.js and uiV2.test.js follow). |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/ui-tests/screens.test.js` | Build label v0.5.2. Test-only. |
+| 2026-11-02 | v0.5.2 | `baseline/mobile/ui-tests/uiV2.test.js` | Build label v0.5.2. Test-only. |
 | 2026-10-28 | v0.5.1 Vera r2 | `baseline/mobile/ui-tests/uiV2.test.js` | HELD tests now carry a verified prove record (HELD without one shows 'RESULT NOT VERIFIED'). Test-only. |
 | 2026-10-28 | v0.5.1 Vera r3 | `baseline/mobile/ui-tests/v051.test.js` | +deadbeef short-head -> unverified case; zz case now unverified. Test-only. |
 | 2026-10-28 | v0.5.1 Vera r2 | `baseline/mobile/ui-tests/v051.test.js` | Exact lock() shape -> pending; shared banner rule; unverified state. Test-only. |
@@ -329,3 +342,6 @@ Context: Chris ran v0.5.0 on his 1998 Ford E-450 (6.8L V10 Triton, gas) with an 
 - prove.js bannerStatus: head must be a full 64-hex sha256. Missing/empty head on HELD/FAILED -> integrity; present but not 64-hex (e.g. 'deadbeef', 'zz') -> unverified.
 - Removed unused `predictionView` (only its own unit test used it; that test now asserts the same never-upgrade rule via bannerStatus).
 - Tests: jest 80/80 (+1 'deadbeef' case; 'zz' case now expects unverified), mobile-bridge 124/124, server 190.
+
+## v0.5.2 (2026-11-02): fixes from Chris's real LX scan (1998 E-450)
+- `baseline/mobile/android/` is gitignored: AndroidManifest.xml on the build box had `RECORD_AUDIO tools:node="remove"`, so every APK since v0.4.4 shipped without the mic permission and "Ask out loud" was always denied (verified: no RECORD_AUDIO in the v0.5.1 fd355e5 APK manifest). Now a plain uses-permission. build.gradle versionCode 15 / versionName 0.5.2 by hand.

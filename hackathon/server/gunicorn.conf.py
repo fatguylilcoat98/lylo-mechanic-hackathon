@@ -32,3 +32,10 @@ if _flag("LYLO_HACK_GTHREAD") == "1":
 else:
     worker_class = "sync"
     threads = 1
+
+# v0.5.2: flag LYLO_HACK_ACCESSLOG=1 -> one access line per request to stdout (PM2 out log):
+# time, method, path (no query string), status, duration in microseconds. No bodies, headers, or query
+# strings, so no keys or scan data. Unset -> no access log (gunicorn default, the old behavior).
+if _flag("LYLO_HACK_ACCESSLOG") == "1":
+    accesslog = "-"
+    access_log_format = '%(t)s "%(m)s %(U)s" %(s)s %(D)sus'

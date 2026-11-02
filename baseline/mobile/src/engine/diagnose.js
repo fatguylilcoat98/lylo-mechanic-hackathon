@@ -3,7 +3,14 @@
  */
 'use strict';
 
-const { BY_CODE, CODES } = require('../data/dtcCodes');
+const { BY_CODE, CODES, extraOn } = require('../data/dtcCodes');
+// v0.5.2 (flag EXPO_PUBLIC_LYLO_DTC_EXTRA=1): official generic titles for ~9,400 codes (MIT, see data/DTC_TITLES_LICENSE.txt).
+let TITLES = null;
+function titleOf(code) {
+  if (!extraOn()) return null;
+  if (!TITLES) { try { TITLES = require('../data/dtcTitles.json').titles || {}; } catch (e) { TITLES = {}; } }
+  return TITLES[code] || null;
+}
 const { estimate, money, ESTIMATE_NOTE } = require('./pricing');
 
 const URGENCY = {
@@ -29,11 +36,14 @@ function buildCodeResult(rawCode, kind) {
   const e = BY_CODE[code];
   if (!e) {
     const manufacturer = /^[PCBU][13]/.test(code);
+    const official = titleOf(code);
     return {
       code, kind: kind || 'stored', known: false,
-      title: manufacturer ? 'Manufacturer-specific code' : 'Code not in LYLO\'s library yet',
+      title: official || (manufacturer ? 'Manufacturer-specific code' : 'Code not in LYLO\'s library yet'),
+      officialTitle: official,
       plain: 'Your car\'s ' + (SYSTEM_BY_LETTER[code[0]] || 'computer') + ' system stored code ' + code + '. ' +
-        (manufacturer ? 'This one is specific to your car\'s brand, so its meaning depends on the make and model.' : 'LYLO doesn\'t have this code in its offline library yet.'),
+        (official ? 'Its standard meaning is "' + official + '". LYLO doesn\'t have a full repair guide for this one yet' + (manufacturer ? ', and some brands use this number differently.' : '.') :
+        (manufacturer ? 'This one is specific to your car\'s brand, so its meaning depends on the make and model.' : 'LYLO doesn\'t have this code in its offline library yet.')),
       causes: [], check: ['Look the code up for your exact make and model', 'A shop scan with an enhanced (brand-specific) scanner can pin it down'],
       urgency: URGENCY.soon, difficulty: { level: 'Unknown', label: 'Needs diagnosis' },
       fix: 'Professional diagnosis', price: null, priceText: { diy: 'Unknown', shop: 'Diagnosis first: $100 – $200', dealer: null },

@@ -208,3 +208,15 @@ Context: Chris ran v0.5.0 on his 1998 Ford E-450 (6.8L V10 Triton, gas) with an 
 - Should-fix 3: the 58995b9 parity tests fail loudly when git history is missing. They skip only with `LYLO_ALLOW_NO_GIT=1`.
 
 - 2026-10-28: Vera r3 should-fix on box: prove.js head regex {64} (short head -> unverified), predictionView removed. Not pushed.
+
+## v0.5.2: fixes from Chris's Nov 2 LX scan (1998 Ford E-450) (2026-11-02)
+Context: the scan worked end to end (VIN, 2 recalls, Good to drive, muse-spark-1.3 in 7.1 s). Items a judge would notice:
+1. Proof header (BUG FIX, presentation): Chris's screen showed the literal "\u00B7" (fixed in v0.5.1 source; his installed APK was likely older, inferred). The header now uses a literal "·" so no escape is involved. A node test fails on any `="...\uXXXX..."` JSX attribute in mobile-bridge/src; none remain.
+2. Evidence counts (CHANGES OLD BEHAVIOUR, label only): above the FROM YOUR CAR / AI'S GUESS / UNKNOWN row the screen now says "N possible causes, all AI's guesses. The counts below are the evidence behind them:". The counts themselves are unchanged (evidence items cited by the causes).
+3. Lean wording (CHANGES OLD BEHAVIOUR, wording): cold+lean verdict now reads "The engine computer is adding extra fuel because the engine reads a little lean (more air than fuel)..."; the non-cold lean line says the same thing. Positive fuel trim = ECU adding fuel because it sees lean, explained once.
+4. Ask out loud (BUG FIX): root cause was the build box AndroidManifest removing RECORD_AUDIO (see NEW_WORK.md). The panel now checks then requests the mic in-app on tap; denied shows "tap again and choose Allow"; denied with don't-ask-again (canAskAgain false) shows an "Open settings" button (Linking.openSettings).
+5. Timeout (BUG FIX): phone client timeout 20 s -> 45 s (`uploadClient.DEFAULT_TIMEOUT_MS`), above the server Muse cap (LYLO_HACK_MUSE_TIMEOUT_S, 25 s, unchanged) + VIN (6 s), so a slow Muse returns the rules safety result with the Muse timeout status instead of the phone's "couldn't reach the server". No fast-safety async path.
+6. Trouble codes (FLAGS): phone EXPO_PUBLIC_LYLO_DTC_EXTRA=1 (curated P0037/P2241 + 9,415 generic titles offline); server LYLO_HACK_DTC_TITLES=1 (`lylo_hack/dtc_titles.py`, fills a missing description in live.build_session; unknown codes get "unknown code, not in the generic list" or "manufacturer-specific"). Source: Wal33D/dtc-database generic SAE J2012 lists (MIT); P0037 "HO2S Heater Control Circuit Low (Bank 1 Sensor 2)", P2241 "O2 Sensor Positive Current Control Circuit Low (Bank 2 Sensor 1)" match the 2026-10-31 diag. mytrile/obd-trouble-codes was rejected (wrong P0420 title).
+7. Access log (FLAG LYLO_HACK_ACCESSLOG=1 in gunicorn.conf.py): `%(t)s "%(m)s %(U)s" %(s)s %(D)sus` to stdout (PM2 out log). Path without query string; no headers or bodies.
+- Tests: hackathon/server/tests/test_v052.py, hackathon/mobile-bridge/test/v052.test.js, baseline/mobile/src/__tests__/dtcExtra.test.js, baseline/mobile/ui-tests/v052.test.js.
+- Version 0.5.2, versionCode 15.

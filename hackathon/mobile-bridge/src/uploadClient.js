@@ -9,7 +9,9 @@
 const { scanToLivePayload } = require('./scanToLive');
 const EO = require('./engineOverride');
 
-const DEFAULT_TIMEOUT_MS = 20000; // the baseline Layer-12 call alone could take 10 s+
+// v0.5.2: 45 s (was 20 s). The server caps Muse at LYLO_HACK_MUSE_TIMEOUT_S (25 s) and then still
+// returns the rules safety result, so the client must wait longer than the server's Muse cap.
+const DEFAULT_TIMEOUT_MS = 45000;
 
 function defaultOfflineEngine() {
   // Pre-existing offline engine (baseline, unchanged).

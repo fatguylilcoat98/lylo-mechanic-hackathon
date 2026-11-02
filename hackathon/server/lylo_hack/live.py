@@ -2,6 +2,7 @@
 import os
 
 from . import baseline_path
+from . import dtc_titles
 
 baseline_path.ensure()
 import api.orchestrator as orchestrator  # noqa: E402  (baseline, read-only)
@@ -70,6 +71,8 @@ def build_session(data):
         code = d["code"].upper()
         status = d.get("status", "active")
         desc = d.get("description")
+        if not desc and dtc_titles.on():
+            desc = dtc_titles.describe(code)  # v0.5.2 flag LYLO_HACK_DTC_TITLES
         if status == "permanent":
             status = "active"
             desc = f"{PERMANENT_NOTE} {desc}" if desc else PERMANENT_NOTE

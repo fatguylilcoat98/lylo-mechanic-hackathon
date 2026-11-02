@@ -49,7 +49,7 @@ test('results v2: no literal \\u00B7, no duplicate causes under Mechanic details
   const ui = render(<SimpleResults uiV2 scan={{ serverDiagnosis: { source: 'server', result: truck } }} screen="codes" storage={memStore()} />);
   await act(async () => {});
   expect(ui.queryByText(/\\u00B7/)).toBeNull();
-  expect(ui.getByText('THE PROOF \u00B7 MUSE DETECTIVE')).toBeTruthy();
+  expect(ui.getByText('THE PROOF · MUSE DETECTIVE')).toBeTruthy();
   await act(async () => { fireEvent.press(ui.getByText(/Mechanic details/)); });
   expect(ui.queryByText(/Hypotheses \(Meta AI/)).toBeNull();
   expect(ui.queryByText(/^Possible causes \(Meta AI/)).toBeNull();

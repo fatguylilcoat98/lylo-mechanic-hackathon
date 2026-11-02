@@ -5,7 +5,7 @@
  * A dash photo can only raise the verdict (onScan gets a scan with the stricter level); voice never changes it.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MSG, SLOW_MS, MAX_RECORD_MS, features, requestDash, requestVoice, dashView, applyDash, voiceView, recordingOptions, audioFile } from './dashVoice';
 import { configuredUrl, configuredKey } from './scanHook';
 
@@ -54,6 +54,7 @@ export default function DashVoicePanel({ scan, onScan, onDash, env, enabled, pic
   const [voiceBusy, setVoiceBusy] = useState(false);
   const [voice, setVoice] = useState(null);
   const [voiceNote, setVoiceNote] = useState(null);
+  const [micBlocked, setMicBlocked] = useState(false); // v0.5.2: denied with "don't ask again"
   const stopTimer = useRef(null);
   const recRef = useRef(null);
   const dashSlow = useSlow(dashBusy);
@@ -91,11 +92,16 @@ export default function DashVoicePanel({ scan, onScan, onDash, env, enabled, pic
   }
 
   async function startRec() {
-    setVoiceNote(null); setVoice(null);
+    setVoiceNote(null); setVoice(null); setMicBlocked(false);
     if (!Audio || !Audio.Recording) { setVoiceNote(MSG.noMic); return; }
     try {
-      const perm = await Audio.requestPermissionsAsync();
-      if (!perm || !perm.granted) { setVoiceNote(MSG.micDenied); return; }
+      // v0.5.2: ask in-app on tap (system dialog). If Android will not ask again, offer Open settings.
+      let perm = Audio.getPermissionsAsync ? await Audio.getPermissionsAsync() : null;
+      if (!perm || !perm.granted) perm = await Audio.requestPermissionsAsync();
+      if (!perm || !perm.granted) {
+        const blocked = !!perm && perm.canAskAgain === false;
+        setMicBlocked(blocked); setVoiceNote(blocked ? MSG.micBlocked : MSG.micDenied); return;
+      }
       if (Audio.setAudioModeAsync) await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
       const { recording } = await Audio.Recording.createAsync(recordingOptions(Audio));
       recRef.current = recording; setRec(recording);
@@ -158,6 +164,7 @@ export default function DashVoicePanel({ scan, onScan, onDash, env, enabled, pic
           {rec ? <Text style={s.small}>Listening... tap Stop when you are done.</Text> : null}
           {voiceBusy ? <Busy text="Meta AI is listening and checking your scan..." slow={voiceSlow} /> : null}
           {voiceNote ? <Text style={s.note}>{voiceNote}</Text> : null}
+          {micBlocked ? <Btn title="Open settings" kind="secondary" testID="mic-settings" onPress={() => { try { Linking.openSettings(); } catch (e) { /* ignore */ } }} /> : null}
           {voice ? (
             <View style={s.card} testID="voice-result">
               {!voice.ok ? <Text style={s.note}>{voice.message}</Text> : (

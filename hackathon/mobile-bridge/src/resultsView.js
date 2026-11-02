@@ -72,8 +72,8 @@ function buildResults(scan, opts = {}) {
     why = first && !hasCode(first) && !(codes[0].title && first.includes(codes[0].title)) ? first : `The car's computer reported ${plainProblem(codes[0].code)}.`;
   }
   else if (cleared && opts.screen === 'usedcar') why = 'Someone recently erased the warning codes, so problems may be hidden right now.';
-  else if (lean && cold) why = "The engine is adding extra fuel. That's normal while it's still cold, or it can mean a hose is leaking air.";
-  else if (lean) why = 'The engine is getting more air than it expects, a common and usually cheap fix like a cracked hose.';
+  else if (lean && cold) why = "The engine computer is adding extra fuel because the engine reads a little lean (more air than fuel). That's normal while it's still cold, or it can mean a hose is leaking air.";
+  else if (lean) why = 'The engine reads lean (more air than fuel), so the computer is adding extra fuel. Often a cheap fix like a cracked hose.';
   else if (cold && tone !== 'green') why = "Your engine was still cold, so some readings aren't reliable yet.";
   else if (tone === 'green') why = "We didn't find any problems in the engine computer.";
   else why = 'Some readings are worth a closer look by a mechanic.';

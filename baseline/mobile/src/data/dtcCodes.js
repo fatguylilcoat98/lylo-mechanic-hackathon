@@ -182,7 +182,22 @@ const CODES = [
   C('P0068', 'MAP / MAF vs Throttle Position Correlation', 'Air-flow readings don\'t match the throttle opening — often a vacuum leak or dirty throttle body.', ['Vacuum leak', 'Dirty throttle body', 'Faulty MAF/MAP sensor'], ['Clean the throttle body and MAF'], 'moderate', 'soon', 'Fix vacuum leak / clean throttle body', [10, 250], [0.5, 1.5]),
 ];
 
+// v0.5.2 (flag EXPO_PUBLIC_LYLO_DTC_EXTRA=1): curated entries for codes seen on Chris's 1998 E-450.
+// Titles: generic SAE J2012 wording (P2241 is Bank 2 Sensor 1, see docs/HACKATHON_LOG.md v0.5.2).
+const EXTRA_CODES = [
+  C('P0037', 'HO2S Heater Control Circuit Low (Bank 1 Sensor 2)', 'The heater inside the oxygen sensor after the catalytic converter (bank 1) is getting too little current. The engine still runs, but the sensor reads slowly and emissions checks can fail.', ['Failed heater in the downstream O2 sensor', 'Blown O2 heater fuse', 'Damaged wiring or connector at the sensor'], ['Check the O2 heater fuse', 'Look for melted or broken wires near the exhaust'], 'easy', 'ok', 'Replace downstream O2 sensor (bank 1)', [40, 160], [0.5, 1.0]),
+  C('P2241', 'O2 Sensor Positive Current Control Circuit Low (Bank 2 Sensor 1)', 'The control circuit of the upstream oxygen / air-fuel sensor on bank 2 reads low. Fuel control on that side of the engine can be less accurate.', ['Failing upstream O2 / air-fuel sensor (bank 2)', 'Wiring or connector problem', 'Engine computer circuit fault (rare)'], ['Inspect the bank 2 upstream sensor connector and wiring'], 'moderate', 'soon', 'Replace upstream O2 / air-fuel sensor (bank 2)', [60, 250], [0.5, 1.5]),
+];
+
 const BY_CODE = {};
 CODES.forEach((c) => { BY_CODE[c.code] = c; });
 
-module.exports = { CODES, BY_CODE };
+/** v0.5.2: with the flag on, add EXTRA_CODES (never overriding an existing entry). Flag off = old library exactly. */
+function extraOn(env) {
+  if (env) return env.EXPO_PUBLIC_LYLO_DTC_EXTRA === '1';
+  let v; try { v = process.env.EXPO_PUBLIC_LYLO_DTC_EXTRA; } catch (e) { v = undefined; } // direct access so Expo inlines it
+  return v === '1';
+}
+if (extraOn()) EXTRA_CODES.forEach((c) => { if (!BY_CODE[c.code]) { BY_CODE[c.code] = c; CODES.push(c); } });
+
+module.exports = { CODES, BY_CODE, EXTRA_CODES, extraOn };
