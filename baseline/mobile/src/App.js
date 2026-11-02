@@ -21,6 +21,8 @@ import LogScreen from './screens/LogScreen';
 import PhotoHelperScreen from '../../../hackathon/mobile-bridge/src/PhotoHelperScreen'; // hackathon v0.4.2
 import VinScreen from '../../../hackathon/mobile-bridge/src/VinScreen'; // hackathon v0.4.3
 import NoAdapterScreen from '../../../hackathon/mobile-bridge/src/NoAdapterScreen'; // hackathon v0.4.5
+import CrashGuardScreen from '../../../hackathon/mobile-bridge/src/CrashGuardScreen'; // hackathon v0.6
+import CollisionScreen from '../../../hackathon/mobile-bridge/src/CollisionScreen'; // hackathon v0.6
 import SetupScreen from '../../../hackathon/mobile-bridge/src/SetupScreen'; // hackathon v0.4.6
 import DemoScreen from '../../../hackathon/mobile-bridge/src/DemoScreen'; // hackathon v0.4.7
 import { C } from './constants/colors';
@@ -59,6 +61,8 @@ export default function App() {
           <Stack.Screen name="NoAdapter" component={NoAdapterScreen} options={{ title: 'No adapter' }} />
           <Stack.Screen name="Setup" component={SetupScreen} options={{ title: 'Quick setup' }} />
           <Stack.Screen name="Demo" component={DemoScreen} options={{ title: 'Demo scan' }} />
+          <Stack.Screen name="CrashGuard" component={CrashGuardScreen} options={{ title: 'Crash Guard' }} />
+          <Stack.Screen name="Collision" component={CollisionScreen} options={{ title: 'After a collision' }} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

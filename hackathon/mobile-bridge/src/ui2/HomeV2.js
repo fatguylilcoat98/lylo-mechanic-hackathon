@@ -10,6 +10,9 @@ import { DEMO_SCANS } from '../../../../baseline/mobile/src/data/demoScans';
 import { features as noAdapterFeatures } from '../noAdapter';
 import { useFirstRunSetup } from '../SetupScreen';
 import { features as demoFeatures } from '../demo';
+import { features as smFeatures } from '../showMe'; // v0.6
+import { features as cgFeatures } from '../crashGuard'; // v0.6
+import { features as colFeatures } from '../collision'; // v0.6
 import { color, space, radius, type, touch } from './theme';
 import { BigActionButton } from './components';
 
@@ -21,7 +24,9 @@ function Link({ title, onPress }) {
   );
 }
 
-export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp }) {
+export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp, env }) {
+  const hero = smFeatures(env).home; // v0.6 EXPO_PUBLIC_LYLO_NOSENSOR_HOME: no-sensor check is the primary action when no adapter
+  const crashOn = cgFeatures(env).on; const colOn = colFeatures(env).on;
   const noAdapter = noAdapterOn === undefined ? noAdapterFeatures().on : noAdapterOn;
   const demoOn = demoOnProp === undefined ? demoFeatures().on : demoOnProp;
   const setupOn = useFirstRunSetup(navigation);
@@ -48,11 +53,20 @@ export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp }) 
           <BigActionButton kind="secondary" title="Used-car check" subtitle="Thinking of buying it? Check it first" onPress={() => go('Scan', { mode: 'usedcar' })} />
           <Pressable onPress={async () => { await OBDService.disconnect(); setDevice(null); }} accessibilityRole="button" style={st.small}><Text style={st.smallText}>Disconnect</Text></Pressable>
         </View>
+      ) : hero ? (
+        <>
+          <BigActionButton testID="primary-action" title="Tell LYLO what's wrong" subtitle="Say it, type it, or snap the dash. No adapter needed"
+            onPress={() => (noAdapter ? go('NoAdapter') : go('Lookup'))} />
+          <BigActionButton kind="secondary" title="Have an OBD adapter? Scan" subtitle="Plug in your OBDLink, ignition ON" onPress={() => go('Connect')} />
+        </>
       ) : (
         <BigActionButton testID="primary-action" title="Scan with adapter" subtitle="Plug in your OBDLink, ignition ON" onPress={() => go('Connect')} />
       )}
+      {hero && !device ? null : (
       <BigActionButton kind="secondary" title="No adapter? Start here" subtitle="Describe it, type a code, or snap the dash"
-        onPress={() => (noAdapter ? go('NoAdapter') : go('Lookup'))} />
+        onPress={() => (noAdapter ? go('NoAdapter') : go('Lookup'))} />)}
+      {crashOn ? <BigActionButton kind="secondary" title="Crash Guard" subtitle="Turn on for this drive. Not a replacement for 911" onPress={() => go('CrashGuard')} /> : null}
+      {colOn ? <BigActionButton kind="secondary" title="I was in a collision" subtitle="Step-by-step checklist and photos for your insurer" onPress={() => go('Collision')} /> : null}
       <BigActionButton kind="secondary" title="Try a demo" subtitle="No car needed. Clearly marked as a replay"
         onPress={() => (demoOn ? go('Demo') : go('Codes', { scan: DEMO_SCANS.checkengine }))} />
 

@@ -98,6 +98,7 @@ function createDetector(opts) {
 
 /** Prompt state: elapsed ms since the crash -> what to show. */
 function promptState(elapsedMs, th) {
+  elapsedMs = Math.max(0, Number(elapsedMs) || 0);
   const t = Object.assign({}, T, th || {});
   const total = t.PROMPT_MS * t.PROMPTS;
   if (elapsedMs >= total) return { phase: 'alert', prompt: t.PROMPTS, secondsLeft: 0 };

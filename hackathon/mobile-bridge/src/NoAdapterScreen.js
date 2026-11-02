@@ -19,6 +19,7 @@ import { forCode } from './priceLinks';
 import { PriceButtons } from './PriceButtons';
 import { loadVehicle } from './vin';
 import DashVoicePanel from './DashVoicePanel';
+import * as SM from './showMe'; // v0.6 flag EXPO_PUBLIC_LYLO_SHOWME
 
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
@@ -44,8 +45,10 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
   const Audio = audio === undefined ? defaultAudio : audio;
   const go = open || ((u) => Linking.openURL(u).catch(() => {}));
   const dv = dvFeatures(env);
+  const sm = SM.features(env).showMe;
 
-  const [text, setText] = useState('');
+  const [textState, setText] = useState('');
+  const text = textState;
   const [codesText, setCodesText] = useState('');
   const [vehicle, setVehicle] = useState(null);
   const [checked, setChecked] = useState(null); // { level, hits, codes: [result], bad }
@@ -53,6 +56,7 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
   const [view, setView] = useState(null);
   const [note, setNote] = useState(null);
   const [rec, setRec] = useState(null);
+  const [causes, setCauses] = useState([]); // v0.6 showMe: guesses from the server reply
   const [photo, setPhoto] = useState(null); // dash-photo view: { level, photoEvidence, reasons }
   const recRef = useRef(null);
   const stopTimer = useRef(null);
@@ -71,8 +75,9 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
     return c;
   }
 
-  async function check(audioFileObj) {
-    setNote(null); setView(null);
+  async function check(audioFileObj, textOverride) {
+    setNote(null); setView(null); setCauses([]);
+    const text = textOverride === undefined ? textState : textOverride;
     if (!text.trim() && !codesText.trim() && !audioFileObj) { setNote(MSG.empty); return; }
     const c = runLocal(text);
     if (!f.server) return;
@@ -80,6 +85,7 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
     try {
       const res = await requestCheck({ baseUrl: url, appKey: key, fetchImpl, text: text.trim(), codes: c.good, vehicle, audio: audioFileObj, photoEvidence: photo && photo.ok ? photo.photoEvidence : [] });
       const v = checkView(res, c.level);
+      if (sm && res && res.ok) setCauses(SM.causesFrom(res.body));
       setView(v);
       if (v.ok && v.transcript) { const merged = runLocal(text + ' ' + v.transcript); v.level = higher(v.level, merged.level); v.levelText = label(v.level); }
     } finally { setBusy(false); }
@@ -115,6 +121,10 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
   let level = view && view.ok ? view.level : (checked ? checked.level : null);
   if (photo && photo.ok && photo.findings.length) level = higher(level || 'INSPECT_SOON', photo.level);
 
+  const answerFollowUp = (q, a) => { const t = SM.appendAnswer(textState, q, a); setText(t); check(null, t); };
+  const fix = sm && view && view.ok ? SM.fixIt(causes, vehicle) : null;
+  const dashPanel = dv.dash ? <DashVoicePanel scan={null} onDash={setPhoto} enabled={{ dash: true, voice: false }} env={env} fetchImpl={fetchImpl} baseUrl={url} appKey={key} /> : null;
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg || '#0a0c0f' }} contentContainerStyle={s.scroll} testID="no-adapter-screen">
       <View style={s.hero}>
@@ -122,6 +132,7 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
         <Text style={s.body}>You don't need an OBD adapter or Bluetooth for anything on this screen.</Text>
         <Text style={s.small} testID="no-sensor-note">{'\u2139\uFE0F  '}Heads up: without live sensor data, these checks are less accurate than a scan with an OBD adapter. They're a starting point, not a diagnosis.</Text>
       </View>
+      {sm ? <><Text style={s.h2}>{'\uD83D\uDCF7  '}1. Snap the dash (optional)</Text>{dashPanel}</> : null}
 
       <Text style={s.h2}>{'\uD83D\uDDE3\uFE0F  '}What's happening with your car?</Text>
       <TextInput testID="symptom-text" style={[s.input, { minHeight: 90 }]} multiline value={text} onChangeText={setText} maxLength={1000}
@@ -155,9 +166,28 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
           {view.transcript ? <><Text style={s.small}>You said:</Text><Text style={s.body}>{'\u201C'}{view.transcript}{'\u201D'}</Text></> : null}
           {view.answer ? <Text style={[s.body, { marginTop: 8 }]}>{view.answer}</Text> : null}
           {view.withheldText ? <Text style={s.note}>{view.withheldText}</Text> : null}
-          {view.followUps.map((t) => <Text key={t} style={s.small}>{'\u2022 '}{t}</Text>)}
+          {sm && causes.length ? <><Text style={[s.h3, { marginTop: 10 }]}>Possible causes (all guesses)</Text>
+            {causes.map((c) => <Text key={c.cause} style={s.small} testID="sm-cause">{'\u2022 '}{c.cause} <Text style={s.mono}>{c.label}</Text></Text>)}</> : null}
+          {sm ? SM.followUps(view).map((t) => (
+            <View key={t} style={{ marginTop: 8 }} testID="sm-followup">
+              <Text style={s.body}>{t}</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {['yes', 'no', 'unsure'].map((a) => <Pressable key={a} disabled={busy} onPress={() => answerFollowUp(t, a)} accessibilityRole="button" style={s.model}><Text style={s.link}>{a === 'unsure' ? 'Not sure' : a === 'yes' ? 'Yes' : 'No'}</Text></Pressable>)}
+              </View>
+            </View>)) : view.followUps.map((t) => <Text key={t} style={s.small}>{'\u2022 '}{t}</Text>)}
           {view.unverified ? <Text style={s.small}>{view.unverified} claim(s) Meta AI could not back up were left out.</Text> : null}
           {view.receipt ? <Text style={s.mono}>{view.receipt}</Text> : null}
+        </View>
+      ) : null}
+      {fix ? (
+        <View style={s.card} testID="sm-fixit">
+          <Text style={s.h3}>{fix.title}</Text>
+          <Text style={s.mono}>{fix.guess}</Text>
+          <Text style={s.body}>{fix.diy}</Text>
+          {fix.links ? <PriceButtons p={fix.links} open={open} /> : (
+            <Pressable onPress={() => go(fix.watchUrl)} accessibilityRole="link"><Text style={s.link}>Watch how it's checked (YouTube search) {'\u2197'}</Text></Pressable>)}
+          {fix.photoHelper ? <Big title={`Find the ${fix.part} on my car`} kind="secondary" testID="sm-photohelper" onPress={() => navigation && navigation.navigate('PhotoHelper')} /> : null}
+          <Text style={s.small}>{fix.note}</Text>
         </View>
       ) : null}
 
@@ -175,7 +205,7 @@ export default function NoAdapterScreen({ navigation, env, fetchImpl, baseUrl, a
         );
       })}
 
-      {dv.dash ? <DashVoicePanel scan={null} onDash={setPhoto} enabled={{ dash: true, voice: false }} env={env} fetchImpl={fetchImpl} baseUrl={url} appKey={key} /> : null}
+      {sm ? null : dashPanel}
 
       <Text style={s.h2}>{'\uD83D\uDD27  '}More without an adapter</Text>
       <Big title={vehicle ? `Your car: ${vehicle.name} (recalls)` : 'Your car: add your VIN + check recalls'} testID="na-vin" onPress={() => navigation && navigation.navigate('Vin')} />

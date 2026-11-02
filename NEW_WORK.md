@@ -61,6 +61,11 @@ Every file under `baseline/` changed after the tag must have a row here. The ful
 
 | Date/time (PT) | Commit | File | Reason |
 |---|---|---|---|
+| 2026-11-02 15:30 | v0.6 (local) | baseline/mobile/src/App.js | Registers CrashGuard and Collision routes (screens render nothing unless EXPO_PUBLIC_LYLO_CRASH_GUARD / EXPO_PUBLIC_LYLO_COLLISION =1). |
+| 2026-11-02 15:30 | v0.6 (local) | baseline/mobile/package.json | Adds expo-sensors, expo-location, expo-sms, expo-mail-composer, expo-keep-awake for Crash Guard / collision report. |
+| 2026-11-02 15:30 | v0.6 (local) | baseline/mobile/app.json | ACCESS_COARSE_LOCATION + expo-location plugin (when-in-use text) for Crash Guard. |
+| 2026-11-02 15:45 | v0.6 (local) | baseline/mobile/ui-tests/v06.test.js | UI tests for v0.6 (no-sensor home, Crash Guard simulate, collision report, show-me follow-ups); stubs only. |
+| 2026-11-02 15:45 | v0.6 (local) | baseline/mobile/package-lock.json | Lock update for the five new expo modules. |
 | 2026-11-02 | v0.5.2 | `baseline/mobile/src/data/dtcCodes.js` | FLAG EXPO_PUBLIC_LYLO_DTC_EXTRA=1: curated P0037 (Bank 1 Sensor 2) and P2241 (Bank 2 Sensor 1) entries; never override existing ones. Flag off = old library. |
 | 2026-11-02 | v0.5.2 | `baseline/mobile/src/engine/diagnose.js` | FLAG EXPO_PUBLIC_LYLO_DTC_EXTRA=1: unknown codes show the generic SAE title from dtcTitles.json ("standard meaning is ..."), still known:false with the same check/shop steps. Flag off = identical output (officialTitle null). |
 | 2026-11-02 | v0.5.2 | `baseline/mobile/src/data/dtcTitles.json` | New data: 9,415 generic titles (P/B/C/U) from Wal33D/dtc-database (MIT); titles only. |

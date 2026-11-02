@@ -30,7 +30,8 @@
         "android.permission.BLUETOOTH_CONNECT",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ],
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW"
@@ -72,6 +73,12 @@
         "expo-av",
         {
           "microphonePermission": "LYLO Mechanic uses the microphone only after you tap \"Ask out loud\", to send your question about a scan."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "LYLO uses your location only for Crash Guard alerts and collision reports."
         }
       ]
     ],
