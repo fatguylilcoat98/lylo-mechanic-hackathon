@@ -45,3 +45,44 @@ def describe(code):
     if r["manufacturer_range"]:
         return f"{r['code']}: manufacturer-specific code; meaning depends on the make and model."
     return f"{r['code']}: unknown code, not in the generic list. The rules still check the rest of the scan."
+
+
+_UNKNOWN = re.compile(r"Unknown fault: ([PBCU][0-9A-F]{4})\b")
+
+
+def _label(code):
+    r = lookup(code)
+    if not r["title"]:
+        return None
+    return f"{r['code']}: {r['title']}" + (" (meaning can vary by make)" if r["manufacturer_range"] else "")
+
+
+def retitle(result):
+    """v0.5.2 (LYLO_HACK_DTC_TITLES=1): in every string of the rules result, replace
+    "Unknown fault: CODE" with "CODE: <generic title>" when the title is known. Text only:
+    the "safety" block is skipped and no level, confidence or list length changes. Returns
+    the codes retitled. Flag off: not called (caller checks on())."""
+    done = set()
+
+    def sub(m):
+        lab = _label(m.group(1))
+        if not lab:
+            return m.group(0)
+        done.add(m.group(1))
+        return lab
+
+    def walk(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k == "safety":
+                    continue
+                o[k] = walk(v)
+            return o
+        if isinstance(o, list):
+            return [walk(v) for v in o]
+        if isinstance(o, str) and "Unknown fault: " in o:
+            return _UNKNOWN.sub(sub, o)
+        return o
+
+    walk(result)
+    return sorted(done)

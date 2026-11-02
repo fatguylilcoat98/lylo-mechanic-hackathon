@@ -118,6 +118,8 @@ def build_session(data):
 def diagnose(data, muse=True, extra_items=None):
     session, symptoms, notes = build_session(data)
     result = orchestrator.run_diagnosis(session, symptoms).to_dict()
+    if dtc_titles.on():  # v0.5.2: text-only retitle of rule-unknown codes; safety block untouched
+        dtc_titles.retitle(result)
     result["hackathon"] = {
         "build": "lylo-mechanic-hackathon",
         "external_handshake": "stubbed" if external_handshake_disabled() else "live",

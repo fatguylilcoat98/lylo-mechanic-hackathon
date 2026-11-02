@@ -7,6 +7,8 @@ prefix; adapter name, owner info and location are never put in the ledger.
 """
 import re
 
+from . import dtc_titles
+
 SAFETY_ORDER = ["SAFE_TO_DRIVE", "INSPECT_SOON", "DRIVE_SHORT_DISTANCE_ONLY",
                 "DO_NOT_DRIVE", "TOW_RECOMMENDED", "EMERGENCY_STOP_IMMEDIATELY"]
 CLEARED_PIDS = ("DIST_SINCE_CODES_CLEARED", "WARMUPS_SINCE_CLEAR", "TIME_SINCE_CODES_CLEARED")
@@ -34,7 +36,12 @@ def build_ledger(data, result):
 
     for d in data.get("raw_dtcs", []):
         code, status = d["code"].upper(), d.get("status", "active")
-        add({"id": f"dtc:{code}:{status}", "type": "dtc", "code": code, "status": status})
+        item = {"id": f"dtc:{code}:{status}", "type": "dtc", "code": code, "status": status}
+        if dtc_titles.on():  # v0.5.2 flag LYLO_HACK_DTC_TITLES: generic SAE title, text only
+            t = dtc_titles.lookup(code)["title"]
+            if t:
+                item["title"] = t
+        add(item)
     for p in data.get("raw_pids", []):
         if p.get("raw_value") is None:
             continue
