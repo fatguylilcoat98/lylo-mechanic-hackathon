@@ -5,7 +5,7 @@
  * No History tab: the app has no saved scan-history screen, so we don't fake one.
  */
 import React, { useEffect, useState } from 'react';
-import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import OBDService from '../../../../baseline/mobile/src/services/OBDService';
 import { DEMO_SCANS } from '../../../../baseline/mobile/src/data/demoScans';
 
@@ -108,11 +108,12 @@ export default function HomeV3({ route, navigation, vmOn, vm, setMode, device, s
   return (
     <View style={st.screen} testID="home-v3">
       <ScrollView contentContainerStyle={st.scroll}>
-        <ImageBackground source={require('../../assets/home-car.jpg')} style={st.top} imageStyle={st.carImg} resizeMode="cover">
+        <View style={st.top}>
+          <Image source={require('../../assets/home-car.jpg')} style={st.carImg} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no" />
           <Brand />
           <Text style={st.hero}>The car AI that shows its proof.</Text>
           <Text style={st.sub}>{'Real answers. Evidence you can see.\nNo guesswork.'}</Text>
-        </ImageBackground>
+        </View>
 
         {vmOn ? <ModeToggle vm={vm} onPick={setMode} /> : null}
 
@@ -161,7 +162,7 @@ export const st = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.bg },
   scroll: { padding: 18, paddingTop: 44, paddingBottom: 110 },
   top: { marginHorizontal: -18, paddingHorizontal: 18, paddingBottom: 12 },
-  carImg: { left: undefined, right: 0, width: '45%', opacity: 0.85 },
+  carImg: { position: 'absolute', top: 0, right: 0, bottom: 0, width: '42%', opacity: 0.55 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   logo: { width: 96, height: 96 },
   divider: { width: 1, height: 56, backgroundColor: '#3A4656', marginHorizontal: 14 },
