@@ -24,7 +24,7 @@ export default function ScanScreen({ route, navigation }) {
     setProgress({ i: 0, n: 8, msg: 'Starting...' });
     try {
       const raw = await OBDService.fullScan((i, n, msg) => setProgress({ i, n, msg }));
-      const scan = await afterScan(raw);
+      const scan = await afterScan(raw, { afterClear: !!route.params?.afterClear });
       navigation.replace(mode === 'usedcar' ? 'UsedCar' : 'Codes', { scan });
     } catch (e) {
       BT.log('scan failed: ' + (e.message || e));

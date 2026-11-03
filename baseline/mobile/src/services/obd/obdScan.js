@@ -92,6 +92,13 @@ function timelineOn(opts) {
   return String(v || '').trim() === '1';
 }
 
+/** v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2=1 (literal access so Expo inlines it). */
+function sessionOn(opts) {
+  if (opts && opts.env) return String(opts.env.EXPO_PUBLIC_LYLO_SESSION_V2 || '').trim() === '1';
+  let v; try { v = process.env.EXPO_PUBLIC_LYLO_SESSION_V2; } catch (e) { v = undefined; }
+  return String(v || '').trim() === '1';
+}
+
 /** Mode 02 frame 0. Never throws; returns null when the car has no freeze frame or does not answer. */
 async function readFreezeFrame(session) {
   const d = await q(session, '020200', 4000);
@@ -139,7 +146,7 @@ async function runFullScan(session, onProgress, opts) {
   step('Reading VIN...');
   const v = await q(session, '0902', 8000);
   if (v && v.ok) {
-    scan.vin = D.decodeVIN(v.lines);
+    scan.vin = sessionOn(opts) ? D.decodeVINStrict(v.lines) : D.decodeVIN(v.lines);
     scan.vehicle = D.decodeVinOffline(scan.vin);
   }
   if (!scan.vin) scan.notes.push('VIN not reported by the engine computer (common on pre-2005 cars).');
@@ -147,6 +154,7 @@ async function runFullScan(session, onProgress, opts) {
   step('Reading check-engine light and readiness monitors...');
   const m = await q(session, '0101', 5000);
   if (m && m.ok) scan.monitor = D.decodeMonitorStatus(D.mode01Bytes(m.lines, '01'));
+  if (sessionOn(opts) && m && m.ok && scan.monitor) { const any = D.milFromAll(m.lines); if (any !== null) scan.monitor.milOn = any; } // v0.7.3: any ECU
 
   step('Reading stored codes (Mode 03)...');
   const s = await q(session, '03', 6000);
@@ -188,4 +196,4 @@ async function clearCodes(session) {
   return ok;
 }
 
-module.exports = { initAdapter, runFullScan, clearCodes, setScanLogger, USED_CAR_PIDS, LIVE_PIDS, FREEZE_PIDS, readFreezeFrame, timelineOn };
+module.exports = { initAdapter, runFullScan, clearCodes, setScanLogger, USED_CAR_PIDS, LIVE_PIDS, FREEZE_PIDS, readFreezeFrame, timelineOn, sessionOn };

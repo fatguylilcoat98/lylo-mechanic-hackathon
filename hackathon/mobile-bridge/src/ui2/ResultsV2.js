@@ -17,6 +17,8 @@ import * as VM from '../viewModes'; // v0.7.2 flag EXPO_PUBLIC_LYLO_VIEW_MODE
 import { MechanicDeep, PlainResults, ViewSwitch } from '../ViewModeScreens';
 import { homeV3On, ModeToggle } from './HomeV3'; // flag EXPO_PUBLIC_LYLO_HOME_V3
 import { Fold } from './ModeScreensV3';
+import * as SV from '../sessionV2'; // v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2
+import SessionCard, { StaleNotice } from '../SessionCard';
 import { ProveCheck } from '../ProvePanel'; // v0.5.1, renders nothing unless EXPO_PUBLIC_LYLO_PROVE=1
 
 export function ResultsV2Body({ m, pinnedReplay = false, expandAll = false }) {
@@ -78,7 +80,9 @@ export function ResultsV2Body({ m, pinnedReplay = false, expandAll = false }) {
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
 
-export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove, timelineEnv, viewEnv, homeEnv, navigation }) {
+export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove, timelineEnv, viewEnv, homeEnv, sessionEnv, onScanAnother, navigation }) {
+  const sv = SV.on(sessionEnv);
+  const [manual, setManual] = useState(null);
   const vmOn = VM.features(viewEnv).on;
   const v3 = vmOn && homeV3On(homeEnv);
   const [vm, setVm] = useState('simple');
@@ -87,16 +91,22 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
   const [raised, setRaised] = useState(null);
   const scan = raised && raised.base === scanIn ? raised.scan : scanIn;
   useEffect(() => { let live = true; loadVehicle(store).then((v) => { if (live) setVehicle(v); }); if (vmOn) VM.loadChosen(store).then((x) => { if (live && x) setVm(x); }); return () => { live = false; }; }, [store]);
-  const m = buildV2(scan, { codes, screen, baselineCleared, vehicle });
-  if (!m) return null;
+  const sm = sv ? SV.buildModel(scanIn, vehicle, manual) : null; // v0.7.3: only a VIN-matched (or confirmed) car
+  const m0 = buildV2(scan, { codes, screen, baselineCleared, vehicle: sv ? (sm.idv.vehicle || null) : vehicle });
+  if (!m0) return null;
+  if (sv && SV.isStale(scanIn)) return <ScrollView style={st.screen} contentContainerStyle={st.scroll}><StaleNotice /></ScrollView>;
+  const m = sv ? { ...m0, verdict: SV.adjustVerdict(m0.verdict, m0.tone, sm.idv) } : m0;
+  const plain = (x) => { const p = VM.buildPlain(x, scanIn); return sv && p && p.verdict ? { ...p, verdict: SV.adjustVerdict(p.verdict, x.tone, sm.idv) } : p; };
   return (
     // A replay badge is a sticky header so it never scrolls out of view.
     <ScrollView style={st.screen} contentContainerStyle={st.scroll} stickyHeaderIndices={m.replay ? [0] : undefined}>
       {m.replay ? <View style={st.pin} testID="replay-pin"><ReplayBadge label={m.replay} /></View> : null}
+      {sv ? <SessionCard model={sm} saved={vehicle} onConfirm={vehicle && scanIn.session ? () => setManual({ sessionId: scanIn.session.id, vehicle }) : null}
+        onEnterVin={navigation ? () => navigation.navigate('Vin') : null} onScanAnother={onScanAnother} /> : null}
       {v3 ? <ModeToggle vm={vm} onPick={(x) => { setVm(x); VM.saveViewMode(store, x); }} /> : null}
       {v3 && vm === 'simple' ? (
         <View testID="results-simple-v3">
-          <PlainResults p={VM.buildPlain(m, scanIn)} tone={m.tone} noTech />
+          <PlainResults p={plain(m)} tone={m.tone} noTech />
           <Fold title="technical details (codes, readings, evidence)" testID="results-tech">
             <ResultsV2Body m={m} pinnedReplay={!!m.replay} />
             <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} />
@@ -115,7 +125,7 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
       ) : null}
       {v3 ? null : <>
       {vmOn ? <ViewSwitch mode={vm} onChange={(x) => { setVm(x); VM.saveViewMode(store, x); }} /> : null}
-      {vmOn && vm === 'simple' ? <PlainResults p={VM.buildPlain(m, scanIn)} tone={m.tone} /> : <ResultsV2Body m={m} pinnedReplay={!!m.replay} />}
+      {vmOn && vm === 'simple' ? <PlainResults p={plain(m)} tone={m.tone} /> : <ResultsV2Body m={m} pinnedReplay={!!m.replay} />}
       {vmOn && vm === 'mechanic' ? <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} /> : null}
       <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />
       <ProveCheck scan={scan} {...(prove || {})} />

@@ -109,7 +109,7 @@ export default function HomeV2({ route, navigation, noAdapterOn, demoOn: demoOnP
           <Link title="Debug log" onPress={() => go('Log')} />
         </View>
       ) : null}
-      <Text style={st.foot}>{`Repair prices are LYLO estimates, not quotes. v${APP_VERSION}`}</Text>
+      <Text style={st.foot}>{`Repair prices are LYLO estimates, not quotes. v${APP_VERSION}${(() => { try { const b = String(process.env.EXPO_PUBLIC_LYLO_BUILD_ID || '').trim(); return b ? ' · build ' + b : ''; } catch (e) { return ''; } })()}`}</Text>
     </ScrollView>
   );
 }

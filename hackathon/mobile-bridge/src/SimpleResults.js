@@ -163,7 +163,8 @@ function SimpleResultsV1({ scan: scanIn, codes, screen, baselineCleared, footer,
   const [raised, setRaised] = useState(null); // v0.4.4: scan with a photo-raised level (never lower)
   const scan = raised && raised.base === scanIn ? raised.scan : scanIn;
   useEffect(() => { let live = true; loadViewMode(store).then((m) => { if (live) setMode(m); }); loadVehicle(store).then((v) => { if (live) setVehicle(v); }); return () => { live = false; }; }, [store]);
-  const m = buildResults(scan, { codes, screen, baselineCleared, vehicle });
+  const sv = require('./sessionV2'); const vOk = sv.on() ? sv.identify(scanIn, vehicle).vehicle : vehicle; // v0.7.3: VIN-matched only
+  const m = buildResults(scan, { codes, screen, baselineCleared, vehicle: vOk });
   if (!m) return null;
   const change = (next) => { setMode(next); saveViewMode(store, next); };
   return (

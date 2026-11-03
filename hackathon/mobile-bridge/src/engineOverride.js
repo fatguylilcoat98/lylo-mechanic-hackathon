@@ -91,6 +91,7 @@ async function save(storage, ov) {
 function fieldsFor(vin, env) {
   if (!features(env).on || !current) return {};
   if (vin && current.vin && vin !== current.vin) return {};
+  if (require('./sessionV2').on(env) && !(vin && current.vin && vin === current.vin)) return {}; // v0.7.3: never another car's engine
   const out = { engine_source: 'user', fuel_user: current.fuel || 'not_sure' };
   if (current.engine) out.engine_user = current.engine;
   return out;

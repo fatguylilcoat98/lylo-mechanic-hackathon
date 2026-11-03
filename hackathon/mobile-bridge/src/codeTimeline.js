@@ -17,6 +17,10 @@ const KIND_LABEL = {
   pending: 'Pending, not lit yet',
   permanent: 'Permanent, survives a clear',
 };
+const KIND_LABEL_V2 = { // v0.7.3: the light status comes from Mode 01 PID 01, not from the code kind
+  stored: 'Stored (confirmed)', stored_lit: 'Stored (confirmed)',
+  pending: 'Pending (seen this or last drive cycle)', permanent: 'Permanent (a scan tool cannot erase it)',
+};
 const NOT_REPORTED = 'Not reported by this car';
 
 function flagOn(v) { return String(v || '').trim() === '1'; }
@@ -56,6 +60,7 @@ function recordScan(history, scan, nowIso) {
   if (!scan) return h;
   const at = nowIso || scan.timestamp || new Date().toISOString();
   const vk = vehicleKey(scan);
+  if (vk === 'no-vin' && require('./sessionV2').on()) return h; // v0.7.3: unidentified scans never enter a car's history
   const veh = h.vehicles[vk] || { scans: 0, lastScanId: null, codes: {} };
   const id = scan.timestamp || at;
   if (veh.lastScanId === id) return h;
@@ -140,7 +145,8 @@ const DEMO_PIDS = { dist_mil_on_km: 248, time_mil_on_min: 312, dist_since_clear_
 function buildTimeline(scan, history, now) {
   if (!scan) return null;
   const demo = isDemo(scan);
-  const veh = demo ? demoHistory(now) : (sane(history).vehicles[vehicleKey(scan)] || { codes: {}, scans: 0 });
+  const s2 = require('./sessionV2').on();
+  const veh = demo ? demoHistory(now) : (s2 && vehicleKey(scan) === 'no-vin' ? { codes: {}, scans: 0 } : (sane(history).vehicles[vehicleKey(scan)] || { codes: {}, scans: 0 }));
   const nowCodes = {};
   codesOf(scan).forEach(({ code, kind }) => { (nowCodes[code] = nowCodes[code] || []).push(kind); });
   const names = Object.keys(veh.codes);
@@ -150,15 +156,16 @@ function buildTimeline(scan, history, now) {
     const kinds = nowCodes[code] || c.kinds;
     return {
       code, inThisScan: !!nowCodes[code],
-      labels: kinds.map((k) => KIND_LABEL[k] || k),
+      labels: kinds.map((k) => (s2 ? KIND_LABEL_V2[k] : KIND_LABEL[k]) || k),
       firstSeen: c.firstSeen ? fmtDate(c.firstSeen) : 'this scan',
       lastSeen: c.lastSeen ? fmtDate(c.lastSeen) : 'this scan',
       count: Math.max(c.count, nowCodes[code] ? 1 : 0),
       firstSeenIso: c.firstSeen,
     };
   }).sort((a, b) => (b.inThisScan - a.inThisScan) || String(a.firstSeenIso || '~').localeCompare(String(b.firstSeenIso || '~')));
+  if (s2 && !demo) rows.forEach((r) => { r.firstLabel = 'First seen by LYLO'; r.lastLabel = 'Last seen by LYLO'; });
   return {
-    demo,
+    demo, noVin: s2 && !demo && vehicleKey(scan) === 'no-vin',
     demoLabel: demo ? 'Demo example: made-up history so you can see how the timeline works.' : null,
     note: HONEST_NOTE,
     freeze: freezeView(demo ? (scan.freezeFrame || DEMO_FREEZE) : scan.freezeFrame),
@@ -170,4 +177,4 @@ function buildTimeline(scan, history, now) {
   };
 }
 
-module.exports = { KEY, HONEST_NOTE, KIND_LABEL, NOT_REPORTED, features, isDemo, vehicleKey, codesOf, recordScan, loadHistory, saveHistory, counters, freezeView, buildTimeline, demoHistory };
+module.exports = { KEY, HONEST_NOTE, KIND_LABEL, KIND_LABEL_V2, NOT_REPORTED, features, isDemo, vehicleKey, codesOf, recordScan, loadHistory, saveHistory, counters, freezeView, buildTimeline, demoHistory };

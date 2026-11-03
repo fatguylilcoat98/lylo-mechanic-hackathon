@@ -15,6 +15,7 @@ import { DEMO_SCANS } from '../../../../baseline/mobile/src/data/demoScans';
 
 let APP_VERSION = '?';
 try { APP_VERSION = require('../../../../baseline/mobile/app.json').expo.version || '?'; } catch (e) { APP_VERSION = '?'; }
+let BUILD_TAG = ''; try { const b = String(process.env.EXPO_PUBLIC_LYLO_BUILD_ID || '').trim(); BUILD_TAG = b ? ' · build ' + b : ''; } catch (e) { BUILD_TAG = ''; } // v0.7.3: set at build time
 
 export function homeV3On(env) {
   const e = env || { EXPO_PUBLIC_LYLO_HOME_V3: process.env.EXPO_PUBLIC_LYLO_HOME_V3 };
@@ -155,7 +156,7 @@ export default function HomeV3({ route, navigation, vmOn, vm, setMode, device, s
           </View>
         ) : null}
         <Text style={st.foot}>Repair prices are LYLO estimates, not quotes.</Text>
-        <Text style={st.ver}>{'v' + APP_VERSION}</Text>
+        <Text style={st.ver} testID="app-version">{'v' + APP_VERSION + BUILD_TAG}</Text>
       </ScrollView>
 
       <TabBar navigation={navigation} active={more ? 'more' : 'home'} onHome={() => setMore(false)} onMore={() => setMore(!more)} />

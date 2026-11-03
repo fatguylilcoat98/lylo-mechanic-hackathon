@@ -30,7 +30,9 @@ function configuredUrl(env) {
   return v || null;
 }
 
-async function afterScan(scan, opts = {}) {
+async function afterScan(scanIn, opts = {}) {
+  const S = require('./sessionV2');
+  const scan = S.on(opts.env) && scanIn ? S.stamp(scanIn, S.newSession(scanIn.adapter), { afterClear: !!opts.afterClear }) : scanIn; // v0.7.3
   const baseUrl = opts.baseUrl !== undefined ? opts.baseUrl : configuredUrl(opts.env);
   if (!baseUrl || !scan) return scan;
   try {

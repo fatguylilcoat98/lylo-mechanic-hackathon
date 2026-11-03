@@ -9,6 +9,8 @@ import { Button, Card, Badge, DemoBanner, LEVEL_COLORS, u } from '../components/
 import { C } from '../constants/colors';
 // Hackathon (Oct 26, 2026): renders nothing unless the scan has serverDiagnosis.
 import ServerDiagnosisCard from '../../../../hackathon/mobile-bridge/src/ServerDiagnosisCard';
+import * as SV from '../../../../hackathon/mobile-bridge/src/sessionV2'; // v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2
+import OBDService from '../services/OBDService';
 import SimpleResults from '../../../../hackathon/mobile-bridge/src/SimpleResults'; // v0.4.1 redesign
 import { hasServerResult, buildResults, shareText } from '../../../../hackathon/mobile-bridge/src/resultsView';
 import { analyzeCodes } from '../engine/diagnose';
@@ -24,7 +26,7 @@ export default function UsedCarScreen({ route, navigation }) {
   const c = a.counters;
   if (hasServerResult(scan)) { // v0.4.1: server answered -> the one-verdict results screen
     const opts = { codes: analyzeCodes(scan), screen: 'usedcar', baselineCleared: a.recentlyCleared };
-    return <SimpleResults scan={scan} {...opts} navigation={navigation} footer={<><Button title="Share this report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
+    return <SimpleResults scan={scan} {...opts} navigation={navigation} onScanAnother={SV.on() ? async () => { SV.resetActive(); try { await OBDService.disconnect(); } catch (e) {} navigation.replace('Connect'); } : undefined} footer={<><Button title="Share this report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
   }
 
   return (

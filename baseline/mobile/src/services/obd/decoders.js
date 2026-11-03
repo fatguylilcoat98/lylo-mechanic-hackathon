@@ -250,10 +250,59 @@ function decodeFreezePid(lines, pid) {
   return v;
 }
 
+
+// ── v0.7.3 (flag EXPO_PUBLIC_LYLO_SESSION_V2=1): stricter VIN + MIL from any ECU ──
+const VIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/;
+const VIN_W = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2];
+const VIN_T = { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, J: 1, K: 2, L: 3, M: 4, N: 5, P: 7, R: 9, S: 2, T: 3, U: 4, V: 5, W: 6, X: 7, Y: 8, Z: 9 };
+function vinCheckOk(v) {
+  if (!/^[1-5]/.test(v)) return true; // check digit is only mandatory for North American VINs
+  let sum = 0;
+  for (let i = 0; i < 17; i++) sum += (/[0-9]/.test(v[i]) ? +v[i] : VIN_T[v[i]]) * VIN_W[i];
+  const r = sum % 11;
+  return (r === 10 ? 'X' : String(r)) === v[8];
+}
+const asciiOf = (bytes) => bytes.filter((x) => x >= 0x30 && x <= 0x5a).map((x) => String.fromCharCode(x)).join('');
+/**
+ * Mode 09 PID 02, every ECU answer considered separately (engine + transmission often both answer on
+ * ISO 15765 CAN, e.g. Kia/Hyundai). Returns the first answer that is a valid 17-char VIN, or null.
+ * Never concatenates two ECUs' bytes and never returns a VIN that fails the check digit.
+ */
+function decodeVINStrict(lines) {
+  const msgs = collectMessages(lines);
+  const cands = [];
+  for (const m of msgs) {
+    if (m[0] !== 0x49 || m[1] !== 0x02) continue;
+    if (m.length >= 20) cands.push(asciiOf(m.slice(3)));
+  }
+  const legacy = msgs.filter((m) => m[0] === 0x49 && m[1] === 0x02 && m.length === 7);
+  if (legacy.length) {
+    const bySeq = {};
+    legacy.forEach((m) => { (bySeq[m[2]] = bySeq[m[2]] || []).push(m); });
+    const seqs = Object.keys(bySeq).map(Number).sort((a, b) => a - b);
+    const ecus = Math.max(...seqs.map((q) => bySeq[q].length));
+    for (let e = 0; e < ecus; e++) cands.push(asciiOf([].concat(...seqs.map((q) => (bySeq[q][e] || [0, 0, 0]).slice(3)))));
+  }
+  for (const c of cands) {
+    const t = c.replace(/[^A-HJ-NPR-Z0-9]/g, '');
+    const v = t.length >= 17 ? t.slice(-17) : '';
+    if (VIN_RE.test(v) && vinCheckOk(v)) return v;
+  }
+  return null;
+}
+/** 0101 from every ECU: MIL is ON if any emissions ECU reports bit 7 of byte A. */
+function milFromAll(lines) {
+  let seen = false; let lit = false;
+  for (const msg of collectMessages(lines)) {
+    if (msg.length >= 3 && msg[0] === 0x41 && msg[1] === 0x01) { seen = true; if (msg[2] & 0x80) lit = true; }
+  }
+  return seen ? lit : null;
+}
+
 const kmToMi = (km) => (km === null || km === undefined ? null : Math.round(km * KM_TO_MI));
 
 module.exports = {
   collectMessages, bytesToDtc, decodeDTCs, mode01Bytes, decodeSupported,
   decodeMonitorStatus, decodePid, decodeVIN, decodeVinOffline, PID_DEFS, kmToMi,
-  mode02Bytes, decodeFreezeDtc, decodeFreezePid,
+  mode02Bytes, decodeFreezeDtc, decodeFreezePid, decodeVINStrict, milFromAll, vinCheckOk,
 };

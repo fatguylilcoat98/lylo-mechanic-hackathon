@@ -32,6 +32,7 @@ export default function CodeTimelineCard({ scan, env, storage, now }) {
       <Text style={s.title}>CODE TIMELINE</Text>
       {t.demoLabel ? <Text style={s.demo} testID="ct-demo">{t.demoLabel}</Text> : null}
       <Text style={s.note} testID="ct-note">{t.note}</Text>
+      {t.noVin ? <Text style={s.small} testID="ct-novin">Vehicle not identified, so this scan is not added to any car's history.</Text> : null}
       {t.freeze ? (
         <View style={s.box} testID="ct-freeze">
           <Text style={s.h}>{`Freeze frame for ${t.freeze.code}`}</Text>
@@ -47,7 +48,7 @@ export default function CodeTimelineCard({ scan, env, storage, now }) {
         <View key={r.code} style={s.box} testID={'ct-row-' + r.code}>
           <Text style={s.h}>{r.code + (r.inThisScan ? '' : '  (not in this scan)')}</Text>
           {r.labels.map((l) => <Text key={l} style={s.tag}>{l}</Text>)}
-          <Text style={s.small}>{`First seen by LYLO: ${r.firstSeen} · Last seen: ${r.lastSeen} · Seen in ${r.count} ${r.count === 1 ? 'scan' : 'scans'}`}</Text>
+          <Text style={s.small}>{`First seen by LYLO: ${r.firstSeen} · ${r.lastLabel || 'Last seen'}: ${r.lastSeen} · Seen in ${r.count} ${r.count === 1 ? 'scan' : 'scans'}`}</Text>
         </View>
       ))}
     </View>
