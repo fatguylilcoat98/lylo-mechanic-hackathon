@@ -120,7 +120,7 @@ export default function CrashGuardScreen({ navigation, fetchImpl, env }) {
       <Text style={st.small}>Keep LYLO open with the screen on (we keep it awake). It listens for a hard impact followed by stillness, or a sudden stop from speed. Turns off when you leave this screen.</Text>
       {status ? <Text style={st.note}>{status}</Text> : null}
       <Text style={st.h}>Your first name (for the alert)</Text>
-      <TextInput style={st.input} value={name} onChangeText={(n) => save(contacts, n)} maxLength={40} />
+      <TextInput style={st.input} value={name} testID="cg-name" placeholder="Your first name" placeholderTextColor="#777" onChangeText={(n) => { setName(n); save(contacts, n); }} maxLength={40} />
       <Text style={st.h}>Emergency contacts ({contacts.length}/{CG.MAX_CONTACTS}, stored on this phone only)</Text>
       {contacts.map((c, i) => (
         <View key={i} style={st.row}><Text style={st.body}>{c.name}: {c.email || ''} {c.phone || ''}</Text>

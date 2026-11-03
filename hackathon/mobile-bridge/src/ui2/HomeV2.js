@@ -6,6 +6,9 @@ import React, { useCallback, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import OBDService from '../../../../baseline/mobile/src/services/OBDService';
+// v0.7.1: footer version comes from app.json (was hardcoded 'v0.5.2').
+let APP_VERSION = '?';
+try { APP_VERSION = require('../../../../baseline/mobile/app.json').expo.version || '?'; } catch (e) { APP_VERSION = '?'; }
 import { DEMO_SCANS } from '../../../../baseline/mobile/src/data/demoScans';
 import { features as noAdapterFeatures } from '../noAdapter';
 import { useFirstRunSetup } from '../SetupScreen';
@@ -83,7 +86,7 @@ export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp, en
           <Link title="Debug log" onPress={() => go('Log')} />
         </View>
       ) : null}
-      <Text style={st.foot}>Repair prices are LYLO estimates, not quotes. v0.5.2</Text>
+      <Text style={st.foot}>{`Repair prices are LYLO estimates, not quotes. v${APP_VERSION}`}</Text>
     </ScrollView>
   );
 }

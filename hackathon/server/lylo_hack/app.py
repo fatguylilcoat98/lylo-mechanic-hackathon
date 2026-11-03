@@ -25,6 +25,7 @@ from . import engine_user
 from . import prove
 from . import webdemo
 from . import crash
+from . import collision_ai
 
 log = logging.getLogger("lylo_hack")
 
@@ -69,6 +70,7 @@ def create_app():
     muse_routes = {"/api/v1/live/live": detective.enabled, "/api/v1/vision/dash": vision.enabled, "/api/v1/vin/photo": vinmod.enabled,
                    "/api/v1/voice/ask": voice.enabled, "/api/v1/photo/helper": helper.enabled,
                    "/api/v1/noadapter/check": symptoms.enabled,
+                   "/api/v1/collision/summary": collision_ai.enabled,  # v0.7.1: same Muse rate limits
                    "/api/v1/demo/replay": lambda: demo.enabled() and detective.enabled()}
 
     @app.before_request
@@ -477,6 +479,7 @@ def create_app():
 
     webdemo.install(app, limiter, noadapter_route, vision_route)
     crash.install(app, limiter)
+    collision_ai.install(app)
 
     @app.errorhandler(HTTPException)
     def http_error(e):  # keep 4xx as 4xx (baseline turned them into 500)

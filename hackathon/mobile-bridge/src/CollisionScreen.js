@@ -11,6 +11,7 @@ const mem = {}; // fallback when storage is unavailable (tests): nothing persist
 const Store = { getItem: async (k) => { try { return AsyncStorage ? await AsyncStorage.getItem(k) : (mem[k] || null); } catch (e) { return mem[k] || null; } },
   setItem: async (k, v) => { try { if (AsyncStorage) await AsyncStorage.setItem(k, v); else mem[k] = v; } catch (e) { mem[k] = v; } } };
 import * as COL from './collision';
+import { configuredUrl, configuredKey } from './scanHook';
 
 let ImagePicker = null; let Mail = null; let Location = null;
 try { ImagePicker = require('expo-image-picker'); } catch (e) { ImagePicker = null; }
@@ -18,7 +19,7 @@ try { Mail = require('expo-mail-composer'); } catch (e) { Mail = null; }
 try { Location = require('expo-location'); } catch (e) { Location = null; }
 const KEY = 'lylo.collision.myemail.v1';
 
-export default function CollisionScreen({ navigation, route, env }) {
+export default function CollisionScreen({ navigation, route, env, fetchImpl }) {
   const [asked, setAsked] = useState(!(route && route.params && route.params.ask));
   const [at] = useState(Date.now());
   const [loc, setLoc] = useState(null);
@@ -26,6 +27,19 @@ export default function CollisionScreen({ navigation, route, env }) {
   const [fields, setFields] = useState({});
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState(null);
+  const F = COL.features(env);
+  const [faultSeen, setFaultSeen] = useState(!F.ai); // v0.7.1: fixed "don't admit fault" screen comes first
+  const [ai, setAi] = useState(null);
+  const [keepAi, setKeepAi] = useState(true);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiMsg, setAiMsg] = useState(null);
+
+  async function askAi() {
+    setAiBusy(true); setAiMsg(null);
+    const r = await COL.requestSummary({ baseUrl: configuredUrl(env), appKey: configuredKey(env), fetchImpl, photos, fields });
+    setAiBusy(false);
+    if (r.ok) { setAi(r.ai); setKeepAi(true); } else setAiMsg(r.error);
+  }
 
   useEffect(() => { Store.getItem(KEY).then((v) => setEmail(v || '')); }, []);
   useEffect(() => { if (!asked || !Location) return; (async () => {
@@ -41,7 +55,7 @@ export default function CollisionScreen({ navigation, route, env }) {
   }
 
   async function send() {
-    const rep = COL.buildReport({ at, loc, photos, fields });
+    const rep = COL.buildReport({ at, loc, photos, fields, ai: F.ai && ai && keepAi ? ai : null });
     if (email) Store.setItem(KEY, email);
     if (Mail && await Mail.isAvailableAsync()) {
       await Mail.composeAsync({ recipients: email ? [email] : [], subject: rep.subject, body: rep.body, attachments: rep.attachments });
@@ -51,7 +65,7 @@ export default function CollisionScreen({ navigation, route, env }) {
     }
   }
 
-  if (!COL.features(env).on) return null;
+  if (!F.on) return null;
   if (!asked) {
     return (
       <View style={st.center} testID="col-ask">
@@ -60,6 +74,19 @@ export default function CollisionScreen({ navigation, route, env }) {
         <Pressable style={st.btn} onPress={() => setAsked(true)} testID="col-yes"><Text style={st.btnText}>Yes, help me with the next steps</Text></Pressable>
         <Pressable style={st.btn2} onPress={() => navigation && navigation.goBack()} testID="col-no"><Text style={st.btnText}>No, false alarm</Text></Pressable>
       </View>
+    );
+  }
+  if (!faultSeen) {
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: '#0a0c0f' }} contentContainerStyle={{ padding: 20, paddingBottom: 60 }} testID="col-fault">
+        <Text style={st.big}>{COL.FAULT_TITLE}</Text>
+        <Text style={st.small}>{COL.FAULT_NOTE}</Text>
+        <Text style={st.h}>SAY / DO</Text>
+        {COL.SAY.map((t) => <Text key={t} style={st.body}>{'\u2705 '}{t}</Text>)}
+        <Text style={st.h}>DON'T SAY / DO</Text>
+        {COL.DONT_SAY.map((t) => <Text key={t} style={st.body}>{'\u274C '}{t}</Text>)}
+        <Pressable style={st.btn} onPress={() => setFaultSeen(true)} testID="col-fault-next"><Text style={st.btnText}>Got it, next: photos</Text></Pressable>
+      </ScrollView>
     );
   }
   return (
@@ -79,6 +106,23 @@ export default function CollisionScreen({ navigation, route, env }) {
       {COL.FIELDS.map(([k, label]) => (
         <TextInput key={k} testID={'col-field-' + k} style={st.input} placeholder={label} placeholderTextColor="#777" multiline={k === 'notes' || k === 'witnesses'}
           value={fields[k] || ''} onChangeText={(v) => setFields({ ...fields, [k]: v.slice(0, 500) })} />))}
+      {F.ai ? (
+        <View testID="col-ai">
+          <Pressable style={st.btn2} onPress={askAi} disabled={aiBusy} testID="col-ai-ask"><Text style={st.btnText}>{aiBusy ? 'Meta AI is writing...' : 'Have Meta AI write my summary'}</Text></Pressable>
+          <Text style={st.small}>Sends up to {COL.AI_MAX_PHOTOS} damage/scene photos (never license or insurance photos) and your answers. Not stored.</Text>
+          {aiMsg ? <Text style={st.note} testID="col-ai-msg">{aiMsg}</Text> : null}
+          {ai ? (
+            <View style={st.step} testID="col-ai-result">
+              <Text style={st.note}>{ai.label}</Text>
+              {ai.photos.map((p) => <Text key={p.photo} style={st.body}>{`Photo ${p.photo} (${p.label}): ${p.damage}`}</Text>)}
+              <Text style={st.body}>{ai.summary}</Text>
+              {ai.missing.length ? <Text style={st.h}>Missing</Text> : null}
+              {ai.missing.map((m) => <Text key={m} style={st.small}>{'\u2022 '}{m}</Text>)}
+              <Pressable style={st.btn2} onPress={() => setKeepAi(!keepAi)} testID="col-ai-keep"><Text style={st.btnText}>{keepAi ? 'Keep in my report: YES (tap to remove)' : 'Keep in my report: NO (tap to add)'}</Text></Pressable>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
       <Text style={st.h}>4. Send it to yourself</Text>
       <TextInput style={st.input} placeholder="My email" placeholderTextColor="#777" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
       <Pressable style={st.btn} onPress={send} testID="col-send"><Text style={st.btnText}>Send to my email</Text></Pressable>
