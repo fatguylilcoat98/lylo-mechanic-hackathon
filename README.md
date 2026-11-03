@@ -2,7 +2,7 @@
 
 **LYLO Mechanic is a free Android phone app that tells you what's wrong with your car, in plain English, using Meta AI.** You don't need any special tools. Tell it what's happening, type a code, or take a photo of your dashboard lights. If you have a small plug-in car reader (an "OBD adapter"), LYLO can also read your car's computer directly.
 
-It answers the question most people actually have: **is it safe to drive?** Then it explains what is probably wrong, what to do next, and roughly what it might cost. It shows the evidence behind every answer, and the AI is never allowed to talk you out of a safety warning.
+It answers the question most people actually have: **is it safe to drive?** It gives a safety rating based on fixed rules. Then it explains what is probably wrong, what to do next, and roughly what it might cost. It shows the evidence behind every answer, and the AI is never allowed to talk you out of a safety warning.
 
 **LYLO stands for Love Your Loved Ones.** Built for the Meta Global AI Developer Hackathon (Oct 26 – Nov 4, 2026).
 
@@ -28,7 +28,7 @@ Chris (the builder) borrowed $2,000 for a used car. It looked and drove fine. Tw
 - **Used-car check:** spots signs that a seller recently erased the warning codes to hide a problem.
 
 **Safety helpers (experimental):**
-- **Crash Guard:** turn it on for a drive. After a hard jolt, if you don't tap "I'm OK" within 30 seconds, your contacts get your time and rough location. **It is not a replacement for 911 or OnStar**, and it can miss a crash or go off when there was none.
+- **Crash Guard:** turn it on for a drive. After a hard jolt, if you don't tap "I'm OK" within about a minute (two prompts), your contacts get your time and rough location. **It is not a replacement for 911 or OnStar**, and it can miss a crash or go off when there was none.
 - **After a collision:** a step-by-step checklist (safety steps, photos, the other driver's details, with time and GPS filled in) that you send to your insurer from your own email. Not legal or insurance advice.
 
 ## What has been tried on a real phone, and what hasn't
@@ -73,7 +73,7 @@ Everything new is listed file by file in [NEW_WORK.md](NEW_WORK.md).
 
 **Web demo, no install:** https://lylo-api.thegoodneighborguard.com/try (describe the problem, type a code, add a dash photo; rate-limited).
 
-**Crash Guard (experimental, v0.6):** turn it on for a drive. A hard jolt starts a 30-second "I'm OK" countdown; if you don't answer, your contacts get your time and approximate location by email from the LYLO server, or the phone opens a prefilled text for one tap. The detection thresholds are unvalidated: it can miss a crash and it can go off when there was none. **It is not a replacement for 911 or OnStar.**
+**Crash Guard (experimental, v0.6):** turn it on for a drive. A hard jolt starts an "I'm OK" check (two prompts, about a minute); if you don't answer, your contacts get your time and approximate location by email from the LYLO server, or the phone opens a prefilled text for one tap. The detection thresholds are unvalidated: it can miss a crash and it can go off when there was none. **It is not a replacement for 911 or OnStar.**
 
 **Collision report (v0.6):** after "I'm OK", LYLO asks "Were you in a collision?" and walks you through safety steps, photos and the other driver's details, with time and GPS filled in. It sends the report through your phone's own mail app. Not legal or insurance advice.
 
