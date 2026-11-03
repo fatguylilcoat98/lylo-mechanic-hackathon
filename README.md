@@ -1,15 +1,58 @@
 # LYLO Mechanic
 
-**LYLO stands for Love Your Loved Ones.** It's an Android app that reads a car's computer (or, with no adapter, what you tell it) and says in plain words what's going on and whether it's safe to drive. It shows its evidence for every claim.
+**LYLO Mechanic is a free Android phone app that tells you what's wrong with your car, in plain English, using Meta AI.** You don't need any special tools. Tell it what's happening, type a code, or take a photo of your dashboard lights. If you have a small plug-in car reader (an "OBD adapter"), LYLO can also read your car's computer directly.
 
-Built for the Meta Global AI Developer Hackathon (Oct 26 – Nov 4, 2026). Everything new is listed file by file in [NEW_WORK.md](NEW_WORK.md).
+It answers the question most people actually have: **is it safe to drive?** Then it explains what is probably wrong, what to do next, and roughly what it might cost. It shows the evidence behind every answer, and the AI is never allowed to talk you out of a safety warning.
 
-**Download (Android):** [lylo-06-bb9f6ed5a0.apk](https://zion.thegoodneighborguard.com/lylo-06-bb9f6ed5a0.apk). v0.6.0, versionCode 16, sha256 `33f72a1bfef3b9e773957c70197918f0514679acfa6e90b0838f3b0bfc905e26`. It's a debug-signed test build (same key as earlier versions, so it installs over them), so allow "install unknown apps".
+**LYLO stands for Love Your Loved Ones.** Built for the Meta Global AI Developer Hackathon (Oct 26 – Nov 4, 2026).
 
-## Why
+**Download (Android):** [lylo-07-be7bda29d2.apk](https://zion.thegoodneighborguard.com/lylo-07-be7bda29d2.apk). v0.7.0, versionCode 17, sha256 `550676af89c948bee47689479c14d94837d0306f301a1ef3dc4f6fb844ceac83`. It's a debug-signed test build (same key as earlier versions, so it installs over them), so allow "install unknown apps". There is no iPhone version.
+
+**No phone? Try it in your web browser:** https://lylo-api.thegoodneighborguard.com/try (describe the problem, type a code, add a dash photo; rate-limited).
+
+## Why Chris built it
 Chris (the builder) borrowed $2,000 for a used car. It looked and drove fine. Two weeks later the check-engine light came on (P0300, misfire). He replaced the coil pack and cleared the code, and two days later it was back. Three weeks after that the transmission failed, stuck in reverse. The seller had a shop and most likely cleared the codes before the sale. Chris had no proof. LYLO is meant to give buyers and drivers that proof.
 
-## What it does
+## What you can do with it
+**No adapter needed:**
+- **Tell LYLO what's wrong**, by typing or talking. It asks up to 3 follow-up questions and gives you likely causes and a fix-it card.
+- **Type a trouble code** (like P0302) and get its meaning in plain words. Works offline for 9,415 standard codes.
+- **Snap your dashboard lights** and LYLO reads them from the photo.
+- **Photo Helper:** take a photo under the hood and LYLO circles the part you're looking for (for example the air filter).
+- **Your car's ID number (VIN):** type it or photograph it, and see recalls for your model.
+- **Price help:** rough repair cost ranges, plus buttons that search parts stores and how-to videos.
+- **Try a demo:** see how it works with no car at all.
+
+**With an OBD adapter** (a small reader that plugs in under the dashboard):
+- Reads the car's warning codes and live readings, and says how safe it is to drive.
+- **Used-car check:** spots signs that a seller recently erased the warning codes to hide a problem.
+
+**Safety helpers (experimental):**
+- **Crash Guard:** turn it on for a drive. After a hard jolt, if you don't tap "I'm OK" within 30 seconds, your contacts get your time and rough location. **It is not a replacement for 911 or OnStar**, and it can miss a crash or go off when there was none.
+- **After a collision:** a step-by-step checklist (safety steps, photos, the other driver's details, with time and GPS filled in) that you send to your insurer from your own email. Not legal or insurance advice.
+
+## What has been tried on a real phone, and what hasn't
+- **Tried on Chris's real phone and truck** (1998 Ford E-450, per the build log): the adapter scan with the OBDLink LX (Nov 2) and MX+ (Oct 28), the result and proof screens, and VIN lookup and recalls.
+- **Not yet recorded on a real phone** (they pass automated render tests only): Ask out loud, dash photo, Photo Helper, Say it instead, Watch how, Find nearest store, the setup flow and Try a demo scan.
+- **New, not yet tried on a real phone:** the code timeline (v0.7), collision help, the Meta AI collision summary, and the Simple / Mechanic views. The collision summary and the Simple / Mechanic views are on a test branch and are not in the download above yet.
+- **The OBDLink CX adapter has not been tested on a real car.**
+
+## Honest limits, in short
+- It's a scan, not an inspection. Causes are best guesses, not a diagnosis.
+- Prices are LYLO's own estimates, not quotes.
+- Recalls are by model, not by your exact car. Check your VIN at nhtsa.gov/recalls.
+- Meta AI needs the internet. Offline, only the built-in safety rules run.
+- Android only.
+
+The full, detailed list is under "Limits (honest)" below.
+
+---
+
+# For developers and judges
+
+Everything new is listed file by file in [NEW_WORK.md](NEW_WORK.md).
+
+## Technical feature detail
 **With an OBD adapter:** the code supports OBDLink LX and MX+ (Bluetooth Classic, Android) and CX (BLE). Tested on a real vehicle (Chris's 1998 Ford E-450): **LX** (Nov 2, full scan, see below) and **MX+** (Oct 28, v0.5.0). The **CX has not been tested on a real car.**
 - Scans codes, live readings and the emissions self-tests ("readiness monitors").
 - **Used-Car Check:** flags recently cleared codes, using miles since clear, warm-ups since clear, engine time since clear and unfinished monitors.
@@ -69,14 +112,14 @@ Recorded runs with receipts are in [`hackathon/server/evidence/`](hackathon/serv
 
 ## Try it in 2 minutes
 No car, no adapter and no Meta key needed.
-1. **Android phone:** download the [v0.6.0 APK](https://zion.thegoodneighborguard.com/lylo-06-bb9f6ed5a0.apk), allow "install unknown apps", and open it. It's a debug-signed test build.
+1. **Android phone:** download the [v0.7.0 APK](https://zion.thegoodneighborguard.com/lylo-07-be7bda29d2.apk), allow "install unknown apps", and open it. It's a debug-signed test build.
 2. Answer the 3 setup questions or skip them. Tap **Try a demo scan** and pick **Chris's truck**.
 3. Flip to **Mechanic view** to see Muse Detective's causes, each citing its evidence, and the receipt (model, seconds, items cited).
 4. Tap **AI vs rules: who wins?** A simulated AI answer says "safe to drive" at 260 °F. The rules say stop, and the rules win.
 5. **No phone?** Run the server (below, under "Try it with no car") and `curl` the demo routes. Then run the tests (see "Run the tests").
 
 ## Try it with no car
-1. Install the [v0.6.0 APK](https://zion.thegoodneighborguard.com/lylo-06-bb9f6ed5a0.apk). It's a debug-signed test build: allow "install unknown apps".
+1. Install the [v0.7.0 APK](https://zion.thegoodneighborguard.com/lylo-07-be7bda29d2.apk). It's a debug-signed test build: allow "install unknown apps".
 2. Open it and tap **Try a demo scan** on Home.
 3. Pick a scan:
    - **Chris's truck** (his real readings: cold engine, fuel trim 27.3 %)
@@ -110,7 +153,7 @@ cd baseline/mobile && npx jest                                           # UI re
 
 ## Limits (honest)
 - **Not a mechanic.** It's a scan, not an inspection. Causes are suggestions with confidence levels.
-- **Real-phone testing is partial.** Used on Chris's real phone, per the build log: the adapter scan with the LX (and earlier the MX+), the result and proof screens, and VIN lookup and recalls. Not yet recorded on a real phone: Ask out loud (its mic permission was missing from the build on Chris's phone; fixed in v0.5.2, not yet confirmed on a phone), dash photo, Photo Helper, Say it instead, Watch how, Find nearest store, the setup flow and Try a demo scan. Those pass render tests only.
+- **Real-phone testing is partial.** Used on Chris's real phone, per the build log: the adapter scan with the LX (and earlier the MX+), the result and proof screens, and VIN lookup and recalls. Not yet recorded on a real phone: Ask out loud (its mic permission was missing from the build on Chris's phone; fixed in v0.5.2, not yet confirmed on a phone), dash photo, Photo Helper, Say it instead, Watch how, Find nearest store, the setup flow and Try a demo scan. Those pass render tests only. Also not yet tried on a real phone: the code timeline (v0.7), collision help, the Meta AI collision summary, and the Simple / Mechanic views.
 - **Point and prove trusts the phone's readings.** The server checks the readings the phone sends as if they were measured, and it can't tell whether a reading was faked. Anyone who has a prove session id can submit readings for that session. The session lives in memory and expires, but treat the id like a password. The ledger is hash-chained and its head is anchored on the server, so an edited or cut-off history is detected.
 - **AI speed varies.** Live answers took 7 s to 34 s in our runs, so the app shows "Still working" on slow calls.
 - **No recorded lower AI answer.** In every recorded run the AI agreed with the rules or raised the level. The AI-vs-rules proof uses a labeled simulated answer.
