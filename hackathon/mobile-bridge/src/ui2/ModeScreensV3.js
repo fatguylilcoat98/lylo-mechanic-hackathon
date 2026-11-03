@@ -98,13 +98,13 @@ export function MechanicHomeV3({ navigation, storage, env }) {
     <Shell navigation={navigation} mode="mechanic" storage={storage} testID="mechanic-v3">
       <Text style={x.h1}>Mechanic tools</Text>
       <Text style={x.sub}>Codes, freeze frame, live PIDs, monitors, evidence. Anything the scanner can't read says "not read".</Text>
+      <SafetyCards env={env} go={go} />
       <View style={st.grid}>
         <Card testID="mech-scan" icon="access-point" tint={C.cyan} title="Scan codes + PIDs" sub="Connect OBD adapter, ignition ON" onPress={() => go('Connect')} />
         <Card testID="mech-used" icon="car-wrench" tint={C.orange} title="Used-car check" sub="Clear counters, monitors" onPress={() => go('Connect')} />
         <Card testID="mech-lookup" icon="book-open-outline" tint={C.purple} title="DTC lookup" sub="Any code, offline" onPress={() => go('Lookup')} />
         <Card testID="mech-log" icon="text-box-outline" tint={C.green} title="Debug log" sub="Raw adapter traffic" onPress={() => go('Log')} />
       </View>
-      <SafetyCards env={env} go={go} />
       {k ? (
         <View style={x.panel} testID="mech-demo">
           <Text style={x.replay}>DEMO REPLAY · not your car</Text>
