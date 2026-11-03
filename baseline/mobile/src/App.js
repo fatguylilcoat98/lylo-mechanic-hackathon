@@ -25,6 +25,7 @@ import CrashGuardScreen from '../../../hackathon/mobile-bridge/src/CrashGuardScr
 import CollisionScreen from '../../../hackathon/mobile-bridge/src/CollisionScreen'; // hackathon v0.6
 import SetupScreen from '../../../hackathon/mobile-bridge/src/SetupScreen'; // hackathon v0.4.6
 import DemoScreen from '../../../hackathon/mobile-bridge/src/DemoScreen'; // hackathon v0.4.7
+import { SimpleHomeV3, MechanicHomeV3 } from '../../../hackathon/mobile-bridge/src/ui2/ModeScreensV3'; // reachable only with EXPO_PUBLIC_LYLO_HOME_V3=1
 import { GuideScreen, PortHelpScreen } from '../../../hackathon/mobile-bridge/src/ViewModeScreens'; // v0.7.2, reachable only with EXPO_PUBLIC_LYLO_VIEW_MODE=1
 import { C } from './constants/colors';
 
@@ -65,6 +66,8 @@ export default function App() {
           <Stack.Screen name="CrashGuard" component={CrashGuardScreen} options={{ title: 'Crash Guard' }} />
           <Stack.Screen name="Guide" component={GuideScreen} options={{ title: 'Simple view' }} />
           <Stack.Screen name="PortHelp" component={PortHelpScreen} options={{ title: 'Where does it plug in?' }} />
+          <Stack.Screen name="SimpleHome" component={SimpleHomeV3} options={{ headerShown: false }} />
+          <Stack.Screen name="MechanicHome" component={MechanicHomeV3} options={{ headerShown: false }} />
           <Stack.Screen name="Collision" component={CollisionScreen} options={{ title: 'After a collision' }} />
         </Stack.Navigator>
       </NavigationContainer>

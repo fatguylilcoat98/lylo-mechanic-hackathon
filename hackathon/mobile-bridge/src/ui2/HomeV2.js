@@ -33,7 +33,7 @@ function Link({ title, onPress }) {
 let vmStorage = null;
 try { vmStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { vmStorage = null; }
 
-export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp, env, storage }) {
+export default function HomeV2({ route, navigation, noAdapterOn, demoOn: demoOnProp, env, storage }) {
   const vmOn = VM.features(env).on;
   const vmStore = storage === undefined ? vmStorage : storage;
   const [vm, setVm] = useState(vmOn ? 'loading' : null);
@@ -46,15 +46,17 @@ export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp, en
   const setupOn = useFirstRunSetup(navigation);
   const [device, setDevice] = useState(OBDService.device);
   const [more, setMore] = useState(false);
-  useFocusEffect(useCallback(() => { setDevice(OBDService.connected ? OBDService.device : null); }, []));
+  useFocusEffect(useCallback(() => { setDevice(OBDService.connected ? OBDService.device : null);
+    if (vmOn && homeV3On(env)) VM.loadChosen(vmStore).then((m) => { if (m) setVm(m); }); // v3: mode screens may have switched it
+  }, []));
   const go = (r, p) => navigation.navigate(r, p);
 
   if (vmOn && vm === 'loading') return <View style={st.screen} />;
   if (vmOn && !vm) return <ScrollView style={st.screen} contentContainerStyle={st.scroll}><ViewChoice onPick={pickView} /></ScrollView>;
   if (homeV3On(env)) {
     // v3 toggle only switches the mode (saved to the same key); the Check My Car card opens the guide in Simple.
-    const setMode = (m) => { setVm(m); VM.saveViewMode(vmStore, m); };
-    return <HomeV3 navigation={navigation} vmOn={vmOn} vm={vm} setMode={setMode} device={device} setDevice={setDevice} hero={hero}
+    const setMode = (m) => { setVm(m); VM.saveViewMode(vmStore, m); if (navigation) navigation.navigate(m === 'simple' ? 'SimpleHome' : 'MechanicHome'); };
+    return <HomeV3 route={route} navigation={navigation} vmOn={vmOn} vm={vm} setMode={setMode} device={device} setDevice={setDevice} hero={hero}
       noAdapter={noAdapter} demoOn={demoOn} crashOn={crashOn} colOn={colOn} setupOn={setupOn} />;
   }
   return (

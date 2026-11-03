@@ -4,7 +4,7 @@
  * Tabs: Home (this screen), My Garage -> existing 'Vin' screen, More -> existing tools list.
  * No History tab: the app has no saved scan-history screen, so we don't fake one.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import OBDService from '../../../../baseline/mobile/src/services/OBDService';
 import { DEMO_SCANS } from '../../../../baseline/mobile/src/data/demoScans';
@@ -17,9 +17,9 @@ export function homeV3On(env) {
   return e.EXPO_PUBLIC_LYLO_HOME_V3 === '1';
 }
 
-const C = { bg: '#070B12', card: 'rgba(16,24,36,0.92)', text: '#F2F5F8', dim: '#B4C0CC', blue: '#2E9BFF', cyan: '#3FD8FF', orange: '#FF7A3D', purple: '#A98BFF', green: '#2BD47D' };
+export const C = { bg: '#070B12', card: 'rgba(16,24,36,0.92)', text: '#F2F5F8', dim: '#B4C0CC', blue: '#2E9BFF', cyan: '#3FD8FF', orange: '#FF7A3D', purple: '#A98BFF', green: '#2BD47D' };
 
-function Card({ testID, glyph, tint, title, sub, onPress }) {
+export function Card({ testID, glyph, tint, title, sub, onPress }) {
   return (
     <Pressable testID={testID} onPress={onPress} accessibilityRole="button" accessibilityLabel={title + '. ' + sub}
       style={({ pressed }) => [st.card, { borderColor: tint, shadowColor: tint }, pressed && { opacity: 0.8 }]}>
@@ -35,7 +35,7 @@ function Card({ testID, glyph, tint, title, sub, onPress }) {
   );
 }
 
-function Mode({ id, on, icon, title, sub, onPress }) {
+export function Mode({ id, on, icon, title, sub, onPress }) {
   return (
     <Pressable testID={'vm-toggle-' + id} onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: on }} style={[st.mode, on && st.modeOn]}>
       <Text style={st.modeIcon}>{icon}</Text>
@@ -47,12 +47,57 @@ function Mode({ id, on, icon, title, sub, onPress }) {
   );
 }
 
-/**
- * props from HomeV2: navigation, vm ('simple'|'mechanic'|null when the view flag is off), setMode,
+
+export function Brand() {
+  return (
+    <View style={st.header} testID="brand-header">
+      <Image source={require('../../assets/home-logo.png')} style={st.logo} accessibilityLabel="LYLO Mechanic logo" />
+      <View style={st.divider} />
+      <View style={{ flexShrink: 1 }}>
+        <Text style={st.brand}>LYLO Mechanic</Text>
+        <Text style={st.powered}><Text style={{ color: C.blue, fontWeight: '900' }}>{'\u221E '}</Text>Powered by Meta AI</Text>
+      </View>
+    </View>
+  );
+}
+
+export function ModeToggle({ vm, onPick }) {
+  return (
+    <View style={st.toggle} testID="vm-toggle">
+      <Mode id="simple" on={vm === 'simple'} icon={'\u{1F464}'} title="Simple Mode" sub="Step-by-step help" onPress={() => onPick('simple')} />
+      <Mode id="mechanic" on={vm === 'mechanic'} icon={'\u{1F6E0}\uFE0F'} title="Mechanic Mode" sub="Advanced tools & data" onPress={() => onPick('mechanic')} />
+    </View>
+  );
+}
+
+/** Home / My Garage (existing 'Vin' screen) / More. No History tab: no scan-history screen exists. */
+export function TabBar({ navigation, active, onHome, onMore }) {
+  const tabs = [
+    ['home', '\u2302', 'Home', onHome || (() => navigation.navigate('Home'))],
+    ['garage', '\u{1F698}', 'My Garage', () => navigation.navigate('Vin')],
+    ['more', '\u2022\u2022\u2022', 'More', onMore || (() => navigation.navigate('Home', { more: true }))],
+  ];
+  return (
+    <View style={st.tabs} testID="tab-bar">
+      {tabs.map(([id, ic, label, f]) => {
+        const on = active === id;
+        return (
+          <Pressable key={id} testID={'tab-' + id} onPress={f} accessibilityRole="tab" accessibilityState={{ selected: on }} style={[st.tab, on && st.tabOn]}>
+            <Text style={[st.tabIcon, on && { color: C.blue }]}>{ic}</Text>
+            <Text style={[st.tabText, on && { color: C.blue }]}>{label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** props from HomeV2: navigation, vm ('simple'|'mechanic'|null when the view flag is off), setMode,
  * device, setDevice, hero, noAdapter, demoOn, crashOn, colOn, setupOn
  */
-export default function HomeV3({ navigation, vmOn, vm, setMode, device, setDevice, hero, noAdapter, demoOn, crashOn, colOn, setupOn }) {
-  const [more, setMore] = useState(false);
+export default function HomeV3({ route, navigation, vmOn, vm, setMode, device, setDevice, hero, noAdapter, demoOn, crashOn, colOn, setupOn }) {
+  const [more, setMore] = useState(!!(route && route.params && route.params.more));
+  useEffect(() => { if (route && route.params && route.params.more) setMore(true); }, [route && route.params && route.params.more]);
   const go = (r, p) => navigation.navigate(r, p);
   const noAdapterGo = () => (noAdapter ? go('NoAdapter') : go('Lookup'));
   const checkCar = () => {
@@ -64,24 +109,12 @@ export default function HomeV3({ navigation, vmOn, vm, setMode, device, setDevic
     <View style={st.screen} testID="home-v3">
       <ScrollView contentContainerStyle={st.scroll}>
         <ImageBackground source={require('../../assets/home-car.jpg')} style={st.top} imageStyle={st.carImg} resizeMode="cover">
-          <View style={st.header} testID="brand-header">
-            <Image source={require('../../assets/home-logo.png')} style={st.logo} accessibilityLabel="LYLO Mechanic logo" />
-            <View style={st.divider} />
-            <View style={{ flexShrink: 1 }}>
-              <Text style={st.brand}>LYLO Mechanic</Text>
-              <Text style={st.powered}><Text style={{ color: C.blue, fontWeight: '900' }}>{'\u221E '}</Text>Powered by Meta AI</Text>
-            </View>
-          </View>
+          <Brand />
           <Text style={st.hero}>The car AI that shows its proof.</Text>
           <Text style={st.sub}>{'Real answers. Evidence you can see.\nNo guesswork.'}</Text>
         </ImageBackground>
 
-        {vmOn ? (
-          <View style={st.toggle} testID="vm-toggle">
-            <Mode id="simple" on={vm === 'simple'} icon={'\u{1F464}'} title="Simple Mode" sub="Step-by-step help" onPress={() => setMode('simple')} />
-            <Mode id="mechanic" on={vm === 'mechanic'} icon={'\u{1F6E0}\uFE0F'} title="Mechanic Mode" sub="Advanced tools & data" onPress={() => setMode('mechanic')} />
-          </View>
-        ) : null}
+        {vmOn ? <ModeToggle vm={vm} onPick={setMode} /> : null}
 
         {device ? (
           <View style={st.conn} testID="connected">
@@ -119,23 +152,12 @@ export default function HomeV3({ navigation, vmOn, vm, setMode, device, setDevic
         <Text style={st.ver}>{'v' + APP_VERSION}</Text>
       </ScrollView>
 
-      <View style={st.tabs} testID="tab-bar">
-        {[
-          ['home', '\u2302', 'Home', () => setMore(false), !more],
-          ['garage', '\u{1F698}', 'My Garage', () => go('Vin'), false],
-          ['more', '\u2022\u2022\u2022', 'More', () => setMore(!more), more],
-        ].map(([id, ic, label, f, on]) => (
-          <Pressable key={id} testID={'tab-' + id} onPress={f} accessibilityRole="tab" accessibilityState={{ selected: on }} style={[st.tab, on && st.tabOn]}>
-            <Text style={[st.tabIcon, on && { color: C.blue }]}>{ic}</Text>
-            <Text style={[st.tabText, on && { color: C.blue }]}>{label}</Text>
-          </Pressable>
-        ))}
-      </View>
+      <TabBar navigation={navigation} active={more ? 'more' : 'home'} onHome={() => setMore(false)} onMore={() => setMore(!more)} />
     </View>
   );
 }
 
-const st = StyleSheet.create({
+export const st = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.bg },
   scroll: { padding: 18, paddingTop: 44, paddingBottom: 110 },
   top: { marginHorizontal: -18, paddingHorizontal: 18, paddingBottom: 12 },

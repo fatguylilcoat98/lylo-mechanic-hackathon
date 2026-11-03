@@ -114,8 +114,9 @@ export function PortHelpScreen() {
 }
 
 /** Simple results: one big verdict, then the same facts in everyday words. */
-export function PlainResults({ p, tone }) {
+export function PlainResults({ p, tone, noTech = false }) {
   if (!p) return null;
+  // noTech (v3 Simple): plain answer only; codes/readings/AI details live in the technical dropdown.
   return (
     <View testID="vm-plain">
       <View style={[s.verdict, { backgroundColor: TONE[tone] || Y }]} testID={'vm-verdict-' + (tone || 'yellow')}>
@@ -125,7 +126,8 @@ export function PlainResults({ p, tone }) {
       {p.cleared ? <Text style={s.warn}>{p.cleared}</Text> : null}
       <Text style={s.h2}>What is going on</Text>
       {p.noCodes ? <Text style={s.body}>Your car did not report any trouble codes (warning messages saved by the car's computer).</Text> : null}
-      {p.codes.map((c) => (
+      {noTech && p.codes.length ? <Text style={s.body}>{`Your car saved ${p.codes.length} warning ${p.codes.length === 1 ? 'message' : 'messages'}. The details are under "Show technical details" below.`}</Text> : null}
+      {noTech ? null : p.codes.map((c) => (
         <View key={c.code} style={s.card}>
           <Text style={s.cardT}>{`Code ${c.code}`}</Text>
           <Text style={s.body}>{c.means}</Text>
@@ -135,9 +137,9 @@ export function PlainResults({ p, tone }) {
           {c.cost ? <Text style={s.body}>{c.cost}</Text> : null}
         </View>
       ))}
-      {p.ai.length ? <><Text style={s.h2}>What Meta AI thinks (a guess, with proof)</Text>{p.ai.map((t) => <Text key={t} style={s.body}>{'\u2022  ' + t}</Text>)}</> : null}
-      {p.readings.length ? <><Text style={s.h2}>What your car told us</Text>{p.readings.map((t) => <Text key={t} style={s.body}>{'\u2022  ' + t}</Text>)}</> : null}
-      {p.selfTests ? <Text style={s.body}>{p.selfTests}</Text> : null}
+      {!noTech && p.ai.length ? <><Text style={s.h2}>What Meta AI thinks (a guess, with proof)</Text>{p.ai.map((t) => <Text key={t} style={s.body}>{'\u2022  ' + t}</Text>)}</> : null}
+      {!noTech && p.readings.length ? <><Text style={s.h2}>What your car told us</Text>{p.readings.map((t) => <Text key={t} style={s.body}>{'\u2022  ' + t}</Text>)}</> : null}
+      {!noTech && p.selfTests ? <Text style={s.body}>{p.selfTests}</Text> : null}
       <Text style={s.h2}>What to do next</Text>
       {p.todo.map((t, i) => <Text key={t} style={s.step}>{`${i + 1}.  ${t}`}</Text>)}
       {p.costNote ? <Text style={s.small}>{p.costNote}</Text> : null}

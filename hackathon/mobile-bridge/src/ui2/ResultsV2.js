@@ -15,12 +15,14 @@ import { MechanicView } from '../SimpleResults';
 import CodeTimelineCard from '../CodeTimelineCard'; // v0.7, renders nothing unless EXPO_PUBLIC_LYLO_CODE_TIMELINE=1
 import * as VM from '../viewModes'; // v0.7.2 flag EXPO_PUBLIC_LYLO_VIEW_MODE
 import { MechanicDeep, PlainResults, ViewSwitch } from '../ViewModeScreens';
+import { homeV3On, ModeToggle } from './HomeV3'; // flag EXPO_PUBLIC_LYLO_HOME_V3
+import { Fold } from './ModeScreensV3';
 import { ProveCheck } from '../ProvePanel'; // v0.5.1, renders nothing unless EXPO_PUBLIC_LYLO_PROVE=1
 
-export function ResultsV2Body({ m, pinnedReplay = false }) {
-  const [open, setOpen] = useState(() => new Set(m.causes.length ? [m.causes[0].key] : []));
-  const [details, setDetails] = useState(false);
-  const [readings, setReadings] = useState(false);
+export function ResultsV2Body({ m, pinnedReplay = false, expandAll = false }) {
+  const [open, setOpen] = useState(() => new Set(expandAll ? m.causes.map((x) => x.key) : m.causes.length ? [m.causes[0].key] : []));
+  const [details, setDetails] = useState(expandAll);
+  const [readings, setReadings] = useState(expandAll);
   const toggle = (k) => setOpen((p) => { const n = new Set(p); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const c = m.evidenceCounts;
   return (
@@ -76,8 +78,9 @@ export function ResultsV2Body({ m, pinnedReplay = false }) {
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
 
-export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove, timelineEnv, viewEnv, navigation }) {
+export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove, timelineEnv, viewEnv, homeEnv, navigation }) {
   const vmOn = VM.features(viewEnv).on;
+  const v3 = vmOn && homeV3On(homeEnv);
   const [vm, setVm] = useState('simple');
   const store = storage === undefined ? defaultStorage : storage;
   const [vehicle, setVehicle] = useState(null);
@@ -90,11 +93,33 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
     // A replay badge is a sticky header so it never scrolls out of view.
     <ScrollView style={st.screen} contentContainerStyle={st.scroll} stickyHeaderIndices={m.replay ? [0] : undefined}>
       {m.replay ? <View style={st.pin} testID="replay-pin"><ReplayBadge label={m.replay} /></View> : null}
+      {v3 ? <ModeToggle vm={vm} onPick={(x) => { setVm(x); VM.saveViewMode(store, x); }} /> : null}
+      {v3 && vm === 'simple' ? (
+        <View testID="results-simple-v3">
+          <PlainResults p={VM.buildPlain(m, scanIn)} tone={m.tone} noTech />
+          <Fold title="technical details (codes, readings, evidence)" testID="results-tech">
+            <ResultsV2Body m={m} pinnedReplay={!!m.replay} />
+            <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} />
+            <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />
+            <ProveCheck scan={scan} {...(prove || {})} />
+          </Fold>
+        </View>
+      ) : null}
+      {v3 && vm !== 'simple' ? (
+        <View testID="results-mechanic-v3">
+          <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} />
+          <ResultsV2Body m={m} pinnedReplay={!!m.replay} expandAll />
+          <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />
+          <ProveCheck scan={scan} {...(prove || {})} />
+        </View>
+      ) : null}
+      {v3 ? null : <>
       {vmOn ? <ViewSwitch mode={vm} onChange={(x) => { setVm(x); VM.saveViewMode(store, x); }} /> : null}
       {vmOn && vm === 'simple' ? <PlainResults p={VM.buildPlain(m, scanIn)} tone={m.tone} /> : <ResultsV2Body m={m} pinnedReplay={!!m.replay} />}
       {vmOn && vm === 'mechanic' ? <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} /> : null}
       <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />
       <ProveCheck scan={scan} {...(prove || {})} />
+      </>}
       <DashVoicePanel scan={scan} onScan={(next) => setRaised({ base: scanIn, scan: next })} {...(dashVoice || {})} />
       <View style={{ marginTop: space.xl }}>{footer}</View>
     </ScrollView>
