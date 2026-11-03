@@ -44,3 +44,17 @@ test('report includes AI section only when given', () => {
   const b = C.buildReport({ at: 0, fields: {}, ai }).body;
   assert.match(b, /Written by Meta AI: check it before sending/); assert.match(b, /No photo of the scene/);
 });
+
+test('C2: other driver name/phone/policy/plate never reach the Meta request (presence only)', async () => {
+  let form;
+  const f = async (url, o) => { form = o.body; return { ok: true, json: async () => ({ collision_ai_status: 'ok', photos: [], summary: 's', missing: [] }) }; };
+  const fields = { other_name: 'Zed Synthetic', other_phone: '555-0100', other_policy: 'POL-998877', other_plate: 'QQQ9999', other_insurer: 'Acme Ins', notes: 'n' };
+  await C.requestSummary({ baseUrl: 'https://x.invalid', fetchImpl: f, photos: {}, fields });
+  const entries = form.p || [...form.entries()];
+  const all = JSON.stringify(entries);
+  for (const v of ['Zed Synthetic', '555-0100', 'POL-998877', 'QQQ9999']) assert.ok(!all.includes(v), v);
+  const a = JSON.parse(entries.find(([k]) => k === 'answers')[1]);
+  assert.strictEqual(a.other_name, 'provided'); assert.strictEqual(a.other_insurer, 'Acme Ins');
+  assert.strictEqual(C.answersForAi({}).other_plate, 'not provided');
+  assert.match(C.buildReport({ at: 0, fields }).body, /Zed Synthetic/); // email keeps real values
+});

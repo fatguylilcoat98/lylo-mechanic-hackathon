@@ -70,6 +70,28 @@ class CollisionAITests(unittest.TestCase):
         files = [(io.BytesIO(png()), f"{i}.png") for i in range(7)]
         self.assertEqual(c.post("/api/v1/collision/summary", data={"photo": files}, content_type="multipart/form-data").status_code, 400)
 
+    def test_c2_third_party_values_never_sent_to_meta(self):
+        call, calls = stub({"photos": [], "summary": "ok"})
+        a = CA.clean_answers({"other_name": "Zed Synthetic", "other_phone": "555-0100", "other_policy": "POL-998877", "other_plate": "QQQ9999", "other_insurer": "Acme Ins"})
+        CA.summarize([], [], a, call=call)
+        sent = json.dumps(calls[0])
+        for v in ("Zed Synthetic", "555-0100", "POL-998877", "QQQ9999"):
+            self.assertNotIn(v, sent)
+        sent_answers = json.loads(calls[0][1]["content"][0]["text"].split("\n", 1)[1])
+        self.assertEqual(sent_answers["other_name"], "provided"); self.assertEqual(sent_answers["other_insurer"], "Acme Ins")
+        self.assertEqual(CA.for_model(CA.clean_answers({}))["other_plate"], "not provided")
+
+    def test_c3_vera_examples_fail_closed(self):
+        for bad in ["The other car ran the red light and rear-ended me.", "Plate ABC1234 visible on the bumper.", "I am certain the other driver was distracted.",
+                    "Driver failed to yield at the stop sign.", "It was definitely their turn.", "Clearly the other car."]:
+            call, _ = stub({"photos": [{"index": 1, "damage": bad}], "summary": bad})
+            r = CA.summarize([png()], ["scene"], CA.clean_answers({}), call=call)
+            self.assertIn("write your own", r["summary"], bad); self.assertIn("describe it yourself", r["photos"][0]["damage"], bad)
+        for ok in ["Dented rear bumper, cracked left tail light.", "No damage visible.", "Two cars met at an intersection. Police report: not provided."]:
+            call, _ = stub({"photos": [{"index": 1, "damage": ok}], "summary": ok})
+            r = CA.summarize([png()], ["scene"], CA.clean_answers({}), call=call)
+            self.assertEqual(r["summary"], ok); self.assertEqual(r["photos"][0]["damage"], ok)
+
     def test_rate_limited_like_vision(self):
         from lylo_hack import app as A
         self.assertIn("/api/v1/collision/summary", open(A.__file__).read())

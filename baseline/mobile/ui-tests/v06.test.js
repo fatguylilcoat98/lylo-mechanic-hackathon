@@ -69,6 +69,7 @@ test('collision: asks first; yes -> checklist; send opens mail composer with rep
   let ui = await mount(<CollisionScreen navigation={nav()} route={{ params: { ask: true } }} env={{ EXPO_PUBLIC_LYLO_COLLISION: '1' }} />);
   expect(ui.getByText('Were you in a collision?')).toBeTruthy();
   await act(async () => { fireEvent.press(ui.getByTestId('col-yes')); await new Promise((r) => setTimeout(r, 10)); });
+  await act(async () => { fireEvent.press(ui.getByTestId('col-fault-next')); }); // v0.7.1 C4: fault screen first
   expect(ui.getByText(/not legal or insurance advice/)).toBeTruthy();
   fireEvent.changeText(ui.getByTestId('col-field-police_report'), 'R-123');
   await act(async () => { fireEvent.press(ui.getByTestId('col-send')); });

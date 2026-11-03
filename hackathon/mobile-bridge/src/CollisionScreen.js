@@ -28,7 +28,7 @@ export default function CollisionScreen({ navigation, route, env, fetchImpl }) {
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState(null);
   const F = COL.features(env);
-  const [faultSeen, setFaultSeen] = useState(!F.ai); // v0.7.1: fixed "don't admit fault" screen comes first
+  const [faultSeen, setFaultSeen] = useState(false); // v0.7.1 (Vera C4): fixed "don't admit fault" screen comes first whenever COLLISION=1
   const [ai, setAi] = useState(null);
   const [keepAi, setKeepAi] = useState(true);
   const [aiBusy, setAiBusy] = useState(false);
@@ -81,6 +81,7 @@ export default function CollisionScreen({ navigation, route, env, fetchImpl }) {
       <ScrollView style={{ flex: 1, backgroundColor: '#0a0c0f' }} contentContainerStyle={{ padding: 20, paddingBottom: 60 }} testID="col-fault">
         <Text style={st.big}>{COL.FAULT_TITLE}</Text>
         <Text style={st.small}>{COL.FAULT_NOTE}</Text>
+        <Pressable style={st.red} onPress={() => Linking.openURL('tel:911')} accessibilityRole="button" testID="col-fault-911"><Text style={st.btnText}>Call 911</Text></Pressable>
         <Text style={st.h}>SAY / DO</Text>
         {COL.SAY.map((t) => <Text key={t} style={st.body}>{'\u2705 '}{t}</Text>)}
         <Text style={st.h}>DON'T SAY / DO</Text>

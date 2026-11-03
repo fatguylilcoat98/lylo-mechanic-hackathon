@@ -58,6 +58,17 @@ function features(env) {
   return { on: flagOn(v), ai: flagOn(v) && flagOn(a) };
 }
 
+// Vera C2: other driver's name/phone/policy/plate never leave the phone; Meta AI only learns whether they were given.
+const PRESENCE_ONLY = ['other_name', 'other_phone', 'other_policy', 'other_plate'];
+function answersForAi(fields) {
+  const a = {};
+  FIELDS.forEach(([k]) => {
+    const v = String((fields || {})[k] || '').trim().slice(0, 500);
+    a[k] = PRESENCE_ONLY.indexOf(k) !== -1 ? (v ? 'provided' : 'not provided') : v;
+  });
+  return a;
+}
+
 /** First photo of each allowed step, up to AI_MAX_PHOTOS. */
 function aiPhotos(photos) {
   const out = [];
@@ -75,7 +86,7 @@ async function requestSummary({ baseUrl, appKey, fetchImpl, photos, fields, time
     list.forEach((p, i) => form.append('photo', { uri: p.uri, type: 'image/jpeg', name: 'p' + i + '.jpg' }));
     form.append('labels', JSON.stringify(list.map((p) => p.id)));
     form.append('have', JSON.stringify(Object.keys(photos || {}).filter((k) => ((photos || {})[k] || []).length)));
-    const a = {}; FIELDS.forEach(([k]) => { a[k] = String((fields || {})[k] || '').slice(0, 500); });
+    const a = answersForAi(fields);
     form.append('answers', JSON.stringify(a));
     const r = await Promise.race([
       f(baseUrl.replace(/\/$/, '') + '/api/v1/collision/summary', { method: 'POST', headers: { 'X-LYLO-App-Key': appKey || '' }, body: form }),
@@ -124,4 +135,4 @@ function buildReport({ at, loc, photos, fields, vehicle, ai }) {
   return { subject: `Collision report ${when.toISOString().slice(0, 10)}`, body: lines.filter((x) => x !== null).join('\n'), attachments };
 }
 
-module.exports = { NOT_ADVICE, SAFETY, PHOTO_STEPS, FIELDS, features, buildReport, FAULT_TITLE, FAULT_NOTE, SAY, DONT_SAY, AI_LABEL, AI_MAX_PHOTOS, aiPhotos, requestSummary, aiSection };
+module.exports = { NOT_ADVICE, SAFETY, PHOTO_STEPS, FIELDS, features, buildReport, FAULT_TITLE, FAULT_NOTE, SAY, DONT_SAY, AI_LABEL, AI_MAX_PHOTOS, aiPhotos, requestSummary, aiSection, answersForAi, PRESENCE_ONLY };

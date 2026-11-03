@@ -33,11 +33,18 @@ test('home footer shows the app.json version, not v0.5.2', async () => {
 
 const ON = { EXPO_PUBLIC_LYLO_COLLISION: '1', EXPO_PUBLIC_LYLO_COLLISION_AI: '1', EXPO_PUBLIC_LYLO_SERVER_URL: 'https://x.invalid' };
 
-test('collision: AI flag off = old flow (photos first, no fault screen, no AI button)', async () => {
+test('collision: COLLISION alone shows the fault screen first with Call 911; no AI button', async () => {
+  const { Linking } = require('react-native');
+  const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
   const ui = await mount(<CollisionScreen navigation={nav()} env={{ EXPO_PUBLIC_LYLO_COLLISION: '1' }} />);
-  expect(ui.queryByTestId('col-fault')).toBeNull();
+  expect(ui.getByTestId('col-fault')).toBeTruthy();
+  expect(ui.queryByTestId('col-screen')).toBeNull();
+  await act(async () => { fireEvent.press(ui.getByTestId('col-fault-911')); });
+  expect(spy).toHaveBeenCalledWith('tel:911');
+  await act(async () => { fireEvent.press(ui.getByTestId('col-fault-next')); });
   expect(ui.getByTestId('col-screen')).toBeTruthy();
   expect(ui.queryByTestId('col-ai')).toBeNull();
+  spy.mockRestore();
 });
 
 test('collision: "Don\'t admit fault" renders FIRST, before photos', async () => {
