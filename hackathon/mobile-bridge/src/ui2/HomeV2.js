@@ -20,6 +20,7 @@ import * as VM from '../viewModes'; // v0.7.2 flag EXPO_PUBLIC_LYLO_VIEW_MODE
 import { ViewChoice, ViewSwitch } from '../ViewModeScreens';
 import { color, space, radius, type, touch } from './theme';
 import { BigActionButton } from './components';
+import HomeV3, { homeV3On } from './HomeV3'; // flag EXPO_PUBLIC_LYLO_HOME_V3
 
 function Link({ title, onPress }) {
   return (
@@ -50,6 +51,12 @@ export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp, en
 
   if (vmOn && vm === 'loading') return <View style={st.screen} />;
   if (vmOn && !vm) return <ScrollView style={st.screen} contentContainerStyle={st.scroll}><ViewChoice onPick={pickView} /></ScrollView>;
+  if (homeV3On(env)) {
+    // v3 toggle only switches the mode (saved to the same key); the Check My Car card opens the guide in Simple.
+    const setMode = (m) => { setVm(m); VM.saveViewMode(vmStore, m); };
+    return <HomeV3 navigation={navigation} vmOn={vmOn} vm={vm} setMode={setMode} device={device} setDevice={setDevice} hero={hero}
+      noAdapter={noAdapter} demoOn={demoOn} crashOn={crashOn} colOn={colOn} setupOn={setupOn} />;
+  }
   return (
     <ScrollView style={st.screen} contentContainerStyle={st.scroll}>
       {vmOn ? <ViewSwitch mode={vm} onChange={pickView} /> : null}
