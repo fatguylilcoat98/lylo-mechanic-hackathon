@@ -114,8 +114,11 @@ export function PortHelpScreen() {
 }
 
 /** Simple results: one big verdict, then the same facts in everyday words. */
-export function PlainResults({ p, tone, noTech = false }) {
-  if (!p) return null;
+export const stripLeadCode = (t) => (typeof t === 'string' ? t.replace(/^\s*[PBCU][0-9A-F]{4}\b\s*[:\-\u2013\u2014,.]?\s*/i, '') : t);
+export function PlainResults({ p: p0, tone, noTech = false }) {
+  if (!p0) return null;
+  // noTech: drop a leading code from verdict / to-do text only (severity/tone untouched).
+  const p = noTech ? { ...p0, verdict: { ...p0.verdict, title: stripLeadCode(p0.verdict.title), why: stripLeadCode(p0.verdict.why) }, todo: (p0.todo || []).map(stripLeadCode) } : p0;
   // noTech (v3 Simple): plain answer only; codes/readings/AI details live in the technical dropdown.
   return (
     <View testID="vm-plain">

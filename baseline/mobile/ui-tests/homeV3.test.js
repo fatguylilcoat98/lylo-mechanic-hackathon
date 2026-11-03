@@ -81,3 +81,35 @@ test('Results flag off: old view switch, no v3 blocks', async () => {
   const ui = await mount(<ResultsV2 scan={truck()} viewEnv={VMON} homeEnv={{}} storage={memStore({ 'lylo.viewMode': 'simple' })} />);
   expect(ui.queryByTestId('results-simple-v3')).toBeNull(); expect(ui.getByTestId('vm-plain')).toBeTruthy();
 });
+
+import { PlainResults, stripLeadCode } from '../../../hackathon/mobile-bridge/src/ViewModeScreens';
+const SAFE = { EXPO_PUBLIC_LYLO_CRASH_GUARD: '1', EXPO_PUBLIC_LYLO_COLLISION: '1' };
+const CAVEAT = 'Crash Guard is not a replacement for 911. It can miss a crash or false-alarm; untested on real crashes.';
+
+test('mode screens: Crash Guard / Collision cards gated on their flags, with the 911 caveat', async () => {
+  for (const Screen of [SimpleHomeV3, MechanicHomeV3]) {
+    const n = { ...nav(), replace: jest.fn() };
+    const on = await mount(<Screen navigation={n} storage={memStore()} env={SAFE} />);
+    expect(on.getByText(CAVEAT)).toBeTruthy();
+    fireEvent.press(on.getByTestId('mode-crash')); expect(n.navigate).toHaveBeenLastCalledWith('CrashGuard', undefined);
+    fireEvent.press(on.getByTestId('mode-collision')); expect(n.navigate).toHaveBeenLastCalledWith('Collision', undefined);
+    const off = await mount(<Screen navigation={n} storage={memStore()} env={{}} />);
+    expect(off.queryByTestId('mode-crash')).toBeNull(); expect(off.queryByTestId('mode-collision')).toBeNull(); expect(off.queryByText(CAVEAT)).toBeNull();
+  }
+});
+
+test('noTech strips a leading code from verdict and to-do only; tone unchanged', async () => {
+  expect(stripLeadCode('P0302: Get the misfire checked')).toBe('Get the misfire checked');
+  expect(stripLeadCode('Check P0302 soon')).toBe('Check P0302 soon');
+  const p = { verdict: { title: 'P0302 - Get it checked soon', why: 'U0100, lost talk' }, codes: [{ code: 'P0302', means: 'x', status: 's' }], ai: [], readings: [], todo: ['C1234 Check brakes', 'Drive gently'] };
+  const ui = await mount(<PlainResults p={p} tone="red" noTech />);
+  expect(ui.getByText('Get it checked soon')).toBeTruthy(); expect(ui.getByText('lost talk')).toBeTruthy();
+  expect(ui.getByText(/1\.\s+Check brakes/)).toBeTruthy(); expect(ui.getByTestId('vm-verdict-red')).toBeTruthy();
+  const full = await mount(<PlainResults p={p} tone="red" />); expect(full.getByText('P0302 - Get it checked soon')).toBeTruthy();
+});
+
+test('toggle and tabs have plain-word labels, no emoji', async () => {
+  const ui = await mount(<HomeV2 navigation={nav()} noAdapterOn demoOn env={ON} storage={memStore({ 'lylo.viewMode': 'simple' })} />);
+  const lbl = ui.getByTestId('vm-toggle-simple').props.accessibilityLabel;
+  expect(lbl).toBe('Simple Mode, Step-by-step help'); expect(/\p{Extended_Pictographic}/u.test(lbl)).toBe(false);
+});

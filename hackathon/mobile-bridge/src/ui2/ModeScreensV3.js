@@ -9,7 +9,24 @@ import { Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
 import * as VM from '../viewModes';
 import { SimpleGuide, MechanicDeep } from '../ViewModeScreens';
 import { DEMO_SCANS } from '../../../../baseline/mobile/src/data/demoScans';
-import { Brand, Card, C, ModeToggle, TabBar, st } from './HomeV3';
+import { Brand, Card, C, ModeToggle, TabBar, st, CRASH_NOTE } from './HomeV3';
+import { features as cgFeatures } from '../crashGuard';
+import { features as colFeatures } from '../collision';
+
+/** Crash Guard / Collision cards, gated on the same flags as the home screen. */
+function SafetyCards({ env, go }) {
+  const crashOn = cgFeatures(env).on; const colOn = colFeatures(env).on;
+  if (!crashOn && !colOn) return null;
+  return (
+    <>
+      <View style={st.grid}>
+        {crashOn ? <Card testID="mode-crash" icon="shield-car" tint={C.orange} title="Crash Guard" sub="Monitor this drive for a crash or false alarm" onPress={() => go('CrashGuard')} /> : null}
+        {colOn ? <Card testID="mode-collision" icon="car-multiple" tint={C.purple} title="I Was in a Collision" sub="Step-by-step checklist, photos, and a summary" onPress={() => go('Collision')} /> : null}
+      </View>
+      {crashOn ? <Text style={st.note}>{CRASH_NOTE}</Text> : null}
+    </>
+  );
+}
 
 let defStore = null;
 try { defStore = require('@react-native-async-storage/async-storage').default; } catch (e) { defStore = null; }
@@ -49,7 +66,7 @@ function Shell({ navigation, mode, storage, testID, children }) {
   );
 }
 
-export function SimpleHomeV3({ navigation, storage }) {
+export function SimpleHomeV3({ navigation, storage, env }) {
   const go = (r, p) => navigation && navigation.navigate(r, p);
   return (
     <Shell navigation={navigation} mode="simple" storage={storage} testID="simple-v3">
@@ -57,21 +74,22 @@ export function SimpleHomeV3({ navigation, storage }) {
       <Text style={x.sub}>Plain English. No car knowledge needed.</Text>
       <View style={x.panel}><SimpleGuide navigation={navigation} /></View>
       <View style={st.grid}>
-        <Card testID="simple-port" glyph={'\u{1F50C}'} tint={C.cyan} title="Where does it plug in?" sub="A picture of where the reader goes" onPress={() => go('PortHelp')} />
-        <Card testID="simple-describe" glyph={'\u{1F4F7}'} tint={C.purple} title="No reader? Tell us" sub="Describe it or snap the dashboard" onPress={() => go('NoAdapter')} />
+        <Card testID="simple-port" icon="power-plug-outline" tint={C.cyan} title="Where does it plug in?" sub="A picture of where the reader goes" onPress={() => go('PortHelp')} />
+        <Card testID="simple-describe" icon="camera-outline" tint={C.purple} title="No reader? Tell us" sub="Describe it or snap the dashboard" onPress={() => go('NoAdapter')} />
       </View>
+      <SafetyCards env={env} go={go} />
       <Fold title="technical details" testID="simple-tech">
         <Text style={x.small}>For people who know cars. You don't need these.</Text>
         <View style={st.grid}>
-          <Card glyph={'\u{1F50D}'} tint={C.cyan} title="Look up a code" sub="Type a trouble code" onPress={() => go('Lookup')} />
-          <Card glyph={'\u{1F4DC}'} tint={C.green} title="Debug log" sub="What the reader said" onPress={() => go('Log')} />
+          <Card icon="magnify" tint={C.cyan} title="Look up a code" sub="Type a trouble code" onPress={() => go('Lookup')} />
+          <Card icon="text-box-outline" tint={C.green} title="Debug log" sub="What the reader said" onPress={() => go('Log')} />
         </View>
       </Fold>
     </Shell>
   );
 }
 
-export function MechanicHomeV3({ navigation, storage }) {
+export function MechanicHomeV3({ navigation, storage, env }) {
   const go = (r, p) => navigation && navigation.navigate(r, p);
   const demo = DEMO_SCANS.checkengine;
   const m = VM.demoModel(demo);
@@ -81,11 +99,12 @@ export function MechanicHomeV3({ navigation, storage }) {
       <Text style={x.h1}>Mechanic tools</Text>
       <Text style={x.sub}>Codes, freeze frame, live PIDs, monitors, evidence. Anything the scanner can't read says "not read".</Text>
       <View style={st.grid}>
-        <Card testID="mech-scan" glyph={'\u{1F4E1}'} tint={C.cyan} title="Scan codes + PIDs" sub="Connect OBD adapter, ignition ON" onPress={() => go('Connect')} />
-        <Card testID="mech-used" glyph={'\u{1F50E}'} tint={C.orange} title="Used-car check" sub="Clear counters, monitors" onPress={() => go('Connect')} />
-        <Card testID="mech-lookup" glyph={'\u{1F4D6}'} tint={C.purple} title="DTC lookup" sub="Any code, offline" onPress={() => go('Lookup')} />
-        <Card testID="mech-log" glyph={'\u{1F4DC}'} tint={C.green} title="Debug log" sub="Raw adapter traffic" onPress={() => go('Log')} />
+        <Card testID="mech-scan" icon="access-point" tint={C.cyan} title="Scan codes + PIDs" sub="Connect OBD adapter, ignition ON" onPress={() => go('Connect')} />
+        <Card testID="mech-used" icon="car-wrench" tint={C.orange} title="Used-car check" sub="Clear counters, monitors" onPress={() => go('Connect')} />
+        <Card testID="mech-lookup" icon="book-open-outline" tint={C.purple} title="DTC lookup" sub="Any code, offline" onPress={() => go('Lookup')} />
+        <Card testID="mech-log" icon="text-box-outline" tint={C.green} title="Debug log" sub="Raw adapter traffic" onPress={() => go('Log')} />
       </View>
+      <SafetyCards env={env} go={go} />
       {k ? (
         <View style={x.panel} testID="mech-demo">
           <Text style={x.replay}>DEMO REPLAY · not your car</Text>

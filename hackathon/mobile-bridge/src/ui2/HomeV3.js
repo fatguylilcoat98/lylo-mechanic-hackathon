@@ -6,6 +6,10 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+let MCI = null; // @expo/vector-icons ships with expo (no new native dep); font bundled by Metro on import
+try { MCI = require('@expo/vector-icons/MaterialCommunityIcons').default; } catch (e) { MCI = null; }
+/** Outline line icon tinted to its card's color. Renders nothing if the icon font is unavailable. */
+export function Icon({ name, size = 30, color: c = '#F2F5F8' }) { return MCI ? <MCI name={name} size={size} color={c} /> : null; }
 import OBDService from '../../../../baseline/mobile/src/services/OBDService';
 import { DEMO_SCANS } from '../../../../baseline/mobile/src/data/demoScans';
 
@@ -17,13 +21,14 @@ export function homeV3On(env) {
   return e.EXPO_PUBLIC_LYLO_HOME_V3 === '1';
 }
 
+export const CRASH_NOTE = 'Crash Guard is not a replacement for 911. It can miss a crash or false-alarm; untested on real crashes.';
 export const C = { bg: '#070B12', card: 'rgba(16,24,36,0.92)', text: '#F2F5F8', dim: '#B4C0CC', blue: '#2E9BFF', cyan: '#3FD8FF', orange: '#FF7A3D', purple: '#A98BFF', green: '#2BD47D' };
 
-export function Card({ testID, glyph, tint, title, sub, onPress }) {
+export function Card({ testID, icon, tint, title, sub, onPress }) {
   return (
     <Pressable testID={testID} onPress={onPress} accessibilityRole="button" accessibilityLabel={title + '. ' + sub}
       style={({ pressed }) => [st.card, { borderColor: tint, shadowColor: tint }, pressed && { opacity: 0.8 }]}>
-      <Text style={[st.glyph, { color: tint }]}>{glyph}</Text>
+      <View style={st.glyph}><Icon name={icon} size={34} color={tint} /></View>
       <View style={st.cardRow}>
         <View style={{ flex: 1 }}>
           <Text style={st.cardTitle}>{title}</Text>
@@ -37,8 +42,8 @@ export function Card({ testID, glyph, tint, title, sub, onPress }) {
 
 export function Mode({ id, on, icon, title, sub, onPress }) {
   return (
-    <Pressable testID={'vm-toggle-' + id} onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: on }} style={[st.mode, on && st.modeOn]}>
-      <Text style={st.modeIcon}>{icon}</Text>
+    <Pressable testID={'vm-toggle-' + id} onPress={onPress} accessibilityRole="tab" accessibilityLabel={title + ', ' + sub} accessibilityState={{ selected: on }} style={[st.mode, on && st.modeOn]}>
+      <View style={st.modeIcon}><Icon name={icon} size={24} color="#F2F5F8" /></View>
       <View style={{ flexShrink: 1 }}>
         <Text style={st.modeTitle}>{title}</Text>
         <Text style={[st.modeSub, on && { color: '#EAF4FF' }]}>{sub}</Text>
@@ -64,8 +69,8 @@ export function Brand() {
 export function ModeToggle({ vm, onPick }) {
   return (
     <View style={st.toggle} testID="vm-toggle">
-      <Mode id="simple" on={vm === 'simple'} icon={'\u{1F464}'} title="Simple Mode" sub="Step-by-step help" onPress={() => onPick('simple')} />
-      <Mode id="mechanic" on={vm === 'mechanic'} icon={'\u{1F6E0}\uFE0F'} title="Mechanic Mode" sub="Advanced tools & data" onPress={() => onPick('mechanic')} />
+      <Mode id="simple" on={vm === 'simple'} icon="account-outline" title="Simple Mode" sub="Step-by-step help" onPress={() => onPick('simple')} />
+      <Mode id="mechanic" on={vm === 'mechanic'} icon="tools" title="Mechanic Mode" sub="Advanced tools & data" onPress={() => onPick('mechanic')} />
     </View>
   );
 }
@@ -73,9 +78,9 @@ export function ModeToggle({ vm, onPick }) {
 /** Home / My Garage (existing 'Vin' screen) / More. No History tab: no scan-history screen exists. */
 export function TabBar({ navigation, active, onHome, onMore }) {
   const tabs = [
-    ['home', '\u2302', 'Home', onHome || (() => navigation.navigate('Home'))],
-    ['garage', '\u{1F698}', 'My Garage', () => navigation.navigate('Vin')],
-    ['more', '\u2022\u2022\u2022', 'More', onMore || (() => navigation.navigate('Home', { more: true }))],
+    ['home', 'home-outline', 'Home', onHome || (() => navigation.navigate('Home'))],
+    ['garage', 'car-outline', 'My Garage', () => navigation.navigate('Vin')],
+    ['more', 'dots-horizontal', 'More', onMore || (() => navigation.navigate('Home', { more: true }))],
   ];
   return (
     <View style={st.tabs} testID="tab-bar">
@@ -83,7 +88,7 @@ export function TabBar({ navigation, active, onHome, onMore }) {
         const on = active === id;
         return (
           <Pressable key={id} testID={'tab-' + id} onPress={f} accessibilityRole="tab" accessibilityState={{ selected: on }} style={[st.tab, on && st.tabOn]}>
-            <Text style={[st.tabIcon, on && { color: C.blue }]}>{ic}</Text>
+            <Icon name={ic} size={24} color={on ? C.blue : C.dim} />
             <Text style={[st.tabText, on && { color: C.blue }]}>{label}</Text>
           </Pressable>
         );
@@ -120,18 +125,18 @@ export default function HomeV3({ route, navigation, vmOn, vm, setMode, device, s
         {device ? (
           <View style={st.conn} testID="connected">
             <Text style={st.connText}>{'\u25CF  Connected: ' + device.name}</Text>
-            <Pressable onPress={async () => { await OBDService.disconnect(); setDevice(null); }} accessibilityRole="button"><Text style={st.connBtn}>Disconnect</Text></Pressable>
+            <Pressable testID="disconnect" style={{ minHeight: 48, justifyContent: 'center' }} onPress={async () => { await OBDService.disconnect(); setDevice(null); }} accessibilityRole="button" accessibilityLabel="Disconnect adapter"><Text style={st.connBtn}>Disconnect</Text></Pressable>
           </View>
         ) : null}
 
         <View style={st.grid}>
-          <Card testID="primary-action" glyph={'\u2699\uFE0F'} tint={C.cyan} title="Check My Car" sub="Scan, read codes, and get a clear answer" onPress={checkCar} />
-          {crashOn ? <Card testID="card-crash" glyph={'\u{1F6E1}\uFE0F'} tint={C.orange} title="Crash Guard" sub="Monitor this drive for a crash or false alarm" onPress={() => go('CrashGuard')} /> : null}
-          {colOn ? <Card testID="card-collision" glyph={'\u{1F697}'} tint={C.purple} title="I Was in a Collision" sub="Step-by-step checklist, photos, and a summary" onPress={() => go('Collision')} /> : null}
-          <Card testID="card-demo" glyph={'\u25B6\uFE0E'} tint={C.green} title="Try a Demo" sub="See how it works (no car needed)"
+          <Card testID="primary-action" icon="engine-outline" tint={C.cyan} title="Check My Car" sub="Scan, read codes, and get a clear answer" onPress={checkCar} />
+          {crashOn ? <Card testID="card-crash" icon="shield-car" tint={C.orange} title="Crash Guard" sub="Monitor this drive for a crash or false alarm" onPress={() => go('CrashGuard')} /> : null}
+          {colOn ? <Card testID="card-collision" icon="car-multiple" tint={C.purple} title="I Was in a Collision" sub="Step-by-step checklist, photos, and a summary" onPress={() => go('Collision')} /> : null}
+          <Card testID="card-demo" icon="play-box-outline" tint={C.green} title="Try a Demo" sub="See how it works (no car needed)"
             onPress={() => (demoOn ? go('Demo') : go('Codes', { scan: DEMO_SCANS.checkengine }))} />
         </View>
-        {crashOn ? <Text style={st.note}>Crash Guard is not a replacement for 911. It can miss a crash or false-alarm; untested on real crashes.</Text> : null}
+        {crashOn ? <Text style={st.note}>{CRASH_NOTE}</Text> : null}
 
         {more ? (
           <View style={st.moreBox} testID="more-tools">
@@ -162,7 +167,7 @@ export const st = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.bg },
   scroll: { padding: 18, paddingTop: 44, paddingBottom: 110 },
   top: { marginHorizontal: -18, paddingHorizontal: 18, paddingBottom: 12 },
-  carImg: { position: 'absolute', top: 0, right: 0, bottom: 0, width: '42%', opacity: 0.55 },
+  carImg: { position: 'absolute', top: 104, right: 0, bottom: 0, width: '42%', opacity: 0.55 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   logo: { width: 96, height: 96 },
   divider: { width: 1, height: 56, backgroundColor: '#3A4656', marginHorizontal: 14 },
@@ -173,7 +178,7 @@ export const st = StyleSheet.create({
   toggle: { flexDirection: 'row', backgroundColor: 'rgba(20,28,40,0.95)', borderRadius: 18, padding: 4, marginVertical: 14, borderWidth: 1, borderColor: '#243042' },
   mode: { flex: 1, flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 14, minHeight: 60 },
   modeOn: { backgroundColor: C.blue, shadowColor: C.blue, shadowOpacity: 0.8, shadowRadius: 12, elevation: 8 },
-  modeIcon: { fontSize: 20, marginRight: 8, color: C.text },
+  modeIcon: { marginRight: 8 },
   modeTitle: { color: C.text, fontSize: 16, fontWeight: '800' },
   modeSub: { color: C.dim, fontSize: 12 },
   conn: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
@@ -181,7 +186,7 @@ export const st = StyleSheet.create({
   connBtn: { color: C.dim, fontWeight: '700', padding: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   card: { width: '48.5%', backgroundColor: C.card, borderRadius: 18, borderWidth: 1.5, padding: 14, marginBottom: 12, minHeight: 150, shadowOpacity: 0.6, shadowRadius: 10, elevation: 4 },
-  glyph: { fontSize: 32, marginBottom: 8 },
+  glyph: { marginBottom: 8 },
   cardRow: { flexDirection: 'row', alignItems: 'center' },
   cardTitle: { color: C.text, fontSize: 17, fontWeight: '800' },
   cardSub: { color: C.dim, fontSize: 13, lineHeight: 18, marginTop: 2 },
