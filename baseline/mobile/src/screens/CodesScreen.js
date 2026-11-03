@@ -64,7 +64,7 @@ export default function CodesScreen({ route, navigation }) {
 
   if (hasServerResult(scan)) { // v0.4.1: server answered -> the one-verdict results screen
     const opts = { codes: results, screen: 'codes' };
-    return <SimpleResults scan={scan} {...opts} footer={<><Button title="Share report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Clear codes (after a repair)" kind="danger" busy={clearing} onPress={confirmClear} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
+    return <SimpleResults scan={scan} {...opts} navigation={navigation} footer={<><Button title="Share report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Clear codes (after a repair)" kind="danger" busy={clearing} onPress={confirmClear} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
   }
   return (
     <ScrollView style={u.screen} contentContainerStyle={u.scroll}>

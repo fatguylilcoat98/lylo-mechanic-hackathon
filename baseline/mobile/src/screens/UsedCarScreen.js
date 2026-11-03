@@ -24,7 +24,7 @@ export default function UsedCarScreen({ route, navigation }) {
   const c = a.counters;
   if (hasServerResult(scan)) { // v0.4.1: server answered -> the one-verdict results screen
     const opts = { codes: analyzeCodes(scan), screen: 'usedcar', baselineCleared: a.recentlyCleared };
-    return <SimpleResults scan={scan} {...opts} footer={<><Button title="Share this report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
+    return <SimpleResults scan={scan} {...opts} navigation={navigation} footer={<><Button title="Share this report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
   }
 
   return (

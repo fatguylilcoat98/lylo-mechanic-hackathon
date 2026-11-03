@@ -13,6 +13,8 @@ import { PriceButtons, VehicleLine } from '../PriceButtons';
 import DashVoicePanel from '../DashVoicePanel';
 import { MechanicView } from '../SimpleResults';
 import CodeTimelineCard from '../CodeTimelineCard'; // v0.7, renders nothing unless EXPO_PUBLIC_LYLO_CODE_TIMELINE=1
+import * as VM from '../viewModes'; // v0.7.2 flag EXPO_PUBLIC_LYLO_VIEW_MODE
+import { MechanicDeep, PlainResults, ViewSwitch } from '../ViewModeScreens';
 import { ProveCheck } from '../ProvePanel'; // v0.5.1, renders nothing unless EXPO_PUBLIC_LYLO_PROVE=1
 
 export function ResultsV2Body({ m, pinnedReplay = false }) {
@@ -74,19 +76,23 @@ export function ResultsV2Body({ m, pinnedReplay = false }) {
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
 
-export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove, timelineEnv }) {
+export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove, timelineEnv, viewEnv, navigation }) {
+  const vmOn = VM.features(viewEnv).on;
+  const [vm, setVm] = useState('simple');
   const store = storage === undefined ? defaultStorage : storage;
   const [vehicle, setVehicle] = useState(null);
   const [raised, setRaised] = useState(null);
   const scan = raised && raised.base === scanIn ? raised.scan : scanIn;
-  useEffect(() => { let live = true; loadVehicle(store).then((v) => { if (live) setVehicle(v); }); return () => { live = false; }; }, [store]);
+  useEffect(() => { let live = true; loadVehicle(store).then((v) => { if (live) setVehicle(v); }); if (vmOn) VM.loadChosen(store).then((x) => { if (live && x) setVm(x); }); return () => { live = false; }; }, [store]);
   const m = buildV2(scan, { codes, screen, baselineCleared, vehicle });
   if (!m) return null;
   return (
     // A replay badge is a sticky header so it never scrolls out of view.
     <ScrollView style={st.screen} contentContainerStyle={st.scroll} stickyHeaderIndices={m.replay ? [0] : undefined}>
       {m.replay ? <View style={st.pin} testID="replay-pin"><ReplayBadge label={m.replay} /></View> : null}
-      <ResultsV2Body m={m} pinnedReplay={!!m.replay} />
+      {vmOn ? <ViewSwitch mode={vm} onChange={(x) => { setVm(x); VM.saveViewMode(store, x); }} /> : null}
+      {vmOn && vm === 'simple' ? <PlainResults p={VM.buildPlain(m, scanIn)} tone={m.tone} /> : <ResultsV2Body m={m} pinnedReplay={!!m.replay} />}
+      {vmOn && vm === 'mechanic' ? <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} /> : null}
       <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />
       <ProveCheck scan={scan} {...(prove || {})} />
       <DashVoicePanel scan={scan} onScan={(next) => setRaised({ base: scanIn, scan: next })} {...(dashVoice || {})} />

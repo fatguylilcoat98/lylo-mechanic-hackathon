@@ -2,7 +2,7 @@
  * UI v2 home (flag EXPO_PUBLIC_LYLO_UI_V2=1). One clear primary action, two backups,
  * everything else tucked under "More tools". Same routes and flags as the v1 home.
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import OBDService from '../../../../baseline/mobile/src/services/OBDService';
@@ -16,6 +16,8 @@ import { features as demoFeatures } from '../demo';
 import { features as smFeatures } from '../showMe'; // v0.6
 import { features as cgFeatures } from '../crashGuard'; // v0.6
 import { features as colFeatures } from '../collision'; // v0.6
+import * as VM from '../viewModes'; // v0.7.2 flag EXPO_PUBLIC_LYLO_VIEW_MODE
+import { ViewChoice, ViewSwitch } from '../ViewModeScreens';
 import { color, space, radius, type, touch } from './theme';
 import { BigActionButton } from './components';
 
@@ -27,7 +29,15 @@ function Link({ title, onPress }) {
   );
 }
 
-export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp, env }) {
+let vmStorage = null;
+try { vmStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { vmStorage = null; }
+
+export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp, env, storage }) {
+  const vmOn = VM.features(env).on;
+  const vmStore = storage === undefined ? vmStorage : storage;
+  const [vm, setVm] = useState(vmOn ? 'loading' : null);
+  useEffect(() => { if (!vmOn) return undefined; let live = true; VM.loadChosen(vmStore).then((m) => { if (live) setVm(m); }); return () => { live = false; }; }, [vmOn, vmStore]);
+  const pickView = (m) => { setVm(m); VM.saveViewMode(vmStore, m); if (m === 'simple' && navigation) navigation.navigate('Guide'); };
   const hero = smFeatures(env).home; // v0.6 EXPO_PUBLIC_LYLO_NOSENSOR_HOME: no-sensor check is the primary action when no adapter
   const crashOn = cgFeatures(env).on; const colOn = colFeatures(env).on;
   const noAdapter = noAdapterOn === undefined ? noAdapterFeatures().on : noAdapterOn;
@@ -38,8 +48,12 @@ export default function HomeV2({ navigation, noAdapterOn, demoOn: demoOnProp, en
   useFocusEffect(useCallback(() => { setDevice(OBDService.connected ? OBDService.device : null); }, []));
   const go = (r, p) => navigation.navigate(r, p);
 
+  if (vmOn && vm === 'loading') return <View style={st.screen} />;
+  if (vmOn && !vm) return <ScrollView style={st.screen} contentContainerStyle={st.scroll}><ViewChoice onPick={pickView} /></ScrollView>;
   return (
     <ScrollView style={st.screen} contentContainerStyle={st.scroll}>
+      {vmOn ? <ViewSwitch mode={vm} onChange={pickView} /> : null}
+      {vmOn && vm === 'simple' ? <BigActionButton testID="vm-start-guide" title="Start: check my car step by step" subtitle="We'll walk you through it" onPress={() => go('Guide')} /> : null}
       <View style={st.header} testID="brand-header">
         <Image source={require('../../../../baseline/mobile/assets/app-icon.png')} style={st.logo} accessibilityLabel="LYLO Mechanic logo" />
         <Text style={st.brand}>LYLO Mechanic</Text>

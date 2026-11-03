@@ -35,7 +35,12 @@ async function afterScan(scan, opts = {}) {
   if (!baseUrl || !scan) return scan;
   try {
     const appKey = opts.appKey !== undefined ? opts.appKey : configuredKey(opts.env);
-    const out = await diagnoseScan(scan, { ...opts, baseUrl, appKey });
+    let view = opts.view;
+    if (!view && require('./viewModes').features(opts.env).on) { // v0.7.2
+      let st = opts.storage; if (st === undefined) { try { st = require('@react-native-async-storage/async-storage').default; } catch (e) { st = null; } }
+      view = await require('./viewModes').loadChosen(st);
+    }
+    const out = await diagnoseScan(scan, { ...opts, baseUrl, appKey, view });
     return { ...scan, serverDiagnosis: { source: out.source, result: out.result, error: out.error, status: out.status } };
   } catch (e) {
     return { ...scan, serverDiagnosis: { source: 'offline', result: null, error: 'hook error: ' + (e && e.message) } };

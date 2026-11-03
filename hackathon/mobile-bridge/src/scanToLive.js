@@ -117,6 +117,8 @@ function scanToLivePayload(scan, opts = {}) {
     codes_cleared_evidence: cleared.evidence,
   };
   if (opts.symptoms && typeof opts.symptoms === 'object') payload.symptoms = opts.symptoms;
+  // v0.7.2: only with EXPO_PUBLIC_LYLO_VIEW_MODE=1; the server ignores it unless LYLO_HACK_VIEW_MODE=1.
+  if ((opts.view === 'simple' || opts.view === 'mechanic') && require('./viewModes').features(opts.env).on) payload.view = opts.view;
   return payload;
 }
 

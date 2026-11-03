@@ -162,6 +162,23 @@ def _cited(verified):
     return sorted(ids)
 
 
+# v0.7.2 (LYLO_HACK_VIEW_MODE=1): the phone's chosen view picks the writing register. Same rules, same schema;
+# merge_safety still ignores any lower level, so the register can never change a safety verdict.
+VIEW_RULES = {
+    "simple": "\nREGISTER: write the explanation, hypotheses and next checks for a 10-year-old: short plain sentences, everyday words, no jargon; if a technical term must appear, add a plain explanation of 5 words or fewer in parentheses. Keep all the facts. All rules above still apply, including rule 5.",
+    "mechanic": "\nREGISTER: write for a master technician: precise terms (STFT/LTFT, bank, MIL, freeze frame, monitors), cite values with units, give diagnostic test steps with what to measure and the expected result, and say 'not in ledger' for anything not read. Never invent values. All rules above still apply, including rule 5.",
+}
+
+
+def view_enabled():
+    return os.environ.get("LYLO_HACK_VIEW_MODE") == "1"
+
+
+def view_rule(data):
+    v = data.get("view") if isinstance(data, dict) else None
+    return VIEW_RULES.get(v, "") if view_enabled() and isinstance(v, str) else ""
+
+
 def run(data, result, call=None, extra_items=None, force_call=False):
     """Adds result['detective'] and may raise result['safety']['level'].
     extra_items: already-typed ledger items from other sources (e.g. photo)."""
@@ -190,6 +207,10 @@ def run(data, result, call=None, extra_items=None, force_call=False):
         instructions = INSTRUCTIONS + PROVE_RULE
     if any(isinstance(i, dict) and i.get("type") == "dtc" and i.get("title") for i in items):
         instructions = instructions + DT.PROMPT_RULE  # v0.5.2: only present when LYLO_HACK_DTC_TITLES=1 added titles
+    _vr = view_rule(data)
+    if _vr:
+        instructions = instructions + _vr
+        det["view"] = data.get("view")
     messages = [{"role": "system", "content": instructions},
                 {"role": "user", "content": "EVIDENCE LEDGER:\n" + ledger_json}]
     prompt_hash = hashlib.sha256(json.dumps(messages, sort_keys=True).encode()).hexdigest()[:16]

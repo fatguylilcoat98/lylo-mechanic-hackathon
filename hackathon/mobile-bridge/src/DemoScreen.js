@@ -9,6 +9,9 @@ import { C } from '../../../baseline/mobile/src/constants/colors';
 import { configuredUrl, configuredKey } from './scanHook';
 import { CASES, replay, proof, replayView, proofView } from './demo';
 import { ProveReplay } from './ProvePanel'; // v0.5.1 'Run the proof'
+import * as VM from './viewModes'; // v0.7.2 flag EXPO_PUBLIC_LYLO_VIEW_MODE
+import { MechanicDeep, PlainResults, ViewSwitch } from './ViewModeScreens';
+const { DEMO_SCANS: VM_DEMOS } = require('../../../baseline/mobile/src/data/demoScans');
 
 const Y = '#f5c518';
 const TONE = { SAFE_TO_DRIVE: '#2a9d8f', INSPECT_SOON: '#f5c518', DRIVE_SHORT_DISTANCE_ONLY: '#f4a261', DO_NOT_DRIVE: '#e5383b', TOW_RECOMMENDED: '#e5383b', EMERGENCY_STOP_IMMEDIATELY: '#ff1f3d' };
@@ -30,7 +33,22 @@ function Verdict({ level, text, tag, testID }) {
   );
 }
 
-export default function DemoScreen({ navigation, fetchImpl, baseUrl, appKey }) {
+/** v0.7.2: the saved check-engine demo in both views (local replay, clearly labeled). */
+export function DemoViews({ navigation }) {
+  const [mode, setMode] = useState('simple');
+  const scan = VM_DEMOS.checkengine;
+  const m = VM.demoModel(scan);
+  return (
+    <View style={s.card} testID="demo-views">
+      <Text style={s.label}>{'REPLAY: ' + m.replay + ' (saved scan, not your car)'}</Text>
+      <ViewSwitch mode={mode} onChange={setMode} />
+      {mode === 'simple' ? <PlainResults p={VM.buildPlain(m, scan)} tone={m.tone} /> : <MechanicDeep k={VM.buildMechanic(m, scan)} navigation={navigation} />}
+    </View>
+  );
+}
+
+export default function DemoScreen({ navigation, fetchImpl, baseUrl, appKey, viewEnv }) {
+  const vmOn = VM.features(viewEnv).on;
   const opts = { baseUrl: baseUrl === undefined ? configuredUrl() : baseUrl, appKey: appKey === undefined ? configuredKey() : appKey, fetchImpl };
   const [busy, setBusy] = useState(null);
   const [msg, setMsg] = useState(null);
@@ -93,6 +111,7 @@ export default function DemoScreen({ navigation, fetchImpl, baseUrl, appKey }) {
           <Text style={s.small}>Merge result: {pv.action}</Text>
         </View>
       ) : null}
+      {vmOn ? <DemoViews navigation={navigation} /> : null}
       <ProveReplay opts={opts} />
       <Big title="Home" onPress={() => navigation && navigation.navigate('Home')} kind="secondary" />
     </ScrollView>
