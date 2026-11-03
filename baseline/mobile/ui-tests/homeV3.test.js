@@ -51,9 +51,11 @@ test('home toggle opens the two distinct screens', async () => {
 test('Simple screen: guided flow up front, technical tools collapsed', async () => {
   const n = { ...nav(), replace: jest.fn() }; const st = memStore();
   const ui = await mount(<SimpleHomeV3 navigation={n} storage={st} />);
-  expect(ui.getByTestId('vm-sensor-q')).toBeTruthy(); expect(ui.getByTestId('tab-bar')).toBeTruthy();
+  expect(ui.getByTestId('simple-check')).toBeTruthy(); expect(ui.getByTestId('tab-bar')).toBeTruthy();
+  fireEvent.press(ui.getByTestId('simple-check')); expect(n.navigate).toHaveBeenLastCalledWith('Guide', undefined);
   expect(ui.queryByTestId('simple-tech-body')).toBeNull();
   fireEvent.press(ui.getByTestId('simple-tech')); expect(ui.getByTestId('simple-tech-body')).toBeTruthy();
+  expect(ui.queryByTestId('vm-toggle')).toBeNull(); fireEvent.press(ui.getByTestId('vm-pill'));
   await act(async () => { fireEvent.press(ui.getByTestId('vm-toggle-mechanic')); });
   expect(st.m['lylo.viewMode']).toBe('mechanic'); expect(n.replace).toHaveBeenCalledWith('MechanicHome');
 });
@@ -112,4 +114,22 @@ test('toggle and tabs have plain-word labels, no emoji', async () => {
   const ui = await mount(<HomeV2 navigation={nav()} noAdapterOn demoOn env={ON} storage={memStore({ 'lylo.viewMode': 'simple' })} />);
   const lbl = ui.getByTestId('vm-toggle-simple').props.accessibilityLabel;
   expect(lbl).toBe('Simple Mode, Step-by-step help'); expect(/\p{Extended_Pictographic}/u.test(lbl)).toBe(false);
+});
+
+test('mockup tiles: only real features; missing ones are not shown', async () => {
+  const n = { ...nav(), replace: jest.fn() };
+  const mech = await mount(<MechanicHomeV3 navigation={n} storage={memStore()} env={SAFE} />);
+  for (const t of ['Live Data', 'Service & Repairs', 'System Tests', 'A/C', 'ABS', 'SRS', 'DPF', 'TPMS', 'History', 'Battery']) expect(mech.queryByText(t)).toBeNull();
+  expect(mech.getByText(/Not connected/)).toBeTruthy();
+  fireEvent.press(mech.getByTestId('mech-scan')); expect(n.navigate).toHaveBeenLastCalledWith('Connect', undefined);
+  fireEvent.press(mech.getByTestId('obd-help')); expect(n.navigate).toHaveBeenLastCalledWith('PortHelp', undefined);
+  fireEvent.press(mech.getByTestId('mech-diagnosis')); expect(n.navigate).toHaveBeenLastCalledWith('Demo', undefined);
+  fireEvent.press(mech.getByTestId('mech-part')); expect(n.navigate).toHaveBeenLastCalledWith('PhotoHelper', undefined);
+  const simp = await mount(<SimpleHomeV3 navigation={n} storage={memStore()} env={SAFE} />);
+  for (const t of ['History', 'Settings']) expect(simp.queryByText(t)).toBeNull();
+  fireEvent.press(simp.getByTestId('simple-say')); expect(n.navigate).toHaveBeenLastCalledWith('NoAdapter', { start: 'describe' });
+  fireEvent.press(simp.getByTestId('simple-photo')); expect(n.navigate).toHaveBeenLastCalledWith('NoAdapter', { start: 'dash' });
+  fireEvent.press(simp.getByTestId('tour-go')); expect(n.navigate).toHaveBeenLastCalledWith('Demo', undefined);
+  fireEvent.press(simp.getByTestId('tour-no')); expect(simp.queryByTestId('tour-banner')).toBeNull();
+  expect(simp.queryByTestId('simple-tech-body')).toBeNull();
 });
