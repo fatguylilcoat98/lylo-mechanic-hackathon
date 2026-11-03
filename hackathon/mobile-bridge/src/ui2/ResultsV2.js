@@ -12,6 +12,7 @@ import { loadVehicle } from '../vin';
 import { PriceButtons, VehicleLine } from '../PriceButtons';
 import DashVoicePanel from '../DashVoicePanel';
 import { MechanicView } from '../SimpleResults';
+import CodeTimelineCard from '../CodeTimelineCard'; // v0.7, renders nothing unless EXPO_PUBLIC_LYLO_CODE_TIMELINE=1
 import { ProveCheck } from '../ProvePanel'; // v0.5.1, renders nothing unless EXPO_PUBLIC_LYLO_PROVE=1
 
 export function ResultsV2Body({ m, pinnedReplay = false }) {
@@ -73,7 +74,7 @@ export function ResultsV2Body({ m, pinnedReplay = false }) {
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
 
-export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove }) {
+export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove, timelineEnv }) {
   const store = storage === undefined ? defaultStorage : storage;
   const [vehicle, setVehicle] = useState(null);
   const [raised, setRaised] = useState(null);
@@ -86,6 +87,7 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
     <ScrollView style={st.screen} contentContainerStyle={st.scroll} stickyHeaderIndices={m.replay ? [0] : undefined}>
       {m.replay ? <View style={st.pin} testID="replay-pin"><ReplayBadge label={m.replay} /></View> : null}
       <ResultsV2Body m={m} pinnedReplay={!!m.replay} />
+      <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />
       <ProveCheck scan={scan} {...(prove || {})} />
       <DashVoicePanel scan={scan} onScan={(next) => setRaised({ base: scanIn, scan: next })} {...(dashVoice || {})} />
       <View style={{ marginTop: space.xl }}>{footer}</View>

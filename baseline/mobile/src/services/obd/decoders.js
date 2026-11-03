@@ -223,9 +223,37 @@ function decodeVinOffline(vin) {
   return { vin, year, make };
 }
 
+
+// ── Mode 02 freeze frame (v0.7, used only when EXPO_PUBLIC_LYLO_CODE_TIMELINE=1) ──
+/** Data bytes for a Mode 02 PID, frame 0. Response: 42 <pid> <frame> <data...>. */
+function mode02Bytes(lines, pid) {
+  const want = parseInt(pid, 16);
+  for (const msg of collectMessages(lines)) {
+    if (msg.length >= 3 && msg[0] === 0x42 && msg[1] === want) return msg.slice(3);
+  }
+  return null;
+}
+/** 0202: the code that stored the freeze frame (null if none / 0000). */
+function decodeFreezeDtc(lines) {
+  const b = mode02Bytes(lines, '02');
+  if (!b || b.length < 2) return null;
+  return bytesToDtc(b[0], b[1]);
+}
+/** Decode one freeze-frame PID with the same formulas as Mode 01. */
+function decodeFreezePid(lines, pid) {
+  const def = PID_DEFS[pid];
+  if (!def) return null;
+  const b = mode02Bytes(lines, pid);
+  if (!b || !b.length) return null;
+  let v; try { v = def.parse(b); } catch (e) { return null; }
+  if (v === null || v === undefined || Number.isNaN(v)) return null;
+  return v;
+}
+
 const kmToMi = (km) => (km === null || km === undefined ? null : Math.round(km * KM_TO_MI));
 
 module.exports = {
   collectMessages, bytesToDtc, decodeDTCs, mode01Bytes, decodeSupported,
   decodeMonitorStatus, decodePid, decodeVIN, decodeVinOffline, PID_DEFS, kmToMi,
+  mode02Bytes, decodeFreezeDtc, decodeFreezePid,
 };

@@ -83,13 +83,39 @@ async function readSupported(session, first) {
 }
 
 const USED_CAR_PIDS = ['21', '30', '31', '4D', '4E'];
+const FREEZE_PIDS = ['04', '05', '06', '07', '0C', '0D', '0F', '11'];
+
+/** v0.7 flag EXPO_PUBLIC_LYLO_CODE_TIMELINE=1. Direct process.env access so Expo inlines it. */
+function timelineOn(opts) {
+  if (opts && opts.env) return String(opts.env.EXPO_PUBLIC_LYLO_CODE_TIMELINE || '').trim() === '1';
+  let v; try { v = process.env.EXPO_PUBLIC_LYLO_CODE_TIMELINE; } catch (e) { v = undefined; }
+  return String(v || '').trim() === '1';
+}
+
+/** Mode 02 frame 0. Never throws; returns null when the car has no freeze frame or does not answer. */
+async function readFreezeFrame(session) {
+  const d = await q(session, '020200', 4000);
+  if (!d || !d.ok) return null;
+  const code = D.decodeFreezeDtc(d.lines);
+  if (!code) return null;
+  const values = {};
+  for (const pid of FREEZE_PIDS) {
+    const r = await q(session, '02' + pid + '00', 3000);
+    if (!r || !r.ok) continue;
+    const v = D.decodeFreezePid(r.lines, pid);
+    if (v !== null) values[D.PID_DEFS[pid].key] = v;
+  }
+  return { code, values };
+}
+
 const LIVE_PIDS = ['42', '05', '0C', '04', '06', '07', '0F', '11', '0D', '2F', '1F'];
 
 /**
  * Full scan. onProgress(stepIndex, totalSteps, message).
  * Returns a plain object safe to JSON.stringify and pass between screens.
  */
-async function runFullScan(session, onProgress) {
+async function runFullScan(session, onProgress, opts) {
+  const timeline = timelineOn(opts);
   const steps = 8;
   let i = 0;
   const step = (msg) => { i++; _log(msg); if (onProgress) onProgress(i, steps, msg); };
@@ -125,6 +151,7 @@ async function runFullScan(session, onProgress) {
   step('Reading stored codes (Mode 03)...');
   const s = await q(session, '03', 6000);
   if (s && s.ok) scan.stored = D.decodeDTCs(s.lines, '03', scan.isCan);
+  if (timeline) scan.freezeFrame = await readFreezeFrame(session); // flag off: key absent, no extra commands
 
   step('Reading pending codes (Mode 07)...');
   const pd = await q(session, '07', 6000);
@@ -161,4 +188,4 @@ async function clearCodes(session) {
   return ok;
 }
 
-module.exports = { initAdapter, runFullScan, clearCodes, setScanLogger, USED_CAR_PIDS, LIVE_PIDS };
+module.exports = { initAdapter, runFullScan, clearCodes, setScanLogger, USED_CAR_PIDS, LIVE_PIDS, FREEZE_PIDS, readFreezeFrame, timelineOn };
