@@ -5,5 +5,6 @@ const TOURS = [
   require('./tours/02-views'),
   require('./tours/03-photo'),
   require('./tours/08-rules'),
+  require('./tours/09-proof'),
 ];
 module.exports = { TOURS };
