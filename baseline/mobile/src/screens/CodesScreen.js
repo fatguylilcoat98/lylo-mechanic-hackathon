@@ -11,7 +11,8 @@ import { C } from '../constants/colors';
 // Hackathon (Oct 26, 2026): renders nothing unless the scan has serverDiagnosis.
 import ServerDiagnosisCard from '../../../../hackathon/mobile-bridge/src/ServerDiagnosisCard';
 import CodesVerdictNote, { NOTE_COLOR } from '../../../../hackathon/mobile-bridge/src/CodesVerdictNote'; // v0.4.1
-import * as SV from '../../../../hackathon/mobile-bridge/src/sessionV2'; // v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2
+import * as SV from '../../../../hackathon/mobile-bridge/src/sessionV2';
+import * as CP from '../../../../hackathon/mobile-bridge/src/clearPolicy'; // v0.7.3 clear policy (same flag) // v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2
 import SimpleResults from '../../../../hackathon/mobile-bridge/src/SimpleResults'; // v0.4.1 redesign
 import { hasServerResult, buildResults, shareText } from '../../../../hackathon/mobile-bridge/src/resultsView';
 import { codesNote } from '../../../../hackathon/mobile-bridge/src/verdictView';
@@ -29,6 +30,7 @@ export default function CodesScreen({ route, navigation }) {
     setClearing(true);
     try {
       const ok = await OBDService.clearCodes();
+      if (SV.on()) { try { const AS = require('@react-native-async-storage/async-storage').default; const k = 'lylo.clearLog'; const prev = JSON.parse((await AS.getItem(k)) || '[]'); prev.push({ ...CP.clearRecord(scan, 'After a repair, to confirm the fix'), accepted: !!ok }); await AS.setItem(k, JSON.stringify(prev.slice(-50))); } catch (e) {} } // v0.7.3 before/when/why, append-only
       if (SV.on()) { // v0.7.3: honest result = rescan right away and show what is still there
         Alert.alert(ok ? 'Clear command accepted' : 'Car did not confirm', (ok ? 'Clearing does not fix the fault. ' : 'The car did not acknowledge the clear. ') + 'LYLO will now rescan and show what is still there, including permanent codes.',
           [{ text: 'Rescan now', onPress: () => navigation.replace('Scan', { mode: 'codes', afterClear: true }) }]);
@@ -47,6 +49,18 @@ export default function CodesScreen({ route, navigation }) {
   const confirmClear = () => {
     if (isDemo) { Alert.alert('Demo mode', 'Clearing codes only works when connected to a real car.'); return; }
     if (!OBDService.connected) { Alert.alert('Not connected', 'Connect to your adapter first.'); return; }
+    if (SV.on()) { // v0.7.3: blocked on safety codes; two explicit confirms; readiness + not-a-fix warning
+      const off = CP.canOffer(scan);
+      if (!off.ok) { Alert.alert('Clearing not offered', off.reason); return; }
+      Alert.alert(CP.WARNING.title, CP.WARNING.body, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: CP.WARNING.confirm, style: 'destructive', onPress: () => Alert.alert(CP.WARNING.final.title, CP.WARNING.final.body, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: CP.WARNING.final.confirm, style: 'destructive', onPress: doClear },
+        ]) },
+      ]);
+      return;
+    }
     Alert.alert(
       'Clear codes? Read this first',
       'Clearing does NOT fix anything.\n\n' +
@@ -70,7 +84,7 @@ export default function CodesScreen({ route, navigation }) {
 
   if (hasServerResult(scan)) { // v0.4.1: server answered -> the one-verdict results screen
     const opts = { codes: results, screen: 'codes' };
-    return <SimpleResults scan={scan} {...opts} navigation={navigation} onScanAnother={SV.on() ? async () => { SV.resetActive(); try { await OBDService.disconnect(); } catch (e) {} navigation.replace('Connect'); } : undefined} footer={<><Button title="Share report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Clear codes (after a repair)" kind="danger" busy={clearing} onPress={confirmClear} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
+    return <SimpleResults scan={scan} {...opts} navigation={navigation} onScanAnother={SV.on() ? async () => { SV.resetActive(); try { await OBDService.disconnect(); } catch (e) {} navigation.replace('Connect'); } : undefined} footer={<><Button title="Share report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} />{SV.on() && !CP.canOffer(scan).ok ? null : <Button title="Clear codes (after a repair)" kind="danger" busy={clearing} onPress={confirmClear} />}<Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
   }
   return (
     <ScrollView style={u.screen} contentContainerStyle={u.scroll}>
@@ -102,7 +116,7 @@ export default function CodesScreen({ route, navigation }) {
 
       <Button title="Used-Car Check view" kind="secondary" onPress={() => navigation.navigate('UsedCar', { scan })} />
       <Button title="Share report" onPress={() => Share.share({ message: buildReport(scan) })} />
-      <Button title="Clear codes (after a repair)" kind="danger" busy={clearing} onPress={confirmClear} />
+      {SV.on() && !CP.canOffer(scan).ok ? null : <Button title="Clear codes (after a repair)" kind="danger" busy={clearing} onPress={confirmClear} />}
       <Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} />
     </ScrollView>
   );

@@ -13,7 +13,7 @@ function on(env) {
   let v;
   if (env) v = env.EXPO_PUBLIC_LYLO_SESSION_V2;
   else { try { v = process.env.EXPO_PUBLIC_LYLO_SESSION_V2; } catch (e) { v = undefined; } }
-  return String(v || '').trim() === '1';
+  return String(v === undefined || v === null ? '' : v) === '1'; // exact '1' only (Vera C1 pattern)
 }
 
 let active = null; // { id, startedAt, adapterId }

@@ -94,9 +94,9 @@ function timelineOn(opts) {
 
 /** v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2=1 (literal access so Expo inlines it). */
 function sessionOn(opts) {
-  if (opts && opts.env) return String(opts.env.EXPO_PUBLIC_LYLO_SESSION_V2 || '').trim() === '1';
+  if (opts && opts.env) return opts.env.EXPO_PUBLIC_LYLO_SESSION_V2 === '1';
   let v; try { v = process.env.EXPO_PUBLIC_LYLO_SESSION_V2; } catch (e) { v = undefined; }
-  return String(v || '').trim() === '1';
+  return v === '1';
 }
 
 /** Mode 02 frame 0. Never throws; returns null when the car has no freeze frame or does not answer. */
