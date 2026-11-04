@@ -216,7 +216,7 @@ const s = StyleSheet.create({
   tTxt: { color: '#d8e2ec', fontSize: 17, fontWeight: '600' }, tTxtOn: { color: BG, fontWeight: '800' },
   verdict: { borderRadius: 20, padding: 24, marginBottom: 16 }, vT: { fontSize: 34, fontWeight: '900', color: '#0a0c0f' }, vW: { fontSize: 19, marginTop: 10, color: '#0a0c0f' },
   card: { backgroundColor: CARD, borderRadius: 14, padding: 14, marginBottom: 10 }, cardT: { color: TXT, fontSize: 18, fontWeight: '800', marginBottom: 6 },
-  row: { flexDirection: 'row', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#232b36' }, rk: { color: DIM, fontSize: 14, flex: 1 }, rv: { color: TXT, fontSize: 14, fontWeight: '700', fontFamily: 'monospace' },
+  row: { flexDirection: 'row', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#232b36' }, rk: { color: DIM, fontSize: 14, flex: 1, paddingRight: 8 }, rv: { color: TXT, fontSize: 14, fontWeight: '700', fontFamily: 'monospace', flex: 1.4, flexShrink: 1, textAlign: 'right' },
   link: { minHeight: 48, justifyContent: 'center' }, linkT: { color: Y, fontSize: 17, fontWeight: '800' },
   draw: { backgroundColor: '#1b2330', borderRadius: 16, padding: 16, marginVertical: 12, alignItems: 'center' },
   dash: { alignSelf: 'stretch', height: 40, backgroundColor: '#3a4656', borderRadius: 10, justifyContent: 'center', alignItems: 'center' },

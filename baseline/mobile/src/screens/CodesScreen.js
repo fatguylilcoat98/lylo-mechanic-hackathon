@@ -32,7 +32,7 @@ export default function CodesScreen({ route, navigation }) {
       const ok = await OBDService.clearCodes();
       if (SV.on()) { try { const AS = require('@react-native-async-storage/async-storage').default; const k = 'lylo.clearLog'; const prev = JSON.parse((await AS.getItem(k)) || '[]'); prev.push({ ...CP.clearRecord(scan, 'After a repair, to confirm the fix'), accepted: !!ok }); await AS.setItem(k, JSON.stringify(prev.slice(-50))); } catch (e) {} } // v0.7.3 before/when/why, append-only
       if (SV.on()) { // v0.7.3: honest result = rescan right away and show what is still there
-        Alert.alert(ok ? 'Clear command accepted' : 'Car did not confirm', (ok ? 'Clearing does not fix the fault. ' : 'The car did not acknowledge the clear. ') + 'LYLO will now rescan and show what is still there, including permanent codes.',
+        Alert.alert(ok ? 'Clear command accepted' : 'Car did not confirm', (ok ? 'Clearing does not fix the fault. ' : 'The car did not acknowledge the clear. Most cars only clear with the engine OFF and the key ON (dash lights on, engine not started). Try again that way. ') + 'LYLO will now rescan and show what is still there, including permanent codes.',
           [{ text: 'Rescan now', onPress: () => navigation.replace('Scan', { mode: 'codes', afterClear: true }) }]);
         return;
       }
