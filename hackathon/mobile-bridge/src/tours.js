@@ -3,5 +3,6 @@
 const TOURS = [
   require('./tours/01-scanclear'),
   require('./tours/02-views'),
+  require('./tours/03-photo'),
 ];
 module.exports = { TOURS };
