@@ -107,6 +107,7 @@ export default function HomeV3({ route, navigation, vmOn, vm, setMode, device, s
   const go = (r, p) => navigation.navigate(r, p);
   const noAdapterGo = () => (noAdapter ? go('NoAdapter') : go('Lookup'));
   const checkCar = () => {
+    if (device) return go('Scan', { mode: 'codes' });
     if (vmOn && vm === 'simple') return go('Guide');
     if (device) return go('Scan', { mode: 'codes' });
     return hero ? noAdapterGo() : go('Connect');

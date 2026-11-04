@@ -40,7 +40,7 @@ test('simple guide: sensor question, then one step per screen; port help has the
   expect(ui.getByTestId('vm-step-where')).toBeTruthy(); expect(ui.getByTestId('vm-port-drawing')).toBeTruthy();
   expect(ui.getByText("Can't find it?")).toBeTruthy(); expect(ui.getByText(/from 1996 on/)).toBeTruthy();
   for (const id of ['off', 'plug', 'key', 'light', 'pair']) { fireEvent.press(ui.getByTestId('vm-next')); expect(ui.getByTestId('vm-step-' + id)).toBeTruthy(); }
-  fireEvent.press(ui.getByTestId('vm-go')); expect(n.navigate).toHaveBeenCalledWith('Connect', undefined);
+  fireEvent.press(ui.getByTestId('vm-go')); expect(n.navigate).toHaveBeenCalledWith('Connect', { then: 'scan' }) // v0.7.5: guide -> Connect -> Scan;
 });
 
 test('simple guide without a sensor walks dash photo, problem photo, describe, code (existing screens)', async () => {

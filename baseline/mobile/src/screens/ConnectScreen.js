@@ -8,7 +8,7 @@ import OBDService from '../services/OBDService';
 import { Button, Card, Badge, Bullet, u } from '../components/ui';
 import { C } from '../constants/colors';
 
-export default function ConnectScreen({ navigation }) {
+export default function ConnectScreen({ navigation, route }) {
   const [devices, setDevices] = useState([]);
   const [scanning, setScanning] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -50,7 +50,8 @@ export default function ConnectScreen({ navigation }) {
     setConnectingKey(d.key);
     try {
       await OBDService.connect(d);
-      navigation.navigate('Home');
+      // v0.7.5 (hackathon): opened from the Simple guide -> straight to the scan, not back Home
+      if (route && route.params && route.params.then === 'scan') navigation.navigate('Scan', { mode: 'codes' }); else navigation.navigate('Home');
     } catch (e) {
       BT.log('connect failed: ' + (e.message || e));
       let msg = e.message || String(e);

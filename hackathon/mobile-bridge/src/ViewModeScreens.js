@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as VM from './viewModes';
+import OBDService from '../../../baseline/mobile/src/services/OBDService';
 
 const BG = '#0a0c0f'; const Y = '#f5c518'; const TXT = '#ffffff'; const DIM = '#b8c4d0'; const CARD = '#161c25';
 const TONE = { green: '#00c87a', yellow: '#f5c518', orange: '#ff8a1f', red: '#e5383b' };
@@ -82,6 +83,16 @@ export function SimpleGuide({ navigation }) {
   const [path, setPath] = useState(null); // 'sensor' | 'nosensor'
   const [i, setI] = useState(0);
   const go = (r, p) => navigation && navigation.navigate(r, p);
+  if (!path && OBDService.connected) {
+    // Already paired: go straight to a scan instead of restarting the plug-in steps.
+    return (
+      <View testID="vm-connected">
+        <Text style={s.h1}>Your sensor is connected</Text>
+        <BigChoice testID="vm-scan-now" title="Scan my car now" onPress={() => go('Scan', { mode: 'codes' })} />
+        <BigChoice testID="vm-sensor-yes" title="Connect a different sensor" onPress={() => { setPath('sensor'); setI(0); }} />
+      </View>
+    );
+  }
   if (!path) {
     return (
       <View testID="vm-sensor-q">

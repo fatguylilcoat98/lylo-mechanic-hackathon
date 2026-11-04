@@ -163,7 +163,9 @@ export function SimpleHomeV3({ navigation, storage, env, setupOn }) {
 
 export function MechanicHomeV3({ navigation, storage, env }) {
   const go = (r, p) => navigation && navigation.navigate(r, p);
-  const connected = !!OBDService.connected;
+  const [, bump] = useState(0);
+  useEffect(() => (navigation && navigation.addListener ? navigation.addListener('focus', () => bump((n) => n + 1)) : undefined), [navigation]);
+  const connected = !!OBDService.connected; // re-read on every focus (was stale after returning from Connect)
   const scan = (mode) => (connected ? go('Scan', { mode }) : go('Connect'));
   const crashOn = cgFeatures(env).on; const colOn = colFeatures(env).on;
   const demo = DEMO_SCANS.checkengine;

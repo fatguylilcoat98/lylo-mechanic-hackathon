@@ -49,7 +49,7 @@ const SENSOR_STEPS = [
   { id: 'plug', title: 'Push the sensor in', body: 'Push the sensor into the port firmly. It only fits one way, so turn it over if it does not slide in.' },
   { id: 'key', title: 'Turn the key to ON', body: 'Turn the key to ON (the dash lights come on), or start the engine.' },
   { id: 'light', title: 'Wait for the light', body: 'Wait until the light on the sensor comes on. That means it has power.' },
-  { id: 'pair', title: 'Pair the sensor', body: 'Your phone will look for the sensor over Bluetooth. Keep the key ON and stay near the car.', go: 'Connect', goLabel: 'Pair and scan' },
+  { id: 'pair', title: 'Pair the sensor', body: 'Your phone will look for the sensor over Bluetooth. Keep the key ON and stay near the car.', go: 'Connect', params: { then: 'scan' }, goLabel: 'Pair and scan' },
 ];
 
 // No sensor: reuses the existing No-adapter screen (snap the dash, describe, type a code) and Photo Helper.
