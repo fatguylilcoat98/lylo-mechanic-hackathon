@@ -101,7 +101,7 @@ export function TabBar({ navigation, active, onHome, onMore }) {
 /** props from HomeV2: navigation, vm ('simple'|'mechanic'|null when the view flag is off), setMode,
  * device, setDevice, hero, noAdapter, demoOn, crashOn, colOn, setupOn
  */
-export default function HomeV3({ route, navigation, vmOn, vm, setMode, device, setDevice, hero, noAdapter, demoOn, crashOn, colOn, setupOn }) {
+export default function HomeV3({ route, navigation, vmOn, vm, setMode, device, setDevice, hero, noAdapter, demoOn, crashOn, colOn, setupOn, tourOn }) {
   const [more, setMore] = useState(!!(route && route.params && route.params.more));
   useEffect(() => { if (route && route.params && route.params.more) setMore(true); }, [route && route.params && route.params.more]);
   const go = (r, p) => navigation.navigate(r, p);
@@ -135,8 +135,8 @@ export default function HomeV3({ route, navigation, vmOn, vm, setMode, device, s
           <Card testID="primary-action" icon="engine-outline" tint={C.cyan} title="Check My Car" sub="Scan, read codes, and get a clear answer" onPress={checkCar} />
           {crashOn ? <Card testID="card-crash" icon="shield-car" tint={C.orange} title="Crash Guard" sub="Monitor this drive for a crash or false alarm" onPress={() => go('CrashGuard')} /> : null}
           {colOn ? <Card testID="card-collision" icon="car-multiple" tint={C.purple} title="I Was in a Collision" sub="Step-by-step checklist, photos, and a summary" onPress={() => go('Collision')} /> : null}
-          <Card testID="card-demo" icon="play-box-outline" tint={C.green} title="Try a Demo" sub="See how it works (no car needed)"
-            onPress={() => (demoOn ? go('Demo') : go('Codes', { scan: DEMO_SCANS.checkengine }))} />
+          <Card testID="card-demo" icon="play-box-outline" tint={C.green} title="Try a Demo" sub={tourOn ? '11 short guided tours (no car needed)' : 'See how it works (no car needed)'}
+            onPress={() => (tourOn ? go('Tours') : demoOn ? go('Demo') : go('Codes', { scan: DEMO_SCANS.checkengine }))} />
         </View>
         {crashOn ? <Text style={st.note}>{CRASH_NOTE}</Text> : null}
 

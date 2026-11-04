@@ -131,7 +131,7 @@ export function SimpleHomeV3({ navigation, storage, env, setupOn }) {
             <Text style={x.tTitle}>New to LYLO?</Text>
             <Text style={x.tSub}>See a demo scan, clearly marked as a replay.</Text>
             <View style={{ flexDirection: 'row', marginTop: 8 }}>
-              <Pressable testID="tour-go" onPress={() => go('Demo')} accessibilityRole="button" accessibilityLabel="Show me around" style={x.btnBlue}><Text style={x.btnT}>Show me around</Text></Pressable>
+              <Pressable testID="tour-go" onPress={() => go(require('../tours/common').tourOn(env) ? 'Tours' : 'Demo')} accessibilityRole="button" accessibilityLabel="Show me around" style={x.btnBlue}><Text style={x.btnT}>Show me around</Text></Pressable>
               <Pressable testID="tour-no" onPress={() => setTour(false)} accessibilityRole="button" accessibilityLabel="No thanks" style={x.btnDark}><Text style={x.btnT}>No thanks</Text></Pressable>
             </View>
           </View>

@@ -50,6 +50,7 @@ function HomeScreenV1({ navigation }) {
       {demoOn ? (
         <Card title="No car? No adapter?">
           <Button title="Try a demo scan" onPress={() => navigation.navigate('Demo')} />
+          {process.env.EXPO_PUBLIC_LYLO_TOUR === '1' ? <Button title="Try a demo (guided tours)" kind="secondary" onPress={() => navigation.navigate('Tours')} /> : null}
         </Card>
       ) : null}
 

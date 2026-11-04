@@ -1,0 +1,6 @@
+/* v0.7.6 guided tours registry (flag EXPO_PUBLIC_LYLO_TOUR=1). Build order: 1, 2, 3, 8, 9, then the rest. */
+'use strict';
+const TOURS = [
+  require('./tours/01-scanclear'),
+];
+module.exports = { TOURS };

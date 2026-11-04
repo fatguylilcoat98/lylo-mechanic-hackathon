@@ -30,6 +30,7 @@ function Link({ title, onPress }) {
   );
 }
 
+const TOURS_ON = (env) => require('../tours/common').tourOn(env); // v0.7.6 EXPO_PUBLIC_LYLO_TOUR=1
 let vmStorage = null;
 try { vmStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { vmStorage = null; }
 
@@ -57,7 +58,7 @@ export default function HomeV2({ route, navigation, noAdapterOn, demoOn: demoOnP
     // v3 toggle only switches the mode (saved to the same key); the Check My Car card opens the guide in Simple.
     const setMode = (m) => { setVm(m); VM.saveViewMode(vmStore, m); if (navigation) navigation.navigate(m === 'simple' ? 'SimpleHome' : 'MechanicHome'); };
     return <HomeV3 route={route} navigation={navigation} vmOn={vmOn} vm={vm} setMode={setMode} device={device} setDevice={setDevice} hero={hero}
-      noAdapter={noAdapter} demoOn={demoOn} crashOn={crashOn} colOn={colOn} setupOn={setupOn} />;
+      noAdapter={noAdapter} demoOn={demoOn} crashOn={crashOn} colOn={colOn} setupOn={setupOn} tourOn={TOURS_ON(env)} />;
   }
   return (
     <ScrollView style={st.screen} contentContainerStyle={st.scroll}>
