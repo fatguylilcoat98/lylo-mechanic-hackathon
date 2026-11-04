@@ -10,7 +10,7 @@ module.exports = {
       deep: 'The pinned verdict is computed once (rules level, raised by any code or unfinished self-test); both views render under it.' },
     { t: 'Simple view', say: 'It tells you what is wrong, how worried to be, and what to do next, worst problem first.',
       deep: 'Codes sorted by severity (library urgency color), plain names, one next step each.' },
-    { t: 'Mechanic view', say: 'It shows the raw codes, live sensor numbers, and the snapshot the car saved when the light came on.',
+    { live: 'repair', t: 'Mechanic view', say: 'It shows the raw codes, live sensor numbers, and the snapshot the car saved when the light came on.',
       deep: 'DTCs with status (stored/pending/permanent), readiness monitors, PIDs (RPM 690, coolant 195 °F, LTFT +18.0 %, STFT +6.3 %, module 14.3 V), freeze frame.' },
     { t: 'Switch any time', say: 'Tap the switch at the top of Home to change views. The answer does not change.', deep: 'Saved on the phone under lylo.viewMode.' },
   ],

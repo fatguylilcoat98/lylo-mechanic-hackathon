@@ -12,6 +12,7 @@ import ServerDiagnosisCard from '../../../../hackathon/mobile-bridge/src/ServerD
 import * as SV from '../../../../hackathon/mobile-bridge/src/sessionV2'; // v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2
 import OBDService from '../services/OBDService';
 import SimpleResults from '../../../../hackathon/mobile-bridge/src/SimpleResults'; // v0.4.1 redesign
+const DNC = require('../../../../hackathon/mobile-bridge/src/demoNoConnect'); // v0.7.8
 import { hasServerResult, buildResults, shareText } from '../../../../hackathon/mobile-bridge/src/resultsView';
 import { analyzeCodes } from '../engine/diagnose';
 import { reconcileVerdict } from '../../../../hackathon/mobile-bridge/src/verdictView'; // v0.4.1: one consistent verdict
@@ -26,7 +27,7 @@ export default function UsedCarScreen({ route, navigation }) {
   const c = a.counters;
   if (hasServerResult(scan)) { // v0.4.1: server answered -> the one-verdict results screen
     const opts = { codes: analyzeCodes(scan), screen: 'usedcar', baselineCleared: a.recentlyCleared };
-    return <SimpleResults scan={scan} {...opts} navigation={navigation} onScanAnother={SV.on() ? async () => { SV.resetActive(); try { await OBDService.disconnect(); } catch (e) {} navigation.replace('Connect'); } : undefined} footer={<><Button title="Share this report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
+    return <SimpleResults scan={scan} {...opts} navigation={navigation} onScanAnother={SV.on() && !DNC.hideAdapterActions(scan) ? async () => { SV.resetActive(); try { await OBDService.disconnect(); } catch (e) {} navigation.replace('Connect'); } : undefined} footer={<><Button title="Share this report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} /><Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
   }
 
   return (

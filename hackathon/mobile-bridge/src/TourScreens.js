@@ -9,6 +9,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Headline } from './DemoScreenOne';
 const { TOURS } = require('./tours');
 const T = require('./tours/common');
+const DNC = require('./demoNoConnect'); // v0.7.8
+import * as W from './TourWow'; // v0.7.8 EXPO_PUBLIC_LYLO_TOUR_WOW
 
 const Y = '#f5c518';
 
@@ -27,7 +29,7 @@ export function TourListScreen({ navigation }) {
   );
 }
 
-export function TourBody({ tour, navigation }) {
+export function TourBody({ tour, navigation, env }) {
   const [part, setPart] = useState(0);
   const [i, setI] = useState(0);
   const [deep, setDeep] = useState(false);
@@ -38,11 +40,30 @@ export function TourBody({ tour, navigation }) {
   const st = steps[Math.min(i, steps.length - 1)];
   const go = (r, prm) => navigation && navigation.navigate(r, prm);
   const nextPart = tour.parts && part < tour.parts.length - 1;
+  const wow = W.wowOn(env);
+  const facts = wow ? W.factsOf(p.scan ? p : tour) : null;
   return (
     <View>
       <Headline level={v.level} car={p.car} sub={p.sub} />
       {tour.parts ? <Text style={s.small} testID="tour-part">{`Part ${part + 1} of ${tour.parts.length}`}</Text> : null}
       {!done ? (
+        wow ? (<>
+        <W.ProgressBar i={i + 1} n={steps.length} />
+        <W.GlowCard level={v.level} stepKey={part + '-' + i} testID={'tour-step-' + (i + 1)}>
+          <Text style={s.small} testID="tour-stepno">{`Step ${i + 1} of ${steps.length}`}</Text>
+          <Text style={[s.cardT, { fontSize: 26 }]}>{st.t}</Text>
+          <Text style={s.say}>{st.say}</Text>
+          <W.CodeChips key={'chips-' + part} codes={facts.codes} hot={W.codesInStep(facts, st)} stepKey={part + '-' + i} />
+          {facts.cleared && i === steps.length - 1 ? <W.ClearedFlash /> : null}
+          {st.live === 'repair' ? <W.LiveRepair tour={p.scan ? p : tour} /> : null}
+          <Pressable testID="tour-more" onPress={() => setDeep(!deep)} accessibilityRole="button"><Text style={s.link}>{deep ? 'Less detail' : 'More detail (mechanic)'}</Text></Pressable>
+          {deep ? <Text style={s.deep} testID="tour-deep">{st.deep}</Text> : null}
+          <View style={s.nav}>
+            {i > 0 ? <Pressable testID="tour-back" style={s.btnDark} onPress={() => setI(i - 1)}><Text style={s.btnT}>Back</Text></Pressable> : null}
+            <Pressable testID="tour-next" style={s.btn} onPress={() => setI(i + 1)}><Text style={s.btnTD}>{i === steps.length - 1 ? 'Finish' : 'Next'}</Text></Pressable>
+          </View>
+        </W.GlowCard>
+        </>) :
         <View style={s.card} testID={'tour-step-' + (i + 1)}>
           <Text style={s.small} testID="tour-stepno">{`Step ${i + 1} of ${steps.length}`}</Text>
           <Text style={s.cardT}>{st.t}</Text>
@@ -55,28 +76,37 @@ export function TourBody({ tour, navigation }) {
           </View>
         </View>
       ) : (
+        <View>
+        {wow ? <W.VerdictSweep level={v.level} /> : null}
+        {wow && !nextPart ? <W.Payoff v={v} facts={facts} /> : null}
         <View style={s.card} testID="tour-done">
           {nextPart ? (
             <Pressable testID="tour-next-part" style={s.btn} onPress={() => { setPart(part + 1); setI(0); setDeep(false); }}><Text style={s.btnTD}>{`Go to part ${part + 2}`}</Text></Pressable>
           ) : (
             <>
+              {DNC.tryIt(tour, env) ? (<>
               <Text style={s.cardT}>Try it yourself</Text>
               <Pressable testID="tour-try" style={s.btn} onPress={() => go(tour.tryIt.route, tour.tryIt.params)}><Text style={s.btnTD}>{tour.tryIt.label}</Text></Pressable>
+              </>) : (<>
+              <Text style={s.cardT} testID="tour-demo-note">{DNC.NOTE}</Text>
+              <Pressable testID="tour-more" style={s.btn} onPress={() => go('Tours')}><Text style={s.btnTD}>More tours</Text></Pressable>
+              </>)}
             </>
           )}
           <Pressable testID="tour-restart" onPress={() => { setPart(0); setI(0); }}><Text style={s.link}>Start this tour again</Text></Pressable>
+        </View>
         </View>
       )}
     </View>
   );
 }
 
-export function TourScreen({ route, navigation }) {
+export function TourScreen({ route, navigation, env }) {
   const id = route && route.params && route.params.id;
   const tour = TOURS.find((t) => t.id === id);
   return (
     <ScrollView style={s.screen} contentContainerStyle={s.scroll}>
-      {tour ? <TourBody key={tour.id} tour={tour} navigation={navigation} /> : <Text style={s.p}>That tour was not found.</Text>}
+      {tour ? <TourBody key={tour.id} tour={tour} navigation={navigation} env={env} /> : <Text style={s.p}>That tour was not found.</Text>}
       <Pressable testID="tour-all" onPress={() => navigation && navigation.navigate('Tours')}><Text style={s.link}>‹ All tours</Text></Pressable>
     </ScrollView>
   );

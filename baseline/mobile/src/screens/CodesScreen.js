@@ -15,6 +15,7 @@ import CodesVerdictNote, { NOTE_COLOR } from '../../../../hackathon/mobile-bridg
 import * as SV from '../../../../hackathon/mobile-bridge/src/sessionV2';
 import * as CP from '../../../../hackathon/mobile-bridge/src/clearPolicy'; // v0.7.3 clear policy (same flag) // v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2
 import SimpleResults from '../../../../hackathon/mobile-bridge/src/SimpleResults'; // v0.4.1 redesign
+const DNC = require('../../../../hackathon/mobile-bridge/src/demoNoConnect'); // v0.7.8
 import { hasServerResult, buildResults, shareText } from '../../../../hackathon/mobile-bridge/src/resultsView';
 import { codesNote } from '../../../../hackathon/mobile-bridge/src/verdictView';
 
@@ -85,7 +86,7 @@ export default function CodesScreen({ route, navigation }) {
 
   if (hasServerResult(scan)) { // v0.4.1: server answered -> the one-verdict results screen
     const opts = { codes: results, screen: 'codes' };
-    return <SimpleResults scan={scan} {...opts} navigation={navigation} onScanAnother={SV.on() ? async () => { SV.resetActive(); try { await OBDService.disconnect(); } catch (e) {} navigation.replace('Connect'); } : undefined} footer={<><Button title="Share report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} />{SV.on() && !CP.canOffer(scan).ok ? null : <Button title="Clear codes (after a repair)" kind="danger" busy={clearing} onPress={confirmClear} />}<Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
+    return <SimpleResults scan={scan} {...opts} navigation={navigation} onScanAnother={SV.on() && !DNC.hideAdapterActions(scan) ? async () => { SV.resetActive(); try { await OBDService.disconnect(); } catch (e) {} navigation.replace('Connect'); } : undefined} footer={<><Button title="Share report" onPress={() => Share.share({ message: shareText(buildResults(scan, opts)) })} />{DNC.hideAdapterActions(scan) || (SV.on() && !CP.canOffer(scan).ok) ? null : <Button title="Clear codes (after a repair)" kind="danger" busy={clearing} onPress={confirmClear} />}<Button title="Home" kind="secondary" onPress={() => navigation.popToTop()} /></>} />;
   }
   return (
     <ScrollView style={u.screen} contentContainerStyle={u.scroll}>
