@@ -91,5 +91,10 @@ test('Vera C1: ANY B, C or U code blocks clearing (manufacturer-specific too); P
     const r = CP.canOffer({ stored: [code, 'P04E0'] }); assert.strictEqual(r.ok, false, code); assert.match(r.reason, new RegExp(code));
   }
   assert.strictEqual(CP.canOffer({ stored: ['P04E0'], pending: ['P04E0'], permanent: ['P04E0'] }).ok, true);
+test('item 6: P04E0 main code card uses the SAE meaning, not "not in library"', () => {
+  const d = require('../../../baseline/mobile/src/engine/diagnose');
+  const r = d.analyzeCodes({ stored: ['P04E0'] })[0];
+  assert.strictEqual(r.known, true); assert.match(r.title, /Purge Control Valve "A" Stuck Closed/);
+  assert.doesNotMatch(JSON.stringify(r), /not in LYLO's library/);
   assert.strictEqual(CP.classify('P04E0').level, 'emissions');
 });

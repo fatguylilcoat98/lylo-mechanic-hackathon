@@ -26,7 +26,7 @@ export function Fold({ title, testID, children, initiallyOpen = false }) {
   return (
     <View style={x.fold}>
       <Pressable testID={testID} onPress={() => setOpen(!open)} accessibilityRole="button" accessibilityState={{ expanded: open }} style={x.foldBtn}>
-        <Text style={x.foldT}>{(open ? 'Hide ' : 'Show ') + title}</Text><Text style={x.foldT}>{open ? '\u25B2' : '\u25BC'}</Text>
+        <Text style={x.foldT}>{(open ? 'Hide ' : 'Show ') + title}</Text><Icon name={open ? 'chevron-up' : 'chevron-down'} size={22} color={C.blue} />
       </Pressable>
       {open ? <View testID={testID + '-body'}>{children}</View> : null}
     </View>
@@ -35,16 +35,16 @@ export function Fold({ title, testID, children, initiallyOpen = false }) {
 
 
 /** Big glowing tile (mockup style). Wide = full row. */
-export function Tile({ testID, icon, tint, title, sub, onPress, wide, art }) {
+export function Tile({ testID, icon, tint, title, sub, onPress, wide, art, soon, compact }) {
   return (
-    <Pressable testID={testID} onPress={onPress} accessibilityRole="button" accessibilityLabel={title + '. ' + sub}
-      style={({ pressed }) => [x.tile, wide ? x.wide : x.half, { borderColor: tint, shadowColor: tint, backgroundColor: tint + '1F' }, pressed && { opacity: 0.8 }]}>
+    <Pressable testID={testID} onPress={soon ? undefined : onPress} disabled={!!soon} accessibilityRole="button" accessibilityState={{ disabled: !!soon }} accessibilityLabel={title + '. ' + (soon ? 'Coming soon' : sub)}
+      style={({ pressed }) => [x.tile, wide ? x.wide : x.half, compact && x.compact, { borderColor: tint, shadowColor: tint, backgroundColor: tint + '1F' }, soon && x.soon, pressed && { opacity: 0.8 }]}>
       <View style={x.tIcon}><Icon name={icon} size={wide ? 44 : 34} color={tint} /></View>
       <View style={{ flex: 1 }}>
         <Text style={x.tTitle}>{title}</Text>
-        <Text style={x.tSub}>{sub}</Text>
+        <Text style={x.tSub}>{soon ? 'Coming soon' : sub}</Text>
       </View>
-      {art ? <View style={x.art}><Icon name={art} size={40} color={tint} /></View> : <Icon name="chevron-right" size={22} color={C.dim} />}
+      {soon ? null : art ? <View style={x.art}><Icon name={art} size={40} color={tint} /></View> : <Icon name="chevron-right" size={22} color={C.dim} />}
     </Pressable>
   );
 }
@@ -98,7 +98,7 @@ function Shell({ navigation, mode, storage, testID, children }) {
 
 function Title({ a, b, sub, bullets, tick }) {
   return (
-    <View style={{ marginBottom: 12 }}>
+    <View style={{ marginBottom: 8 }}>
       <Text style={x.h1}>{a + ' '}<Text style={{ color: C.cyan }}>{b}</Text></Text>
       <Text style={x.sub}>{sub}</Text>
       {bullets.map((t) => (
@@ -117,6 +117,13 @@ export function SimpleHomeV3({ navigation, storage, env, setupOn }) {
     <Shell navigation={navigation} mode="simple" storage={storage} testID="simple-v3">
       <Title a="Simple" b="View" sub="Car help made easy." tick={C.blue}
         bullets={["Find what's wrong", 'Get clear next steps', 'Use photos or an adapter']} />
+      {crashOn || colOn ? (
+        <View style={x.grid} testID="simple-safety">
+          {crashOn ? <Tile compact testID="mode-crash" icon="shield-car" tint={C.orange} title="Crash Guard" sub="Watch this drive for a crash" onPress={() => go('CrashGuard')} /> : null}
+          {colOn ? <Tile compact testID="mode-collision" icon="car-multiple" tint={C.red || '#FF5A52'} title="I Was in a Collision" sub="Checklist, photos, summary" onPress={() => go('Collision')} /> : null}
+        </View>
+      ) : null}
+      {crashOn ? <Text style={st.note} testID="crash-note">{CRASH_NOTE}</Text> : null}
       {tour ? (
         <View style={x.banner} testID="tour-banner">
           <Icon name="map-marker-path" size={30} color={C.cyan} />
@@ -134,11 +141,9 @@ export function SimpleHomeV3({ navigation, storage, env, setupOn }) {
         <Tile wide testID="simple-check" icon="engine-outline" art="connection" tint={C.cyan} title="Check My Car" sub="Step by step: scan with an OBD adapter, or describe the problem" onPress={() => go('Guide')} />
         <Tile testID="simple-photo" icon="camera-outline" tint={C.blue} title="Take a Photo" sub="Snap your dashboard lights" onPress={() => go('NoAdapter', { start: 'dash' })} />
         <Tile testID="simple-say" icon="microphone-outline" tint={C.purple} title={"Say What's Happening"} sub="In your own words (voice or text)" onPress={() => go('NoAdapter', { start: 'describe' })} />
-        {colOn ? <Tile testID="mode-collision" icon="car-multiple" tint={C.orange} title="I Was in a Collision" sub="Step-by-step checklist, photos, and summary" onPress={() => go('Collision')} /> : null}
         <Tile testID="simple-part" icon="car-cog" tint={C.green} title="Find a Part" sub="Use a photo to find a part" onPress={() => go('PhotoHelper')} />
-        {crashOn ? <Tile wide testID="mode-crash" icon="shield-car" tint={C.orange} title="Crash Guard" sub="Monitor this drive for a crash or false alarm" onPress={() => go('CrashGuard')} /> : null}
+        <Tile testID="simple-history" icon="history" tint={C.dim} title="History" sub="" soon />
       </View>
-      {crashOn ? <Text style={st.note}>{CRASH_NOTE}</Text> : null}
       <View style={x.row4}>
         <Small testID="simple-mycar" icon="book-open-outline" title="My Car" sub="Your car's VIN" onPress={() => go('Vin')} />
         <Small testID="simple-plug" icon="power-plug-outline" title="Plug Help" sub="Where it plugs in" onPress={() => go('PortHelp')} />
@@ -179,16 +184,18 @@ export function MechanicHomeV3({ navigation, storage, env }) {
       </View>
       {crashOn || colOn ? (
         <View style={x.grid}>
-          {crashOn ? <Tile testID="mode-crash" icon="shield-car" tint={C.orange} title="Crash Guard" sub="Monitor this drive for a crash or false alarm" onPress={() => go('CrashGuard')} /> : null}
-          {colOn ? <Tile testID="mode-collision" icon="car-multiple" tint={C.purple} title="I Was in a Collision" sub="Checklist, photos, and a summary" onPress={() => go('Collision')} /> : null}
+          {crashOn ? <Tile compact testID="mode-crash" icon="shield-car" tint={C.orange} title="Crash Guard" sub="Watch this drive for a crash" onPress={() => go('CrashGuard')} /> : null}
+          {colOn ? <Tile compact testID="mode-collision" icon="car-multiple" tint={C.purple} title="I Was in a Collision" sub="Checklist, photos, and a summary" onPress={() => go('Collision')} /> : null}
         </View>
       ) : null}
-      {crashOn ? <Text style={st.note}>{CRASH_NOTE}</Text> : null}
+      {crashOn ? <Text style={st.note} testID="crash-note">{CRASH_NOTE}</Text> : null}
       <View style={x.grid}>
         <Tile testID="mech-scan" icon="engine-outline" tint={C.cyan} title="Full Scan" sub="Engine codes, freeze frame, and readings" onPress={() => scan('codes')} />
         <Tile testID="mech-diagnosis" icon="clipboard-list-outline" tint={C.purple} title="Diagnosis" sub="Meta AI causes with evidence. Try it on a demo scan" onPress={() => go('Demo')} />
         <Tile testID="mech-used" icon="car-wrench" tint={C.orange} title="Used-Car Check" sub="Clear counters and readiness monitors" onPress={() => scan('usedcar')} />
         <Tile testID="mech-part" icon="cog-outline" tint={C.green} title="Find a Part" sub="Point the camera to find a part" onPress={() => go('PhotoHelper')} />
+        <Tile testID="soon-live" icon="pulse" tint={C.dim} title="Live Data" sub="" soon />
+        <Tile testID="soon-service" icon="wrench-outline" tint={C.dim} title="Service & Repairs" sub="" soon />
       </View>
       <Text style={x.qt}>{'Quick Tools'}</Text>
       <View style={x.row4}>
@@ -210,12 +217,14 @@ export function MechanicHomeV3({ navigation, storage, env }) {
 const x = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center' },
   back: { width: 40, height: 48, justifyContent: 'center' },
-  pillRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: -6, marginBottom: 6 },
+  pillRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: -10, marginBottom: 2 },
+  compact: { minHeight: 64, paddingVertical: 8, marginBottom: 6 },
+  soon: { opacity: 0.45, shadowOpacity: 0, elevation: 0, borderStyle: 'dashed' },
   pill: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: C.blue, borderRadius: 999, paddingHorizontal: 14, minHeight: 44, backgroundColor: 'rgba(46,155,255,0.12)', shadowColor: C.blue, shadowOpacity: 0.7, shadowRadius: 10, elevation: 6 },
   pillT: { color: C.text, fontWeight: '800', fontSize: 15, marginHorizontal: 8 },
-  h1: { color: C.text, fontSize: 38, fontWeight: '900', lineHeight: 44 },
-  sub: { color: C.text, fontSize: 18, lineHeight: 24, marginTop: 2, marginBottom: 6 },
-  bullet: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  h1: { color: C.text, fontSize: 32, fontWeight: '900', lineHeight: 38 },
+  sub: { color: C.text, fontSize: 16, lineHeight: 22, marginTop: 0, marginBottom: 2 },
+  bullet: { flexDirection: 'row', alignItems: 'center', marginTop: 1 },
   bulletT: { color: C.text, fontSize: 15, marginLeft: 8 },
   banner: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: C.blue, borderRadius: 18, padding: 14, marginBottom: 12, backgroundColor: 'rgba(46,155,255,0.10)' },
   obd: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', borderWidth: 1.5, borderColor: '#2E9BFF88', borderRadius: 18, padding: 12, marginBottom: 12, backgroundColor: 'rgba(16,24,36,0.92)' },

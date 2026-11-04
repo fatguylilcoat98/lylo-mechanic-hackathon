@@ -119,17 +119,30 @@ test('toggle and tabs have plain-word labels, no emoji', async () => {
 test('mockup tiles: only real features; missing ones are not shown', async () => {
   const n = { ...nav(), replace: jest.fn() };
   const mech = await mount(<MechanicHomeV3 navigation={n} storage={memStore()} env={SAFE} />);
-  for (const t of ['Live Data', 'Service & Repairs', 'System Tests', 'A/C', 'ABS', 'SRS', 'DPF', 'TPMS', 'History', 'Battery']) expect(mech.queryByText(t)).toBeNull();
+  for (const t of ['System Tests', 'A/C', 'ABS', 'SRS', 'DPF', 'TPMS', 'History', 'Battery']) expect(mech.queryByText(t)).toBeNull();
+  for (const id of ['soon-live', 'soon-service']) { const el = mech.getByTestId(id); expect(el.props.accessibilityState.disabled).toBe(true); const before = n.navigate.mock.calls.length; fireEvent.press(el); expect(n.navigate.mock.calls.length).toBe(before); }
+  expect(mech.getAllByText('Coming soon').length).toBe(2);
   expect(mech.getByText(/Not connected/)).toBeTruthy();
   fireEvent.press(mech.getByTestId('mech-scan')); expect(n.navigate).toHaveBeenLastCalledWith('Connect', undefined);
   fireEvent.press(mech.getByTestId('obd-help')); expect(n.navigate).toHaveBeenLastCalledWith('PortHelp', undefined);
   fireEvent.press(mech.getByTestId('mech-diagnosis')); expect(n.navigate).toHaveBeenLastCalledWith('Demo', undefined);
   fireEvent.press(mech.getByTestId('mech-part')); expect(n.navigate).toHaveBeenLastCalledWith('PhotoHelper', undefined);
   const simp = await mount(<SimpleHomeV3 navigation={n} storage={memStore()} env={SAFE} />);
-  for (const t of ['History', 'Settings']) expect(simp.queryByText(t)).toBeNull();
+  expect(simp.queryByText('Settings')).toBeNull();
+  expect(simp.getByTestId('simple-history').props.accessibilityState.disabled).toBe(true);
   fireEvent.press(simp.getByTestId('simple-say')); expect(n.navigate).toHaveBeenLastCalledWith('NoAdapter', { start: 'describe' });
   fireEvent.press(simp.getByTestId('simple-photo')); expect(n.navigate).toHaveBeenLastCalledWith('NoAdapter', { start: 'dash' });
   fireEvent.press(simp.getByTestId('tour-go')); expect(n.navigate).toHaveBeenLastCalledWith('Demo', undefined);
   fireEvent.press(simp.getByTestId('tour-no')); expect(simp.queryByTestId('tour-banner')).toBeNull();
   expect(simp.queryByTestId('simple-tech-body')).toBeNull();
+});
+
+test('v0.7.4: safety cards and 911 note come before the tour and tool tiles on both screens', async () => {
+  const order = (ui, ids) => { const all = JSON.stringify(ui.toJSON()); return ids.map((id) => all.indexOf('"testID":"' + id + '"')); };
+  const simp = await mount(<SimpleHomeV3 navigation={nav()} storage={memStore()} env={ON} />);
+  const a = order(simp, ['mode-crash', 'mode-collision', 'crash-note', 'tour-banner', 'simple-check']);
+  expect(a.every((i) => i >= 0)).toBe(true); expect([...a].sort((p, q) => p - q)).toEqual(a);
+  const mech = await mount(<MechanicHomeV3 navigation={nav()} storage={memStore()} env={ON} />);
+  const b = order(mech, ['mode-crash', 'crash-note', 'mech-scan']);
+  expect(b.every((i) => i >= 0)).toBe(true); expect([...b].sort((p, q) => p - q)).toEqual(b);
 });
