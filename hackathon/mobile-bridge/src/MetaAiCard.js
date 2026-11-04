@@ -7,12 +7,14 @@ export function metaInfo(scan) {
   const det = (r && r.detective) || {};
   const status = det.muse_status == null ? 'off' : String(det.muse_status);
   const ran = status === 'ok';
-  const timedOut = !ran && /^error/i.test(status); // 'error', 'error: TIMEOUT', ...
+  // server detective.py: "error: <CODE>; deterministic result returned unchanged" (codes from muse.py)
+  const errored = !ran && /^error/i.test(status);
+  const timedOut = errored && /^error:\s*TIMEOUT\b/i.test(status); // muse.py:65 TIMEOUT only
   const rc = det.receipt || {};
   const pv = det.prove || {};
   const pred = det.prediction && det.prediction.text ? det.prediction.text : null;
   return {
-    ran, status, timedOut,
+    ran, status, errored, timedOut,
     model: ran && rc.model ? String(rc.model) : null,
     secs: ran && typeof rc.latency_ms === 'number' ? Math.round(rc.latency_ms / 100) / 10 : null,
     explanation: ran && det.explanation && det.explanation.text ? det.explanation.text : null,
@@ -35,7 +37,9 @@ export default function MetaAiCard({ scan, env }) {
       <View style={s.off} testID="meta-ai-off">
         {i.timedOut
           ? <Text style={s.t} testID="meta-ai-timeout">Meta AI didn't answer in time, so this is the safety rules' answer.</Text>
-          : <Text style={s.t}>Meta AI didn't run on this scan. This answer comes from the safety rules only.</Text>}
+          : i.errored
+            ? <Text style={s.t} testID="meta-ai-error">Meta AI had a problem on this scan, so this is the safety rules' answer.</Text>
+            : <Text style={s.t}>Meta AI didn't run on this scan. This answer comes from the safety rules only.</Text>}
         {i.prediction ? <Text style={s.b}>{`Locked prediction (made by ${i.predictionBy}): ${i.prediction}`}</Text> : null}
       </View>
     );

@@ -142,11 +142,26 @@ test('Meta AI card: muse_status "off" and missing -> "didn\'t run ... safety rul
   }
 });
 
-test('Meta AI card: muse_status "error..." (incl. TIMEOUT) -> "didn\'t answer in time"', () => {
-  for (const st of ['error', 'error: TIMEOUT', 'ERROR_TIMEOUT']) {
+test('Meta AI card: "error: TIMEOUT" (muse.py:65) -> "didn\'t answer in time"', () => {
+  for (const st of ['error: TIMEOUT', 'error: TIMEOUT; deterministic result returned unchanged']) {
     const ui = render(<MetaAiCard scan={metaScan({ muse_status: st })} env={ON} />);
     expect(allText(ui)).toMatch(/Meta AI didn't answer in time, so this is the safety rules' answer\./);
-    expect(allText(ui)).not.toMatch(/didn't run/);
+    expect(allText(ui)).not.toMatch(/didn't run|had a problem/);
+  }
+});
+
+for (const code of ['NO_KEY', 'HTTP_500', 'HTTP_401', 'RATE_LIMIT', 'NETWORK', 'BAD_JSON', 'BAD_SHAPE']) {
+  test(`Meta AI card: "error: ${code}" -> "had a problem"`, () => {
+    const ui = render(<MetaAiCard scan={metaScan({ muse_status: `error: ${code}; deterministic result returned unchanged` })} env={ON} />);
+    expect(allText(ui)).toMatch(/Meta AI had a problem on this scan, so this is the safety rules' answer\./);
+    expect(allText(ui)).not.toMatch(/in time|didn't run/);
+  });
+}
+
+test('Meta AI card: "off (...)" and "skipped (...)" server strings -> "didn\'t run"', () => {
+  for (const st of ['off (LYLO_HACK_MUSE is not 1)', 'skipped (deterministic rebuild)']) {
+    const ui = render(<MetaAiCard scan={metaScan({ muse_status: st })} env={ON} />);
+    expect(allText(ui)).toMatch(/Meta AI didn't run on this scan\./);
   }
 });
 
