@@ -4,7 +4,7 @@
  * - The warning says clearing resets readiness monitors and does NOT fix the fault.
  * - Clearing is NOT offered while any safety-level code is active (stored, pending or permanent),
  *   or when the LYLO server rated the scan red/unsafe.
- * Safety-level = a conservative fixed list (brakes/ABS/stability chassis codes, airbag/restraint,
+ * Safety-level = a conservative fixed list (ANY B, C or U code incl. manufacturer-specific, Vera C1;
  * overheating, oil pressure, engine misfire). EVAP/emissions codes such as P04E0 are NOT safety-level.
  */
 'use strict';
@@ -15,8 +15,9 @@ const CODE_INFO = {
 };
 
 const SAFETY_RULES = [
-  [/^C0\d{3}$/, 'Brakes, ABS or stability control'],
-  [/^B00\d{2}$/, 'Airbag or seat-belt restraint'],
+  [/^C[0-9A-F]{4}$/, 'Chassis code (brakes, ABS, stability, steering, suspension)'],
+  [/^B[0-9A-F]{4}$/, 'Body code (airbag, restraints, lighting, body systems)'],
+  [/^U[0-9A-F]{4}$/, 'Network code (modules not talking, can affect safety systems)'],
   [/^P021[78]$/, 'Engine or transmission overheating'],
   [/^P052[0-4]$/, 'Engine oil pressure'],
   [/^P030\d$|^P031[0-2]$/, 'Engine misfire (can overheat the catalytic converter)'],

@@ -84,3 +84,12 @@ test('flag: exact "1" only (" 1" and "true" are off)', () => {
   assert.strictEqual(S.on({ EXPO_PUBLIC_LYLO_SESSION_V2: 'true' }), false);
   assert.strictEqual(require('../../../baseline/mobile/src/services/obd/obdScan').sessionOn({ env: { EXPO_PUBLIC_LYLO_SESSION_V2: '1 ' } }), false);
 });
+
+test('Vera C1: ANY B, C or U code blocks clearing (manufacturer-specific too); P04E0 stays clearable', () => {
+  for (const code of ['C1611', 'B1620', 'U0100', 'U1234', 'C0035', 'B0001']) {
+    assert.strictEqual(CP.classify(code).level, 'safety', code);
+    const r = CP.canOffer({ stored: [code, 'P04E0'] }); assert.strictEqual(r.ok, false, code); assert.match(r.reason, new RegExp(code));
+  }
+  assert.strictEqual(CP.canOffer({ stored: ['P04E0'], pending: ['P04E0'], permanent: ['P04E0'] }).ok, true);
+  assert.strictEqual(CP.classify('P04E0').level, 'emissions');
+});
