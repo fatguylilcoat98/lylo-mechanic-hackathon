@@ -9,5 +9,6 @@ const TOURS = [
   require('./tours/04-collision'),
   require('./tours/05-crashguard'),
   require('./tours/06-timeline'),
+  require('./tours/07-usedcar'),
 ];
 module.exports = { TOURS };
