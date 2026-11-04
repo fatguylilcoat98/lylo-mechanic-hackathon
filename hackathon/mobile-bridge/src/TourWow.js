@@ -76,9 +76,10 @@ function VerdictSweep({ level }) {
 function Payoff({ v, facts }) {
   const items = [...(v.reasons || []), ...facts.codes.filter((c) => !(v.reasons || []).some((r) => r.includes(c.code))).map((c) => c.kind + ' ' + c.code)];
   if (facts.cleared) items.push('Codes were recently cleared');
+  if (!items.length) return null; // never restate the headline's why as a ticked item (Vera r1)
   return (<View style={[x.card, { borderColor: toneHex(v.level) }]} testID="wow-payoff">
     <Text style={x.payT}>What LYLO caught</Text>
-    {items.length ? items.map((t, k) => <Text key={k} style={x.payI}>{'\u2714  ' + t}</Text>) : <Text style={x.payI}>{'\u2714  ' + ((v.title && v.title.why) || '')}</Text>}
+    {items.map((t, k) => <Text key={k} style={x.payI}>{'\u2714  ' + t}</Text>)}
   </View>);
 }
 

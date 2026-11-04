@@ -56,6 +56,8 @@ test('NO_CONNECT="true" (not exactly 1) = old behavior', () => {
   expect(textOf(ui.getByTestId('tour-try'))).toBe('Scan my car');
 });
 
+const NO_PAYOFF = ['photo', 'rules', 'collision', 'crashguard', 'noadapter'];
+
 test('TOUR_WOW=1: progress bar, code chips, payoff, one verdict only, every tour', () => {
   TOURS.forEach((t) => {
     walk(t, { EXPO_PUBLIC_LYLO_TOUR_WOW: '1' }, (ui, kind, st, part) => {
@@ -65,7 +67,7 @@ test('TOUR_WOW=1: progress bar, code chips, payoff, one verdict only, every tour
       const txt = allText(ui).split('\n').filter((x) => x === want);
       expect({ t: t.id, n: txt.length }).toEqual({ t: t.id, n: 1 }); // payoff never repeats the verdict
       if (kind === 'step') expect(ui.queryByTestId('wow-progress')).toBeTruthy();
-      if (kind === 'done' && !(t.parts && part < t.parts.length - 1)) { expect(ui.getByTestId('wow-payoff')).toBeTruthy(); expect(ui.getByTestId('wow-sweep')).toBeTruthy(); }
+      if (kind === 'done' && !(t.parts && part < t.parts.length - 1)) { expect(ui.getByTestId('wow-sweep')).toBeTruthy(); if (!NO_PAYOFF.includes(t.id)) expect(ui.getByTestId('wow-payoff')).toBeTruthy(); }
     });
   });
 });
@@ -96,4 +98,21 @@ test('TOUR_WOW=1: Mechanic view + price steps show the real Watch-how YouTube bu
     expect({ id, seen }).toEqual({ id, seen: true });
   });
   expect(PL.youtubeUrl('P0302 x')).toMatch(/^https:\/\/www\.youtube\.com\/results\?search_query=/);
+});
+
+test('TOUR_WOW=1: tours with no reasons/codes render no payoff, and the why sentence is never repeated (Headline line exactly once)', () => {
+  NO_PAYOFF.forEach((id) => {
+    const t = TOURS.find((x) => x.id === id);
+    expect({ id, found: !!t }).toEqual({ id, found: true });
+    walk(t, { EXPO_PUBLIC_LYLO_TOUR_WOW: '1' }, (ui, kind, st, part) => {
+      const why = T.verdictOf(t, part).title.why;
+      const all = allText(ui);
+      const sub = T.partOf(t, part).sub;
+      const n = all.split(why).length - 1; // Headline shows sub || why (DemoScreenOne.js:41)
+      expect({ id, kind, n }).toEqual({ id, kind, n: sub && !sub.includes(why) ? 0 : 1 }); // never a second copy
+      const line = sub || why;
+      expect({ id, kind, line: all.split(line).length - 1 }).toEqual({ id, kind, line: 1 });
+      if (kind === 'done') expect({ id, payoff: ui.queryByTestId('wow-payoff') }).toEqual({ id, payoff: null });
+    });
+  });
 });
