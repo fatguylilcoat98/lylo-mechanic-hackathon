@@ -2,5 +2,6 @@
 'use strict';
 const TOURS = [
   require('./tours/01-scanclear'),
+  require('./tours/02-views'),
 ];
 module.exports = { TOURS };
