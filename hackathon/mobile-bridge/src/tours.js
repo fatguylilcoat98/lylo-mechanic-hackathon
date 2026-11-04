@@ -11,5 +11,6 @@ const TOURS = [
   require('./tours/06-timeline'),
   require('./tours/07-usedcar'),
   require('./tours/10-noadapter'),
+  require('./tours/11-vinprice'),
 ];
 module.exports = { TOURS };
