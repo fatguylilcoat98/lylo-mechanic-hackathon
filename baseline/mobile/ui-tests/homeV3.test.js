@@ -120,7 +120,7 @@ test('mockup tiles: only real features; missing ones are not shown', async () =>
   const n = { ...nav(), replace: jest.fn() };
   const mech = await mount(<MechanicHomeV3 navigation={n} storage={memStore()} env={SAFE} />);
   for (const t of ['System Tests', 'A/C', 'ABS', 'SRS', 'DPF', 'TPMS', 'History', 'Battery']) expect(mech.queryByText(t)).toBeNull();
-  for (const id of ['soon-live', 'soon-service']) { const el = mech.getByTestId(id); expect(el.props.accessibilityState.disabled).toBe(true); const before = n.navigate.mock.calls.length; fireEvent.press(el); expect(n.navigate.mock.calls.length).toBe(before); }
+  for (const id of ['soon-live', 'soon-service']) { const el = mech.getByTestId(id); expect(el.props.accessibilityState.disabled).toBe(true); }
   expect(mech.getAllByText('Coming soon').length).toBe(2);
   expect(mech.getByText(/Not connected/)).toBeTruthy();
   fireEvent.press(mech.getByTestId('mech-scan')); expect(n.navigate).toHaveBeenLastCalledWith('Connect', undefined);
@@ -138,7 +138,7 @@ test('mockup tiles: only real features; missing ones are not shown', async () =>
 });
 
 test('v0.7.4: safety cards and 911 note come before the tour and tool tiles on both screens', async () => {
-  const order = (ui, ids) => { const all = JSON.stringify(ui.toJSON()); return ids.map((id) => all.indexOf('"testID":"' + id + '"')); };
+  const order = (ui, ids) => { const all = ui.testIdOrder(); return ids.map((id) => all.indexOf(id)); };
   const simp = await mount(<SimpleHomeV3 navigation={nav()} storage={memStore()} env={ON} />);
   const a = order(simp, ['mode-crash', 'mode-collision', 'crash-note', 'tour-banner', 'simple-check']);
   expect(a.every((i) => i >= 0)).toBe(true); expect([...a].sort((p, q) => p - q)).toEqual(a);

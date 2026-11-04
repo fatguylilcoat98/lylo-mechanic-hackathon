@@ -39,6 +39,7 @@ function render(el) {
     queryByTestId: (id) => root().findAll((n) => typeof n.type === 'string' && n.props.testID === id)[0] || null,
     getByTestId: (id) => { const n = api.queryByTestId(id); if (!n) throw new Error('No testID ' + id); return n; },
     _pressableFor: pressableFor,
+    testIdOrder: () => root().findAll((n) => typeof n.type === 'string' && n.props.testID).map((n) => n.props.testID), // v0.7.4: tree order
     unmount: () => act(() => { r.unmount(); }),
   };
   return api;
