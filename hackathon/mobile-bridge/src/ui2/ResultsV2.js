@@ -19,9 +19,10 @@ import { homeV3On, ModeToggle } from './HomeV3'; // flag EXPO_PUBLIC_LYLO_HOME_V
 import { Fold } from './ModeScreensV3';
 import * as SV from '../sessionV2'; // v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2
 import SessionCard, { StaleNotice } from '../SessionCard';
+const OV = require('../oneVerdict'); // v0.7.5 flag EXPO_PUBLIC_LYLO_ONE_VERDICT=1
 import { ProveCheck } from '../ProvePanel'; // v0.5.1, renders nothing unless EXPO_PUBLIC_LYLO_PROVE=1
 
-export function ResultsV2Body({ m, pinnedReplay = false, expandAll = false }) {
+export function ResultsV2Body({ m, pinnedReplay = false, expandAll = false, noBanner = false }) {
   const [open, setOpen] = useState(() => new Set(expandAll ? m.causes.map((x) => x.key) : m.causes.length ? [m.causes[0].key] : []));
   const [details, setDetails] = useState(expandAll);
   const [readings, setReadings] = useState(expandAll);
@@ -31,7 +32,7 @@ export function ResultsV2Body({ m, pinnedReplay = false, expandAll = false }) {
     <>
       {pinnedReplay ? null : <ReplayBadge label={m.replay} />}
       <VehicleLine v={m.vehicle} />
-      <SafetyBanner tone={m.tone} title={m.verdict.title} why={m.verdict.why} safety={m.safety} />
+      {noBanner ? null : <SafetyBanner tone={m.tone} title={m.verdict.title} why={m.verdict.why} safety={m.safety} />}
       {m.clearedWarning ? <View style={st.warn}><Text style={st.warnText}>{m.clearedWarning}</Text></View> : null}
       <PredictionBanner prediction={m.prediction} />
 
@@ -71,7 +72,7 @@ export function ResultsV2Body({ m, pinnedReplay = false, expandAll = false }) {
       </Pressable>
       {details ? <MechanicView m={m} hideCauses /> : null}
 
-      <Text style={st.powered}>{m.poweredBy}</Text>
+      {m.poweredBy ? <Text style={st.powered}>{m.poweredBy}</Text> : null}
       {m.receipt ? <Text style={st.mono}>{m.receipt}</Text> : null}
     </>
   );
@@ -80,7 +81,8 @@ export function ResultsV2Body({ m, pinnedReplay = false, expandAll = false }) {
 let defaultStorage = null;
 try { defaultStorage = require('@react-native-async-storage/async-storage').default; } catch (e) { defaultStorage = null; }
 
-export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove, timelineEnv, viewEnv, homeEnv, sessionEnv, onScanAnother, navigation }) {
+export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared, footer, storage, dashVoice, prove, timelineEnv, viewEnv, homeEnv, sessionEnv, oneEnv, onScanAnother, navigation }) {
+  const one = OV.on(oneEnv); // v0.7.5
   const sv = SV.on(sessionEnv);
   const [manual, setManual] = useState(null);
   const vmOn = VM.features(viewEnv).on;
@@ -92,11 +94,11 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
   const scan = raised && raised.base === scanIn ? raised.scan : scanIn;
   useEffect(() => { let live = true; loadVehicle(store).then((v) => { if (live) setVehicle(v); }); if (vmOn) VM.loadChosen(store).then((x) => { if (live && x) setVm(x); }); return () => { live = false; }; }, [store]);
   const sm = sv ? SV.buildModel(scanIn, vehicle, manual) : null; // v0.7.3: only a VIN-matched (or confirmed) car
-  const m0 = buildV2(scan, { codes, screen, baselineCleared, vehicle: sv ? (sm.idv.vehicle || null) : vehicle });
+  const m0 = buildV2(scan, { env: oneEnv, codes, screen, baselineCleared, vehicle: sv ? (sm.idv.vehicle || null) : vehicle });
   if (!m0) return null;
   if (sv && SV.isStale(scanIn)) return <ScrollView style={st.screen} contentContainerStyle={st.scroll}><StaleNotice /></ScrollView>;
   const m = sv ? { ...m0, verdict: SV.adjustVerdict(m0.verdict, m0.tone, sm.idv) } : m0;
-  const plain = (x) => { const p = VM.buildPlain(x, scanIn); return sv && p && p.verdict ? { ...p, verdict: SV.adjustVerdict(p.verdict, x.tone, sm.idv) } : p; };
+  const plain = (x) => { const p = VM.buildPlain(x, scanIn, oneEnv); return sv && p && p.verdict ? { ...p, verdict: SV.adjustVerdict(p.verdict, x.tone, sm.idv) } : p; };
   return (
     // A replay badge is a sticky header so it never scrolls out of view.
     <ScrollView style={st.screen} contentContainerStyle={st.scroll} stickyHeaderIndices={m.replay ? [0] : undefined}>
@@ -108,8 +110,8 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
         <View testID="results-simple-v3">
           <PlainResults p={plain(m)} tone={m.tone} noTech />
           <Fold title="technical details (codes, readings, evidence)" testID="results-tech">
-            <ResultsV2Body m={m} pinnedReplay={!!m.replay} />
-            <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} />
+            <ResultsV2Body m={m} pinnedReplay={!!m.replay} noBanner={one} />
+            <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} plainLevel={one} />
             <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />
             <ProveCheck scan={scan} {...(prove || {})} />
           </Fold>
@@ -117,7 +119,7 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
       ) : null}
       {v3 && vm !== 'simple' ? (
         <View testID="results-mechanic-v3">
-          <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} />
+          <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} plainLevel={one} />
           <ResultsV2Body m={m} pinnedReplay={!!m.replay} expandAll />
           <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />
           <ProveCheck scan={scan} {...(prove || {})} />
@@ -126,7 +128,7 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
       {v3 ? null : <>
       {vmOn ? <ViewSwitch mode={vm} onChange={(x) => { setVm(x); VM.saveViewMode(store, x); }} /> : null}
       {vmOn && vm === 'simple' ? <PlainResults p={plain(m)} tone={m.tone} /> : <ResultsV2Body m={m} pinnedReplay={!!m.replay} />}
-      {vmOn && vm === 'mechanic' ? <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} /> : null}
+      {vmOn && vm === 'mechanic' ? <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} plainLevel={one} /> : null}
       <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />
       <ProveCheck scan={scan} {...(prove || {})} />
       </>}

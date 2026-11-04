@@ -1,0 +1,215 @@
+{
+ "session_id": "0322E4C7",
+ "vehicle": {
+  "vin": null,
+  "year": null,
+  "make": null,
+  "model": null,
+  "trim": null,
+  "engine": null,
+  "engine_type": null,
+  "transmission": null,
+  "drive_type": null,
+  "odometer": null,
+  "is_hybrid": false,
+  "is_ev": false,
+  "supported_pids": [],
+  "enhanced_protocol": false
+ },
+ "confidence": {
+  "connection_valid": true,
+  "read_complete": true,
+  "pid_coverage": "full",
+  "symptom_alignment": "no_symptoms",
+  "codes_possibly_cleared": false,
+  "monitors_incomplete": false,
+  "unstable_session": false,
+  "manufacturer_specific_unknowns": false,
+  "overall": 1.0,
+  "limit_reason": null,
+  "blocked_outputs": []
+ },
+ "safety": {
+  "level": "SAFE_TO_DRIVE",
+  "triggering_conditions": [
+   "No safety-critical fault codes detected",
+   "No active diagnostic trouble codes",
+   "No drivability symptoms reported"
+  ],
+  "reasoning": "No safety-critical conditions detected. Monitor for changes and schedule routine service as needed.",
+  "symptom_overrides_sensor": false,
+  "user_must_acknowledge": false
+ },
+ "hypotheses": [],
+ "diy_eligibility": null,
+ "cost_estimates": [],
+ "tutorial_available": false,
+ "tutorial_blocked_reason": "No DIY assessment available.",
+ "veracore_flags": [],
+ "handshake_required": false,
+ "handshake_reason": null,
+ "what_we_know": [
+  "Fuel trim Bank 1: +6.3% \u2014 within normal range",
+  "Coolant temperature: 79\u00b0F \u2014 below normal",
+  "Battery/charging voltage: 14.3V \u2014 normal",
+  "No active or pending fault codes detected"
+ ],
+ "what_this_might_mean": "No diagnostic data is available to form a conclusion. A physical inspection is recommended.",
+ "what_to_check_first": [],
+ "professional_help_triggers": [
+  "If symptoms worsen or a new warning light appears, stop driving and seek professional inspection"
+ ],
+ "session_flags": [],
+ "handshake_api": null,
+ "hackathon": {
+  "build": "lylo-mechanic-hackathon",
+  "external_handshake": "stubbed",
+  "conversion_notes": [],
+  "codes_cleared_evidence": [],
+  "vehicle_received": {
+   "vin": null,
+   "model": null,
+   "odometer": null
+  }
+ },
+ "detective": {
+  "muse_status": "off (LYLO_HACK_MUSE is not 1)",
+  "ledger": [
+   {
+    "id": "pid:DIST_SINCE_CODES_CLEARED",
+    "type": "codes_cleared_counter",
+    "name": "DIST_SINCE_CODES_CLEARED",
+    "value": 6400,
+    "unit": "km"
+   },
+   {
+    "id": "pid:WARMUPS_SINCE_CLEAR",
+    "type": "codes_cleared_counter",
+    "name": "WARMUPS_SINCE_CLEAR",
+    "value": 255,
+    "unit": ""
+   },
+   {
+    "id": "pid:TIME_SINCE_CODES_CLEARED",
+    "type": "codes_cleared_counter",
+    "name": "TIME_SINCE_CODES_CLEARED",
+    "value": 9800,
+    "unit": "min"
+   },
+   {
+    "id": "pid:BATTERY_VOLTAGE",
+    "type": "pid",
+    "name": "BATTERY_VOLTAGE",
+    "value": 14.3,
+    "unit": "V"
+   },
+   {
+    "id": "pid:ENGINE_RPM",
+    "type": "pid",
+    "name": "ENGINE_RPM",
+    "value": 984,
+    "unit": "rpm"
+   },
+   {
+    "id": "pid:ENGINE_COOLANT_TEMP",
+    "type": "pid",
+    "name": "ENGINE_COOLANT_TEMP",
+    "value": 79,
+    "unit": "\u00b0F"
+   },
+   {
+    "id": "pid:LONG_TERM_FUEL_TRIM_B1",
+    "type": "pid",
+    "name": "LONG_TERM_FUEL_TRIM_B1",
+    "value": 6.3,
+    "unit": "%"
+   },
+   {
+    "id": "pid:SHORT_TERM_FUEL_TRIM_B1",
+    "type": "pid",
+    "name": "SHORT_TERM_FUEL_TRIM_B1",
+    "value": 27.3,
+    "unit": "%"
+   },
+   {
+    "id": "mon:misfire",
+    "type": "readiness_monitor",
+    "name": "Misfire",
+    "status": "complete"
+   },
+   {
+    "id": "mon:fuel_system",
+    "type": "readiness_monitor",
+    "name": "Fuel system",
+    "status": "complete"
+   },
+   {
+    "id": "mon:comprehensive_components",
+    "type": "readiness_monitor",
+    "name": "Comprehensive components",
+    "status": "complete"
+   },
+   {
+    "id": "mon:catalyst",
+    "type": "readiness_monitor",
+    "name": "Catalyst",
+    "status": "complete"
+   },
+   {
+    "id": "mon:evaporative_system_evap",
+    "type": "readiness_monitor",
+    "name": "Evaporative system (EVAP)",
+    "status": "complete"
+   },
+   {
+    "id": "mon:oxygen_sensor",
+    "type": "readiness_monitor",
+    "name": "Oxygen sensor",
+    "status": "complete"
+   },
+   {
+    "id": "mon:oxygen_sensor_heater",
+    "type": "readiness_monitor",
+    "name": "Oxygen sensor heater",
+    "status": "complete"
+   },
+   {
+    "id": "rule:safety",
+    "type": "rule_safety",
+    "level": "SAFE_TO_DRIVE",
+    "triggers": [
+     "No safety-critical fault codes detected",
+     "No active diagnostic trouble codes",
+     "No drivability symptoms reported"
+    ]
+   },
+   {
+    "id": "m06:misfire:not_reported",
+    "type": "mode06_misfire",
+    "source": "car",
+    "value": "not reported by this vehicle"
+   }
+  ],
+  "rule_safety_level": "SAFE_TO_DRIVE",
+  "final_safety_level": "SAFE_TO_DRIVE",
+  "safety_action": "kept_rule_level",
+  "recently_cleared": false,
+  "prove": {
+   "misfire": {
+    "codes": [],
+    "per_cylinder_counts": "not reported by this vehicle",
+    "worst_cylinder": null,
+    "active": false
+   },
+   "proposal_rejected": null,
+   "note": "No testable prediction for this scan."
+  },
+  "prediction": null
+ },
+ "demo": {
+  "case": "truck",
+  "title": "Chris's truck: cold engine, high fuel trim",
+  "source": "Readings from Chris's own truck scan, as shown on his phone (short-term fuel trim 27.3%, long-term 6.3%, coolant 79 \u00b0F, 984 rpm, no codes). Vehicle details left out.",
+  "replay": true
+ }
+}

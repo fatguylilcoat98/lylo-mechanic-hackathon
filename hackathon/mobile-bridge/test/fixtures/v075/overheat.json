@@ -1,0 +1,133 @@
+{
+ "session_id": "20F7F41F",
+ "vehicle": {
+  "vin": null,
+  "year": null,
+  "make": null,
+  "model": null,
+  "trim": null,
+  "engine": null,
+  "engine_type": null,
+  "transmission": null,
+  "drive_type": null,
+  "odometer": null,
+  "is_hybrid": false,
+  "is_ev": false,
+  "supported_pids": [],
+  "enhanced_protocol": false
+ },
+ "confidence": {
+  "connection_valid": true,
+  "read_complete": true,
+  "pid_coverage": "full",
+  "symptom_alignment": "no_symptoms",
+  "codes_possibly_cleared": false,
+  "monitors_incomplete": false,
+  "unstable_session": false,
+  "manufacturer_specific_unknowns": false,
+  "overall": 1.0,
+  "limit_reason": null,
+  "blocked_outputs": []
+ },
+ "safety": {
+  "level": "EMERGENCY_STOP_IMMEDIATELY",
+  "triggering_conditions": [
+   "Coolant temperature critical: 260\u00b0F"
+  ],
+  "reasoning": "One or more conditions require immediate stop. Do not attempt to drive to a shop.",
+  "symptom_overrides_sensor": false,
+  "user_must_acknowledge": true
+ },
+ "hypotheses": [],
+ "diy_eligibility": null,
+ "cost_estimates": [],
+ "tutorial_available": false,
+ "tutorial_blocked_reason": "Vehicle is not safe to drive. Resolve safety issue before attempting any repair.",
+ "veracore_flags": [],
+ "handshake_required": true,
+ "handshake_reason": "Safety classification requires acknowledgment: EMERGENCY_STOP_IMMEDIATELY",
+ "what_we_know": [
+  "Coolant temperature: 260\u00b0F \u2014 elevated",
+  "Battery/charging voltage: 14.1V \u2014 normal",
+  "No active or pending fault codes detected"
+ ],
+ "what_this_might_mean": "No diagnostic data is available to form a conclusion. A physical inspection is recommended.",
+ "what_to_check_first": [],
+ "professional_help_triggers": [
+  "Vehicle safety classification is EMERGENCY_STOP_IMMEDIATELY \u2014 do not drive to a shop, call for a tow"
+ ],
+ "session_flags": [],
+ "handshake_api": null,
+ "hackathon": {
+  "build": "lylo-mechanic-hackathon",
+  "external_handshake": "stubbed",
+  "conversion_notes": [],
+  "codes_cleared_evidence": [],
+  "vehicle_received": {
+   "vin": null,
+   "model": null,
+   "odometer": null
+  }
+ },
+ "detective": {
+  "muse_status": "off (LYLO_HACK_MUSE is not 1)",
+  "ledger": [
+   {
+    "id": "pid:ENGINE_COOLANT_TEMP",
+    "type": "pid",
+    "name": "ENGINE_COOLANT_TEMP",
+    "value": 260,
+    "unit": "\u00b0F"
+   },
+   {
+    "id": "pid:ENGINE_RPM",
+    "type": "pid",
+    "name": "ENGINE_RPM",
+    "value": 850,
+    "unit": "rpm"
+   },
+   {
+    "id": "pid:BATTERY_VOLTAGE",
+    "type": "pid",
+    "name": "BATTERY_VOLTAGE",
+    "value": 14.1,
+    "unit": "V"
+   },
+   {
+    "id": "rule:safety",
+    "type": "rule_safety",
+    "level": "EMERGENCY_STOP_IMMEDIATELY",
+    "triggers": [
+     "Coolant temperature critical: 260\u00b0F"
+    ]
+   },
+   {
+    "id": "m06:misfire:not_reported",
+    "type": "mode06_misfire",
+    "source": "car",
+    "value": "not reported by this vehicle"
+   }
+  ],
+  "rule_safety_level": "EMERGENCY_STOP_IMMEDIATELY",
+  "final_safety_level": "EMERGENCY_STOP_IMMEDIATELY",
+  "safety_action": "kept_rule_level",
+  "recently_cleared": false,
+  "prove": {
+   "misfire": {
+    "codes": [],
+    "per_cylinder_counts": "not reported by this vehicle",
+    "worst_cylinder": null,
+    "active": false
+   },
+   "proposal_rejected": null,
+   "note": "No testable prediction for this scan."
+  },
+  "prediction": null
+ },
+ "demo": {
+  "case": "overheat",
+  "title": "Overheating: coolant 260 \u00b0F",
+  "source": "Made-up test scan: coolant at 260 \u00b0F at idle. Used to show the safety rules.",
+  "replay": true
+ }
+}

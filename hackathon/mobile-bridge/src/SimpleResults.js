@@ -6,6 +6,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+const OV = require('./oneVerdict'); // v0.7.5 flag EXPO_PUBLIC_LYLO_ONE_VERDICT=1
 import { C } from '../../../baseline/mobile/src/constants/colors';
 import { buildResults, formatValue } from './resultsView';
 import { MODE_LABELS, loadViewMode, saveViewMode } from './viewMode';
@@ -100,9 +101,9 @@ export function MechanicView({ m, hideCauses = false }) {
   return (
     <View>
       <Text style={s.h2}>Safety</Text>
-      <Row label="Final level" value={x.levelCode} />
-      <Row label="Rule level" value={x.ruleLevel} />
-      <Row label="AI action" value={x.safetyAction} />
+      <Row label="Final level" value={x.oneVerdict ? OV.plainLevel(x.levelCode) : x.levelCode} />
+      <Row label="Rule level" value={x.oneVerdict ? OV.plainLevel(x.ruleLevel) : x.ruleLevel} />
+      <Row label="AI action" value={x.oneVerdict ? OV.plainAction(x.safetyAction) : x.safetyAction} />
       {x.safetyNote ? <Text style={s.small}>{x.safetyNote}</Text> : null}
       {x.triggers.map((t) => <Text key={t} style={s.small}>{'\u2022 '}{t}</Text>)}
       {x.clearedText ? <><Text style={s.h2}>Codes cleared</Text><Text style={s.body}>{x.clearedText}</Text></> : null}

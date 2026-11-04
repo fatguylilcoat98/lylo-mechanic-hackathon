@@ -207,7 +207,7 @@ export function MechanicHomeV3({ navigation, storage, env }) {
       {k ? (
         <View style={x.panel} testID="mech-demo">
           <Text style={x.replay}>DEMO REPLAY · not your car</Text>
-          <MechanicDeep k={k} navigation={navigation} />
+          <MechanicDeep k={k} navigation={navigation} plainLevel={require('../oneVerdict').on()} />
         </View>
       ) : null}
     </Shell>

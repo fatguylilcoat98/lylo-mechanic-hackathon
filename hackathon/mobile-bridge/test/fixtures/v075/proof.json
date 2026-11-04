@@ -1,0 +1,114 @@
+{
+ "proof": {
+  "label": "Simulated AI answer for this test (no AI model was called)",
+  "simulated": true,
+  "case": "overheat",
+  "title": "Overheating: coolant 260 \u00b0F",
+  "ai_verdict": "SAFE_TO_DRIVE",
+  "rules_verdict": "EMERGENCY_STOP_IMMEDIATELY",
+  "final_verdict": "EMERGENCY_STOP_IMMEDIATELY",
+  "winner": "rules",
+  "safety_action": "detective_lower_ignored",
+  "explain": "The AI proposed a lower level. LYLO's merge never lowers the rule level, so the rules won.",
+  "receipt": {
+   "prompt_sha256_16": "c9954d1c0b1a2e65",
+   "ledger_size": 4,
+   "model": "simulated (no model call)",
+   "latency_ms": 0,
+   "usage": null,
+   "finish_reason": "simulated",
+   "cited_ledger_ids": [
+    "pid:ENGINE_COOLANT_TEMP",
+    "rule:safety"
+   ]
+  }
+ },
+ "safety": {
+  "level": "EMERGENCY_STOP_IMMEDIATELY",
+  "triggering_conditions": [
+   "Coolant temperature critical: 260\u00b0F"
+  ],
+  "reasoning": "One or more conditions require immediate stop. Do not attempt to drive to a shop.",
+  "symptom_overrides_sensor": false,
+  "user_must_acknowledge": true
+ },
+ "detective": {
+  "muse_status": "ok",
+  "ledger": [
+   {
+    "id": "pid:ENGINE_COOLANT_TEMP",
+    "type": "pid",
+    "name": "ENGINE_COOLANT_TEMP",
+    "value": 260,
+    "unit": "\u00b0F"
+   },
+   {
+    "id": "pid:ENGINE_RPM",
+    "type": "pid",
+    "name": "ENGINE_RPM",
+    "value": 850,
+    "unit": "rpm"
+   },
+   {
+    "id": "pid:BATTERY_VOLTAGE",
+    "type": "pid",
+    "name": "BATTERY_VOLTAGE",
+    "value": 14.1,
+    "unit": "V"
+   },
+   {
+    "id": "rule:safety",
+    "type": "rule_safety",
+    "level": "EMERGENCY_STOP_IMMEDIATELY",
+    "triggers": [
+     "Coolant temperature critical: 260\u00b0F"
+    ]
+   }
+  ],
+  "rule_safety_level": "EMERGENCY_STOP_IMMEDIATELY",
+  "final_safety_level": "EMERGENCY_STOP_IMMEDIATELY",
+  "safety_action": "detective_lower_ignored",
+  "recently_cleared": false,
+  "receipt": {
+   "prompt_sha256_16": "c9954d1c0b1a2e65",
+   "ledger_size": 4,
+   "model": "simulated (no model call)",
+   "latency_ms": 0,
+   "usage": null,
+   "finish_reason": "simulated",
+   "cited_ledger_ids": [
+    "pid:ENGINE_COOLANT_TEMP",
+    "rule:safety"
+   ]
+  },
+  "hypotheses": [
+   {
+    "rank": 1,
+    "cause": "Gauge or sensor glitch",
+    "reasoning": "SIMULATED: argues the reading is a fluke.",
+    "confidence": "low",
+    "cites": [
+     "pid:ENGINE_COOLANT_TEMP"
+    ],
+    "next_check": "SIMULATED"
+   }
+  ],
+  "explanation": {
+   "text": "SIMULATED answer for the AI-vs-rules test.",
+   "cites": [
+    "pid:ENGINE_COOLANT_TEMP"
+   ]
+  },
+  "cleared_codes_warning": null,
+  "safety_opinion": {
+   "level": "SAFE_TO_DRIVE",
+   "reason": "SIMULATED: the AI says it is fine to drive.",
+   "cites": [
+    "pid:ENGINE_COOLANT_TEMP",
+    "rule:safety"
+   ]
+  },
+  "unverified_claims": [],
+  "cold_engine_note": null
+ }
+}

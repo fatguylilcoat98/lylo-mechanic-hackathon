@@ -1,0 +1,480 @@
+{
+ "session_id": "6FE752A6",
+ "vehicle": {
+  "vin": "1HG**************",
+  "year": 2003,
+  "make": "Honda",
+  "model": null,
+  "trim": null,
+  "engine": null,
+  "engine_type": null,
+  "transmission": null,
+  "drive_type": null,
+  "odometer": null,
+  "is_hybrid": false,
+  "is_ev": false,
+  "supported_pids": [],
+  "enhanced_protocol": false
+ },
+ "confidence": {
+  "connection_valid": true,
+  "read_complete": true,
+  "pid_coverage": "full",
+  "symptom_alignment": "no_symptoms",
+  "codes_possibly_cleared": true,
+  "monitors_incomplete": true,
+  "unstable_session": false,
+  "manufacturer_specific_unknowns": false,
+  "overall": 0.65,
+  "limit_reason": "Fault codes may have been cleared before scan \u2014 active faults could be missing; One or more readiness monitors have not completed \u2014 system self-tests are pending",
+  "blocked_outputs": []
+ },
+ "safety": {
+  "level": "DRIVE_SHORT_DISTANCE_ONLY",
+  "triggering_conditions": [
+   "Codes were recently cleared \u2014 readiness monitors need more drive cycles to complete"
+  ],
+  "reasoning": "Vehicle is operable but has active faults. Limit driving and schedule service soon.",
+  "symptom_overrides_sensor": false,
+  "user_must_acknowledge": false
+ },
+ "hypotheses": [
+  {
+   "cause_rank": 1,
+   "cause_id": "vacuum_leak",
+   "cause_name": "Vacuum Leak",
+   "cause_description": "Unmetered air entering after the MAF sensor causes a lean condition. This is the most common cause of P0171 and is often free or cheap to fix.",
+   "confidence_score": 75,
+   "confidence_basis": "OBD_confirmed",
+   "supporting_evidence": [
+    "P0171 with elevated LTFT strongly suggests vacuum leak",
+    "Rough idle further supports air leak diagnosis",
+    "Boosted by: high ltft over 10",
+    "Long-term fuel trim is +14.8% \u2014 elevated, indicating lean/rich condition"
+   ],
+   "what_could_make_this_wrong": [
+    "If LTFT is only slightly elevated, the cause may be a weak O2 sensor not a real lean condition",
+    "Confidence capped at 75% due to incomplete scan data \u2014 physical inspection needed to confirm"
+   ],
+   "is_downstream": false,
+   "probable_root_cause_id": null,
+   "requires_physical_inspection": true
+  },
+  {
+   "cause_rank": 2,
+   "cause_id": "dirty_maf_sensor",
+   "cause_name": "Dirty or Failing MAF Sensor",
+   "cause_description": "A contaminated MAF sensor under-reports airflow, causing the ECU to run lean. MAF sensors are wear items on high-mileage vehicles.",
+   "confidence_score": 50,
+   "confidence_basis": "plausible",
+   "supporting_evidence": [
+    "Dirty MAF is a leading lean-code cause",
+    "MAF value below expected range for RPM supports this",
+    "Long-term fuel trim is +14.8% \u2014 elevated, indicating lean/rich condition"
+   ],
+   "what_could_make_this_wrong": [
+    "MAF cleaning with sensor-safe spray is a $5 first step \u2014 try this before replacement"
+   ],
+   "is_downstream": false,
+   "probable_root_cause_id": null,
+   "requires_physical_inspection": true
+  },
+  {
+   "cause_rank": 3,
+   "cause_id": "weak_fuel_pump",
+   "cause_name": "Weak Fuel Pump / Low Fuel Pressure",
+   "cause_description": "Insufficient fuel pressure causes lean conditions, especially under load or at highway speeds.",
+   "confidence_score": 30,
+   "confidence_basis": "low_confidence",
+   "supporting_evidence": [
+    "Lean codes with load-based symptoms suggest fuel pressure issue",
+    "Long-term fuel trim is +14.8% \u2014 elevated, indicating lean/rich condition"
+   ],
+   "what_could_make_this_wrong": [
+    "Requires fuel pressure gauge test to confirm \u2014 cannot be confirmed from OBD-II data alone"
+   ],
+   "is_downstream": false,
+   "probable_root_cause_id": null,
+   "requires_physical_inspection": true
+  }
+ ],
+ "diy_eligibility": {
+  "verdict": "DIY_WITH_CAUTION",
+  "skill_level_required": "intermediate",
+  "risk_level": "low",
+  "hard_stop": false,
+  "hard_stop_reason": null,
+  "required_tools": [
+   "Smoke machine (rental) OR carb cleaner spray",
+   "Flashlight",
+   "Inspection mirror"
+  ],
+  "special_equipment": [
+   "Smoke machine (strongly recommended)"
+  ],
+  "failure_mode_catastrophic": false,
+  "requires_recalibration": false,
+  "requires_programming": false
+ },
+ "cost_estimates": [
+  {
+   "cause_id": "vacuum_leak",
+   "volatility": "HIGH",
+   "pricing_data_date": "2026-01-01",
+   "stale_warning": true,
+   "diy": {
+    "label": "DIY",
+    "total_low": 10,
+    "total_high": 50,
+    "parts_low": 0,
+    "parts_high": 40,
+    "labor_low": 0,
+    "labor_high": 0,
+    "note": null
+   },
+   "shop": {
+    "label": "Independent Shop",
+    "total_low": 80,
+    "total_high": 290,
+    "parts_low": 0,
+    "parts_high": 40,
+    "labor_low": 80,
+    "labor_high": 250,
+    "note": null
+   },
+   "dealership": {
+    "label": "Dealership",
+    "total_low": 150,
+    "total_high": 500,
+    "parts_low": 0,
+    "parts_high": 0,
+    "labor_low": 0,
+    "labor_high": 0,
+    "note": "Dealer labor rates make vacuum leak diagnosis expensive if location is not immediately obvious"
+   },
+   "parts_list": [
+    {
+     "part_name": "Vacuum hose material",
+     "oem_part_number": null,
+     "aftermarket_note": "Match ID/OD exactly",
+     "qty": 1,
+     "cost_low": 5,
+     "cost_high": 20
+    },
+    {
+     "part_name": "Intake manifold gasket (if needed)",
+     "oem_part_number": null,
+     "aftermarket_note": "Only if leak is at manifold seating surface",
+     "qty": 1,
+     "cost_low": 15,
+     "cost_high": 60
+    }
+   ],
+   "labor_hours_low": 0.5,
+   "labor_hours_high": 2.5,
+   "time_to_complete_diy": "30 min \u2013 several hours (finding the leak is the hard part)",
+   "uncertainty_factors": [
+    "Location of leak dramatically affects repair cost",
+    "Smoke machine rental speeds up diagnosis significantly",
+    "Some leaks are at intake manifold gasket \u2014 repair cost jumps to $200-400",
+    "\u26a0 Pricing data is 306 days old \u2014 verify current prices before purchasing parts"
+   ],
+   "what_could_make_estimate_wrong": [
+    "If leak is at intake manifold gasket, cost is substantially higher",
+    "Some vacuum leaks are only present cold or under load \u2014 intermittent leaks are harder to find"
+   ]
+  }
+ ],
+ "tutorial_available": true,
+ "tutorial_blocked_reason": null,
+ "veracore_flags": [
+  {
+   "flag_type": "stale_pricing",
+   "target": "vacuum_leak",
+   "message": "Cost estimate for 'vacuum_leak' uses pricing data that is approaching expiration. Verify current parts pricing before purchasing.",
+   "severity": "caution"
+  }
+ ],
+ "handshake_required": true,
+ "handshake_reason": "This repair has caution steps that require your acknowledgment before proceeding.",
+ "what_we_know": [
+  "Active fault: P0171 \u2014 System Too Lean (Bank 1)",
+  "Pending fault (not yet confirmed): P0420 \u2014 Catalyst System Efficiency Below Threshold (Bank 1)",
+  "Long-term fuel trim Bank 1: +14.8% \u2014 significantly lean",
+  "Coolant temperature: 192\u00b0F \u2014 normal",
+  "Battery/charging voltage: 14.1V \u2014 normal",
+  "Readiness monitors not yet complete: Catalyst, Evaporative system (EVAP), Oxygen sensor",
+  "\u26a0 Codes may have been cleared before this scan \u2014 some faults may not yet have re-triggered"
+ ],
+ "what_this_might_mean": "Based on moderate confidence scan data, the most likely cause is 'Vacuum Leak' (75% confidence). Note: codes may have been recently cleared \u2014 the fault that triggered this code may not yet have re-appeared.",
+ "what_to_check_first": [
+  "Check LTFT \u2014 if over +15%, start with vacuum leak inspection",
+  "MAF cleaning is free and quick \u2014 rule it out first"
+ ],
+ "professional_help_triggers": [
+  "If symptoms worsen or a new warning light appears, stop driving and seek professional inspection"
+ ],
+ "session_flags": [
+  "CODES_POSSIBLY_CLEARED",
+  "MONITORS_INCOMPLETE"
+ ],
+ "handshake_api": {
+  "handshake_active": false,
+  "mode": "LOW_FRICTION",
+  "message": null,
+  "requires_acknowledgment": false,
+  "blocked": false
+ },
+ "hackathon": {
+  "build": "lylo-mechanic-hackathon",
+  "external_handshake": "stubbed",
+  "conversion_notes": [
+   "P0171: permanent code treated as active."
+  ],
+  "codes_cleared_evidence": [
+   "Only 19 km driven since codes were cleared (under 80).",
+   "Only 3 warm-ups since codes were cleared (under 10).",
+   "Only 41 engine minutes since codes were cleared (under 60).",
+   "Permanent code(s) P0171 present with no matching stored code, which usually means the stored codes were erased."
+  ],
+  "vehicle_received": {
+   "vin": "1HG**************",
+   "model": null,
+   "odometer": null
+  }
+ },
+ "detective": {
+  "muse_status": "off (LYLO_HACK_MUSE is not 1)",
+  "ledger": [
+   {
+    "id": "dtc:P0420:pending",
+    "type": "dtc",
+    "code": "P0420",
+    "status": "pending"
+   },
+   {
+    "id": "dtc:P0171:permanent",
+    "type": "dtc",
+    "code": "P0171",
+    "status": "permanent"
+   },
+   {
+    "id": "pid:DIST_SINCE_CODES_CLEARED",
+    "type": "codes_cleared_counter",
+    "name": "DIST_SINCE_CODES_CLEARED",
+    "value": 19,
+    "unit": "km"
+   },
+   {
+    "id": "pid:WARMUPS_SINCE_CLEAR",
+    "type": "codes_cleared_counter",
+    "name": "WARMUPS_SINCE_CLEAR",
+    "value": 3,
+    "unit": ""
+   },
+   {
+    "id": "pid:TIME_SINCE_CODES_CLEARED",
+    "type": "codes_cleared_counter",
+    "name": "TIME_SINCE_CODES_CLEARED",
+    "value": 41,
+    "unit": "min"
+   },
+   {
+    "id": "pid:DIST_MIL_ON",
+    "type": "pid",
+    "name": "DIST_MIL_ON",
+    "value": 0,
+    "unit": "km"
+   },
+   {
+    "id": "pid:TIME_MIL_ON",
+    "type": "pid",
+    "name": "TIME_MIL_ON",
+    "value": 0,
+    "unit": "min"
+   },
+   {
+    "id": "pid:BATTERY_VOLTAGE",
+    "type": "pid",
+    "name": "BATTERY_VOLTAGE",
+    "value": 14.1,
+    "unit": "V"
+   },
+   {
+    "id": "pid:ENGINE_RPM",
+    "type": "pid",
+    "name": "ENGINE_RPM",
+    "value": 720,
+    "unit": "rpm"
+   },
+   {
+    "id": "pid:ENGINE_COOLANT_TEMP",
+    "type": "pid",
+    "name": "ENGINE_COOLANT_TEMP",
+    "value": 192,
+    "unit": "\u00b0F"
+   },
+   {
+    "id": "pid:LONG_TERM_FUEL_TRIM_B1",
+    "type": "pid",
+    "name": "LONG_TERM_FUEL_TRIM_B1",
+    "value": 14.8,
+    "unit": "%"
+   },
+   {
+    "id": "pid:SHORT_TERM_FUEL_TRIM_B1",
+    "type": "pid",
+    "name": "SHORT_TERM_FUEL_TRIM_B1",
+    "value": 3.1,
+    "unit": "%"
+   },
+   {
+    "id": "mon:misfire",
+    "type": "readiness_monitor",
+    "name": "Misfire",
+    "status": "complete"
+   },
+   {
+    "id": "mon:fuel_system",
+    "type": "readiness_monitor",
+    "name": "Fuel system",
+    "status": "complete"
+   },
+   {
+    "id": "mon:comprehensive_components",
+    "type": "readiness_monitor",
+    "name": "Comprehensive components",
+    "status": "complete"
+   },
+   {
+    "id": "mon:catalyst",
+    "type": "readiness_monitor",
+    "name": "Catalyst",
+    "status": "incomplete"
+   },
+   {
+    "id": "mon:evaporative_system_evap",
+    "type": "readiness_monitor",
+    "name": "Evaporative system (EVAP)",
+    "status": "incomplete"
+   },
+   {
+    "id": "mon:oxygen_sensor",
+    "type": "readiness_monitor",
+    "name": "Oxygen sensor",
+    "status": "incomplete"
+   },
+   {
+    "id": "mon:oxygen_sensor_heater",
+    "type": "readiness_monitor",
+    "name": "Oxygen sensor heater",
+    "status": "complete"
+   },
+   {
+    "id": "mon:egr_vvt_system",
+    "type": "readiness_monitor",
+    "name": "EGR / VVT system",
+    "status": "complete"
+   },
+   {
+    "id": "clr:flag",
+    "type": "codes_cleared",
+    "value": true
+   },
+   {
+    "id": "clr:e1",
+    "type": "codes_cleared_evidence",
+    "text": "Only 19 km driven since codes were cleared (under 80)."
+   },
+   {
+    "id": "clr:e2",
+    "type": "codes_cleared_evidence",
+    "text": "Only 3 warm-ups since codes were cleared (under 10)."
+   },
+   {
+    "id": "clr:e3",
+    "type": "codes_cleared_evidence",
+    "text": "Only 41 engine minutes since codes were cleared (under 60)."
+   },
+   {
+    "id": "clr:e4",
+    "type": "codes_cleared_evidence",
+    "text": "Permanent code(s) P0171 present with no matching stored code, which usually means the stored codes were erased."
+   },
+   {
+    "id": "veh:year",
+    "type": "vehicle",
+    "name": "year",
+    "value": 2003
+   },
+   {
+    "id": "veh:make",
+    "type": "vehicle",
+    "name": "make",
+    "value": "Honda"
+   },
+   {
+    "id": "veh:vin_masked",
+    "type": "vehicle",
+    "name": "vin_masked",
+    "value": "1HG**************"
+   },
+   {
+    "id": "rule:safety",
+    "type": "rule_safety",
+    "level": "DRIVE_SHORT_DISTANCE_ONLY",
+    "triggers": [
+     "Codes were recently cleared \u2014 readiness monitors need more drive cycles to complete"
+    ]
+   },
+   {
+    "id": "rule:hyp:vacuum_leak",
+    "type": "rule_hypothesis",
+    "cause": "Vacuum Leak",
+    "rank": 1,
+    "confidence": 75
+   },
+   {
+    "id": "rule:hyp:dirty_maf_sensor",
+    "type": "rule_hypothesis",
+    "cause": "Dirty or Failing MAF Sensor",
+    "rank": 2,
+    "confidence": 50
+   },
+   {
+    "id": "rule:hyp:weak_fuel_pump",
+    "type": "rule_hypothesis",
+    "cause": "Weak Fuel Pump / Low Fuel Pressure",
+    "rank": 3,
+    "confidence": 30
+   },
+   {
+    "id": "m06:misfire:not_reported",
+    "type": "mode06_misfire",
+    "source": "car",
+    "value": "not reported by this vehicle"
+   }
+  ],
+  "rule_safety_level": "DRIVE_SHORT_DISTANCE_ONLY",
+  "final_safety_level": "DRIVE_SHORT_DISTANCE_ONLY",
+  "safety_action": "kept_rule_level",
+  "recently_cleared": true,
+  "prove": {
+   "misfire": {
+    "codes": [],
+    "per_cylinder_counts": "not reported by this vehicle",
+    "worst_cylinder": null,
+    "active": false
+   },
+   "proposal_rejected": null,
+   "note": "No testable prediction for this scan."
+  },
+  "prediction": null
+ },
+ "demo": {
+  "case": "usedcar",
+  "title": "Used car: codes recently cleared",
+  "source": "LYLO's built-in used-car demo scan (not a real car): codes cleared recently, emissions monitors not finished.",
+  "replay": true
+ }
+}

@@ -115,16 +115,16 @@ export function PortHelpScreen() {
 
 /** Simple results: one big verdict, then the same facts in everyday words. */
 export const stripLeadCode = (t) => (typeof t === 'string' ? t.replace(/^\s*[PBCU][0-9A-F]{4}\b\s*[:\-\u2013\u2014,.]?\s*/i, '') : t);
-export function PlainResults({ p: p0, tone, noTech = false }) {
+export function PlainResults({ p: p0, tone, noTech = false, noVerdict = false }) {
   if (!p0) return null;
   // noTech: drop a leading code from verdict / to-do text only (severity/tone untouched).
   const p = noTech ? { ...p0, verdict: { ...p0.verdict, title: stripLeadCode(p0.verdict.title), why: stripLeadCode(p0.verdict.why) }, todo: (p0.todo || []).map(stripLeadCode) } : p0;
   // noTech (v3 Simple): plain answer only; codes/readings/AI details live in the technical dropdown.
   return (
     <View testID="vm-plain">
-      <View style={[s.verdict, { backgroundColor: TONE[tone] || Y }]} testID={'vm-verdict-' + (tone || 'yellow')}>
+      {noVerdict ? null : <View style={[s.verdict, { backgroundColor: TONE[tone] || Y }]} testID={'vm-verdict-' + (tone || 'yellow')}>
         <Text style={s.vT}>{p.verdict.title}</Text><Text style={s.vW}>{p.verdict.why}</Text>
-      </View>
+      </View>}
       {p.vehicle ? <Text style={s.small}>{p.vehicle}</Text> : null}
       {p.cleared ? <Text style={s.warn}>{p.cleared}</Text> : null}
       <Text style={s.h2}>What is going on</Text>
@@ -153,11 +153,11 @@ export function PlainResults({ p: p0, tone, noTech = false }) {
 function Row({ k, v }) { return <View style={s.row}><Text style={s.rk}>{k}</Text><Text style={s.rv}>{v}</Text></View>; }
 
 /** Mechanic detail: everything read, dense. Not read = 'not read'. */
-export function MechanicDeep({ k, navigation }) {
+export function MechanicDeep({ k, navigation, plainLevel = false }) {
   if (!k) return null;
   return (
     <View testID="vm-mechanic">
-      <Row k="Final safety level" v={k.levelCode || VM.NOT_READ} />
+      <Row k="Final safety level" v={plainLevel ? require('./oneVerdict').plainLevel(k.levelCode) : (k.levelCode || VM.NOT_READ)} />
       <Text style={s.h2}>DTCs</Text>
       {k.codes.length ? k.codes.map((c) => (
         <View key={c.code} style={s.card} testID={'vm-dtc-' + c.code}>

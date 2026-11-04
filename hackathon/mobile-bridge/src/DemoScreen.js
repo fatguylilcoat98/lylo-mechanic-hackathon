@@ -11,6 +11,8 @@ import { CASES, replay, proof, replayView, proofView } from './demo';
 import { ProveReplay } from './ProvePanel'; // v0.5.1 'Run the proof'
 import * as VM from './viewModes'; // v0.7.2 flag EXPO_PUBLIC_LYLO_VIEW_MODE
 import { MechanicDeep, PlainResults, ViewSwitch } from './ViewModeScreens';
+import DemoScreenOne from './DemoScreenOne'; // v0.7.5 flag EXPO_PUBLIC_LYLO_ONE_VERDICT=1
+const OV = require('./oneVerdict');
 const { DEMO_SCANS: VM_DEMOS } = require('../../../baseline/mobile/src/data/demoScans');
 
 const Y = '#f5c518';
@@ -47,7 +49,12 @@ export function DemoViews({ navigation }) {
   );
 }
 
-export default function DemoScreen({ navigation, fetchImpl, baseUrl, appKey, viewEnv }) {
+export default function DemoScreen(props) {
+  if (OV.on(props.oneEnv)) return <DemoScreenOne {...props} env={props.oneEnv} />;
+  return <DemoScreenOld {...props} />;
+}
+
+function DemoScreenOld({ navigation, fetchImpl, baseUrl, appKey, viewEnv }) {
   const vmOn = VM.features(viewEnv).on;
   const opts = { baseUrl: baseUrl === undefined ? configuredUrl() : baseUrl, appKey: appKey === undefined ? configuredKey() : appKey, fetchImpl };
   const [busy, setBusy] = useState(null);

@@ -10,6 +10,7 @@
 'use strict';
 
 const { VIEW_MODE_KEY, MODES, saveViewMode } = require('./viewMode');
+const OV = require('./oneVerdict'); // v0.7.5 flag EXPO_PUBLIC_LYLO_ONE_VERDICT=1
 
 function features(env) {
   const e = env || { EXPO_PUBLIC_LYLO_VIEW_MODE: process.env.EXPO_PUBLIC_LYLO_VIEW_MODE };
@@ -119,12 +120,13 @@ const KM_TO_MI = 0.621371;
 const mi = (km) => (typeof km === 'number' ? Math.round(km * KM_TO_MI) : null);
 
 /** Simple view: same facts, everyday words. m = buildResults/buildV2 model (one verdict). */
-function buildPlain(m, scan) {
+function buildPlain(m, scan, env) {
   if (!m) return null;
+  const one = OV.on(env);
   const seen = new Set();
   const say = (t) => explainTerms(t, seen);
-  const v = PLAIN_VERDICT[m.tone] || PLAIN_VERDICT.yellow;
-  const codes = codeList(scan || {}).map(({ code, statuses }) => {
+  const v = one ? (OV.TITLES[m.levelCode] || OV.TONE_TITLE[m.tone] || OV.TITLES.INSPECT_SOON) : (PLAIN_VERDICT[m.tone] || PLAIN_VERDICT.yellow);
+  const codes = (one ? OV.bySeverity(codeList(scan || {})) : codeList(scan || {})).map(({ code, statuses }) => {
     const r = lookup(code, statuses[0]);
     return {
       code,
@@ -140,7 +142,10 @@ function buildPlain(m, scan) {
   if (typeof p.coolant_temp_f === 'number') readings.push(say(`Engine temperature: ${p.coolant_temp_f} °F. ${p.coolant_temp_f >= 240 ? 'That is too hot.' : p.coolant_temp_f < 150 ? 'The engine is still cold, so some readings are not reliable yet.' : 'That is a normal warm engine.'}`));
   if (typeof p.module_voltage === 'number') readings.push(`Battery and charging: ${p.module_voltage} volts. ${p.module_voltage >= 13.2 ? 'The charging system is working while the engine runs.' : p.module_voltage < 12 ? 'That is low. The battery or charging may be weak.' : 'That is a normal battery reading.'}`);
   const trim = (typeof p.stft_b1 === 'number' ? p.stft_b1 : 0) + (typeof p.ltft_b1 === 'number' ? p.ltft_b1 : 0);
-  if (typeof p.ltft_b1 === 'number') readings.push(say(`Fuel trim: the computer is adding ${trim > 0 ? 'extra' : 'less'} fuel (${Math.round(trim)}%). ${trim > 10 ? 'More than 10% often means air is getting in somewhere it shouldn\'t (lean).' : 'That is in the usual range.'}`));
+  const coldTrim = one && OV.isColdTrim({ coolantF: p.coolant_temp_f, trim });
+  if (typeof p.ltft_b1 === 'number') readings.push(say(coldTrim
+    ? `Fuel trim: the computer is adding ${trim > 0 ? 'extra' : 'less'} fuel (${Math.round(trim)}%). The engine is still cold, so this reading is not reliable yet. Drive about 15 minutes and scan again. If it stays above 10%, air may be getting in somewhere it shouldn't (lean).`
+    : `Fuel trim: the computer is adding ${trim > 0 ? 'extra' : 'less'} fuel (${Math.round(trim)}%). ${trim > 10 ? 'More than 10% often means air is getting in somewhere it shouldn\'t (lean).' : 'That is in the usual range.'}`));
   if (typeof p.dist_since_clear_km === 'number') readings.push(`Codes were last erased ${mi(p.dist_since_clear_km)} miles ago.`);
   const mons = (scan && scan.monitor && Array.isArray(scan.monitor.incomplete)) ? scan.monitor.incomplete : [];
   const selfTests = mons.length ? say(`${mons.length} of the car's self-checks have not finished yet (${mons.join(', ')}). Until they finish, some problems can stay hidden.`) : null;
@@ -212,7 +217,16 @@ function buildMechanic(m, scan) {
 }
 
 /** Demo only: a local model for a saved demo scan, from the offline code library (worst code urgency). Labeled a replay. */
-function demoModel(scan) {
+function demoModel(scan, env) {
+  if (OV.on(env)) { // v0.7.5: fail-closed, the same rule as live scans; ruleLevel from the server when known
+    const d = OV.decide(scan && scan.ruleLevel, OV.factsFromScan(scan));
+    const acts = [];
+    if (d.tone === 'red') acts.push('Leave it parked. Have it towed or call a mobile mechanic.');
+    if (d.tone === 'orange') acts.push('Only drive it a short distance, straight to a repair shop.');
+    OV.bySeverity(codeList(scan)).forEach(({ code, statuses }) => { const r = lookup(code, statuses[0]); if (r && r.known && acts.length < 3) acts.push(`Ask a shop about code ${code}: ${r.fix.toLowerCase()}.`); });
+    if (!acts.length) acts.push(d.tone === 'green' ? 'Nothing to fix right now. Keep up regular service.' : 'Have a mechanic take a look when you can.');
+    return { tone: d.tone, levelCode: d.level, actions: acts, causes: [], mechanic: { vehicle: null }, replay: scan.demoLabel || 'Demo replay', raisedBy: d.reasons };
+  }
   const TONE = { ok: 'green', soon: 'yellow', stop: 'red' };
   const LEVEL = { green: 'SAFE_TO_DRIVE', yellow: 'INSPECT_SOON', red: 'DO_NOT_DRIVE' };
   let tone = 'green';

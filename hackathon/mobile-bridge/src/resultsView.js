@@ -11,6 +11,7 @@ const { friendly, labelFor, formatValue, monitorLabel, plainProblem, stripCodes,
 const hasCode = (t) => /\b[PBCU][0-9A-F]{4}\b/i.test(String(t || ''));
 const { detectiveView } = require('./detectiveView');
 const { forCode, priceLinks, partFromCause } = require('./priceLinks');
+const OV = require('./oneVerdict'); // v0.7.5 flag EXPO_PUBLIC_LYLO_ONE_VERDICT=1
 
 const ORDER = ['SAFE_TO_DRIVE', 'INSPECT_SOON', 'DRIVE_SHORT_DISTANCE_ONLY', 'DO_NOT_DRIVE', 'TOW_RECOMMENDED', 'EMERGENCY_STOP_IMMEDIATELY'];
 const VERDICTS = {
@@ -57,7 +58,9 @@ function buildResults(scan, opts = {}) {
   const ledger = Array.isArray(det.ledger) ? det.ledger : [];
   const pids = pidMap(ledger);
   const codes = Array.isArray(opts.codes) ? opts.codes : [];
-  const level = r.safety.level;
+  const one = OV.on(opts.env);
+  const facts = one ? OV.factsFromResult(r) : null;
+  const level = one ? OV.decide(r.safety.level, facts).level : r.safety.level; // v0.7.5: rule level, only raised
   const tone = TONE[level];
   const coolF = tempF(pids.ENGINE_COOLANT_TEMP);
   const cold = coolF !== null && coolF < COLD_F;
@@ -75,6 +78,8 @@ function buildResults(scan, opts = {}) {
   else if (lean && cold) why = "The engine computer is adding extra fuel because the engine reads a little lean (more air than fuel). That's normal while it's still cold, or it can mean a hose is leaking air.";
   else if (lean) why = 'The engine reads lean (more air than fuel), so the computer is adding extra fuel. Often a cheap fix like a cracked hose.';
   else if (cold && tone !== 'green') why = "Your engine was still cold, so some readings aren't reliable yet.";
+  else if (one && facts.codes.length) why = `The car's computer reported ${plainProblem(facts.codes[0].code)}.`; // RULING: never "no problems" with a code listed
+  else if (one && cold && facts && OV.isColdTrim(facts)) why = "The engine was still cold, so the fuel readings aren't reliable yet. Scan again after a 15-minute drive.";
   else if (tone === 'green') why = "We didn't find any problems in the engine computer.";
   else why = 'Some readings are worth a closer look by a mechanic.';
 
@@ -128,6 +133,7 @@ function buildResults(scan, opts = {}) {
     freezeFrame: scan.freezeFrame || null,
     receipt: dv ? dv.receipt : null,
     museStatus: det.muse_status || 'off',
+    oneVerdict: one, // v0.7.5: Mechanic rows show plain level words
     server: 'LYLO server (lylo-api) · session ' + (r.session_id || '?'),
   };
 
@@ -146,13 +152,13 @@ function buildResults(scan, opts = {}) {
     vehicle: vehicle ? { name: vehicle.name, caveat: `Based on your VIN (${vehicle.caveat}).`, recalls: vehicle.recalls || null } : null,
     prices,
     tone, levelCode: level,
-    verdict: { ...VERDICTS[tone], why },
+    verdict: one ? { ...VERDICTS[tone], title: OV.TITLES[level].title, why } : { ...VERDICTS[tone], why },
     actions: actions.slice(0, 3),
     clearedWarning: cleared && opts.screen === 'usedcar' ? "Someone recently erased this car's warning codes. Be careful buying it." : null,
     coldNote: cold ? COLD_ACTION : null,
     seeWhy: { causes, readings, monitors, counters,
       vin: scan.vin || 'Not reported by the car', adapter: [scan.deviceName, scan.adapter].filter(Boolean).join(' · ') || 'Unknown' },
-    receipt, poweredBy: 'Powered by Meta AI',
+    receipt, poweredBy: one && det.muse_status !== 'ok' ? null : 'Powered by Meta AI',
     mechanic,
   };
 }
