@@ -74,7 +74,7 @@ test('saved demos (phone): headline never lower than anything on screen, Simple 
   assert.strictEqual(VM.demoModel(DEMO_SCANS.checkengine, ON).levelCode, 'DRIVE_SHORT_DISTANCE_ONLY');
 });
 
-test('server demos + Meta AI proof replays: headline = server rule level, only raised', () => {
+test('server demos + locked-guess proof replays: headline = server rule level, only raised', () => {
   for (const n of [...SERVER, ...PROVE]) {
     const body = fx(n);
     const sc = PROVE.includes(n) ? asScan(body) : { serverDiagnosis: { source: 'server', result: body } };

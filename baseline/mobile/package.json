@@ -10,7 +10,8 @@
     "test": "node --test src/__tests__/ && node src/__tests__/parser.test.js",
     "build:apk:local": "cd android && ./gradlew assembleRelease",
     "ios": "expo run:ios",
-    "test:ui": "jest"
+    "test:ui": "jest",
+    "test:flags": "jest -c jest.flags.config.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.23.1",
@@ -41,11 +42,16 @@
   },
   "jest": {
     "preset": "jest-expo/android",
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|react-native-svg)"
+    ],
     "testMatch": [
       "<rootDir>/ui-tests/**/*.test.js"
     ],
-    "transformIgnorePatterns": [
-      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|react-native-svg)"
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/ui-tests/v076hotfix\\.test\\.js$",
+      "/ui-tests/v077codes\\.test\\.js$"
     ]
   }
 }

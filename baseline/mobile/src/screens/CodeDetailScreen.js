@@ -6,6 +6,7 @@ import { View, Text, ScrollView, Share } from 'react-native';
 import { buildCodeResult } from '../engine/diagnose';
 import { Button, Card, Badge, Bullet, LEVEL_COLORS, u } from '../components/ui';
 import { C } from '../constants/colors';
+import { codeBadge } from '../../../../hackathon/mobile-bridge/src/oneVerdict'; // v0.7.7 badge via decide() behind ONE_VERDICT
 import RepairLinks from '../../../../hackathon/mobile-bridge/src/RepairLinks'; // hackathon v0.4.6: Watch how + nearest store
 
 export default function CodeDetailScreen({ route }) {
@@ -16,10 +17,10 @@ export default function CodeDetailScreen({ route }) {
         <Text style={[u.h1, { color: C.accent }]}>{r.code}</Text>
         <Text style={[u.h2, { marginTop: 4 }]}>{r.title}</Text>
         <View style={u.row}>
-          <Badge text={r.urgency.level} color={LEVEL_COLORS[r.urgency.color]} />
+          <Badge text={codeBadge(r) ? codeBadge(r).text : r.urgency.level} color={LEVEL_COLORS[codeBadge(r) ? codeBadge(r).tone : r.urgency.color]} />
           <Badge text={'Difficulty: ' + r.difficulty.level} color={C.accent} />
         </View>
-        <Text style={[u.small, { marginTop: 8 }]}>{r.urgency.message}</Text>
+        <Text style={[u.small, { marginTop: 8 }]}>{codeBadge(r) ? codeBadge(r).message : r.urgency.message}</Text>
       </Card>
 
       <Card title="What it means">

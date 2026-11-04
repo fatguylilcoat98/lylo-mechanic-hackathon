@@ -25,7 +25,8 @@ test('Mechanic row: long value wraps (shrinks, right-aligned, label keeps its ow
 });
 
 test('Clear not confirmed by the car: tells you engine OFF, key ON, then rescans', async () => {
-  process.env.EXPO_PUBLIC_LYLO_SESSION_V2 = '1'; // read at runtime by sessionV2.on()
+  // SESSION_V2='1' is set by jest setupFiles (ui-tests/env/flagsOn.js) before compile, not here.
+  expect(require('../../../hackathon/mobile-bridge/src/sessionV2').on()).toBe(true);
   jest.spyOn(OBDService, 'clearCodes').mockResolvedValue(false);
   jest.spyOn(OBDService, 'connected', 'get').mockReturnValue(true);
   const alerts = []; jest.spyOn(Alert, 'alert').mockImplementation((...a) => alerts.push(a));
@@ -43,5 +44,5 @@ test('Clear not confirmed by the car: tells you engine OFF, key ON, then rescans
   expect(msg[1]).toMatch(/engine OFF and the key ON/);
   expect(msg[1]).toMatch(/dash lights on, engine not started/);
   expect(msg[2][0].text).toBe('Rescan now');
-  delete process.env.EXPO_PUBLIC_LYLO_SESSION_V2; jest.restoreAllMocks();
+  jest.restoreAllMocks();
 });

@@ -8,6 +8,7 @@ import { buildReport } from '../engine/report';
 import OBDService from '../services/OBDService';
 import { Button, Card, Badge, DemoBanner, LEVEL_COLORS, u } from '../components/ui';
 import { C } from '../constants/colors';
+import { codeBadge } from '../../../../hackathon/mobile-bridge/src/oneVerdict'; // v0.7.7 badge via decide() behind ONE_VERDICT
 // Hackathon (Oct 26, 2026): renders nothing unless the scan has serverDiagnosis.
 import ServerDiagnosisCard from '../../../../hackathon/mobile-bridge/src/ServerDiagnosisCard';
 import CodesVerdictNote, { NOTE_COLOR } from '../../../../hackathon/mobile-bridge/src/CodesVerdictNote'; // v0.4.1
@@ -101,7 +102,7 @@ export default function CodesScreen({ route, navigation }) {
           <Card>
             <View style={[u.row, { justifyContent: 'space-between' }]}>
               <Text style={s.code}>{r.code}</Text>
-              <Badge text={r.urgency.level} color={LEVEL_COLORS[r.urgency.color]} />
+              <Badge text={codeBadge(r) ? codeBadge(r).text : r.urgency.level} color={LEVEL_COLORS[codeBadge(r) ? codeBadge(r).tone : r.urgency.color]} />
             </View>
             <Text style={[u.h2, { marginTop: 4 }]}>{r.title}</Text>
             <Text style={[u.body, { marginTop: 4 }]}>{r.plain}</Text>

@@ -128,4 +128,11 @@ const ACTION_PLAIN = { kept_rule_level: 'Set by the safety rules', agreed: 'Meta
 const plainLevel = (lv) => (TITLES[lv] ? TITLES[lv].title : 'Not read');
 const plainAction = (a) => ACTION_PLAIN[a] || 'Set by the safety rules';
 
-module.exports = { plainLevel, plainAction,  ORDER, rank, maxLevel, TONE, TITLES, TONE_TITLE, on, codeLevel, floors, decide, factsFromScan, factsFromResult, scanFromResult, bySeverity, isColdTrim };
+/** v0.7.7: legacy code badge routed through decide() (can only raise). Returns null when the flag is off. */
+function codeBadge(r, env) {
+  if (!on(env) || !r || !r.urgency) return null;
+  const v = decide(COLOR_LEVEL[r.urgency.color], { codes: [{ code: r.code, status: r.kind || 'stored' }] });
+  return { level: v.level, tone: v.tone, text: v.title.title.toUpperCase(), message: v.title.why, raised: v.raised };
+}
+
+module.exports = { codeBadge, plainLevel, plainAction,  ORDER, rank, maxLevel, TONE, TITLES, TONE_TITLE, on, codeLevel, floors, decide, factsFromScan, factsFromResult, scanFromResult, bySeverity, isColdTrim };

@@ -21,12 +21,12 @@ const { DEMO_SCANS } = require('../../../baseline/mobile/src/data/demoScans');
 const Y = '#f5c518';
 const BG = { green: '#2a9d8f', yellow: '#f5c518', orange: '#f4a261', red: '#e5383b' };
 
-// Every demo in one list. kind: server replay | proof | saved (on the phone) | prove (Meta AI proof replay)
+// Every demo in one list. kind: server replay | proof | saved (on the phone) | prove (locked-guess proof replay)
 const ALL = [
   ...CASES.map((c) => ({ ...c, kind: 'server' })),
   { id: 'proof', kind: 'proof', title: 'Safety rules vs. AI: who wins?', short: 'A made-up AI answer says the overheating car is fine. Watch the safety rules overrule it.' },
   { id: 'checkengine', kind: 'saved', title: 'Check-engine light: Simple vs Mechanic view', short: 'A saved sample scan (2003 Honda, made-up). Flip between the two views.' },
-  ...REPLAY_CASES.map((c) => ({ ...c, kind: 'prove', title: 'Meta AI proof: ' + c.title })),
+  ...REPLAY_CASES.map((c) => ({ ...c, kind: 'prove', title: 'Locked-guess proof: ' + c.title })),
 ];
 
 export function Headline({ level, car, sub }) {

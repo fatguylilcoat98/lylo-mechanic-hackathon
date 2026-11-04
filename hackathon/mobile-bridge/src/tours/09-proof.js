@@ -2,7 +2,7 @@
 const MISFIRE = require('../tourData/prove_misfire_synthetic.json');
 const LEAN = require('../tourData/prove_lean_fail_synthetic.json');
 module.exports = {
-  id: 'proof', n: 9, title: 'Meta AI proof: one holds, one fails',
+  id: 'proof', n: 9, title: 'Locked-guess proof: one holds, one fails',
   short: 'A guess is locked before the readings come in. One guess holds, one fails, and LYLO says so.',
   parts: [
     { car: 'Demo car A (made-up, misfire replay)', body: MISFIRE, sub: 'Saved replay. The locked guess holds.' },

@@ -13,3 +13,4 @@ __pycache__/
 build/
 hackathon/.env
 hackathon/server/data/
+baseline/mobile/.jest-cache-flags-on/
