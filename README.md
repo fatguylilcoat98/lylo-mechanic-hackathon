@@ -9,7 +9,7 @@ It answers the question most people actually have: **is it safe to drive?** **Fi
 ## Watch, try, download
 - **Demo video:** https://youtu.be/4lrNDRI9mP0
 - **Try it in your web browser (no install):** https://lylo-api.thegoodneighborguard.com/try (describe the problem, type a code, add a dash photo; rate-limited)
-- **Android app, v0.7.7:** [lylo-077-42c032b.apk](https://zion.thegoodneighborguard.com/lylo-077-42c032b.apk), sha256 `4516fc662a89e7d236c75ec112d3b481e9272a4b80d8a4ddc2a07a6588d98bf7`. It's a debug-signed test build, so allow "install unknown apps". There is no iPhone version.
+- **Android app, v0.7.8:** [lylo-078-8a54f0a.apk](https://zion.thegoodneighborguard.com/lylo-078-8a54f0a.apk), sha256 `29a98f958e4ef19709b04a49a251503509fc0879e87cf429688f6bc1342db2c4`. It's a debug-signed test build, so allow "install unknown apps". There is no iPhone version.
 - **Website:** https://thegoodneighborguard.com
 - **Scanner (optional):** works with OBDLink Bluetooth adapters. They plug into the port under the dashboard, near the steering wheel. See what one looks like: https://www.obdlink.com/products/obdlink-mxp/
 - **No scanner? It still works.** Use a photo and a description of the problem.
@@ -131,14 +131,14 @@ Recorded runs with receipts are in [`hackathon/server/evidence/`](hackathon/serv
 
 ## Try it in 2 minutes
 No car, no adapter and no Meta key needed.
-1. **Android phone:** download the [v0.7.7 APK](https://zion.thegoodneighborguard.com/lylo-077-42c032b.apk), allow "install unknown apps", and open it. It's a debug-signed test build.
+1. **Android phone:** download the [v0.7.8 APK](https://zion.thegoodneighborguard.com/lylo-078-8a54f0a.apk), allow "install unknown apps", and open it. It's a debug-signed test build.
 2. Answer the 3 setup questions or skip them. Tap **Try a demo scan** and pick **Chris's truck**.
 3. Flip to **Mechanic view** to see Muse Detective's causes, each citing its evidence, and the receipt (model, seconds, items cited).
 4. Tap **AI vs rules: who wins?** A simulated AI answer says "safe to drive" at 260 °F. The rules say stop, and the rules win.
 5. **No phone?** Run the server (below, under "Try it with no car") and `curl` the demo routes. Then run the tests (see "Run the tests").
 
 ## Try it with no car
-1. Install the [v0.7.7 APK](https://zion.thegoodneighborguard.com/lylo-077-42c032b.apk). It's a debug-signed test build: allow "install unknown apps".
+1. Install the [v0.7.8 APK](https://zion.thegoodneighborguard.com/lylo-078-8a54f0a.apk). It's a debug-signed test build: allow "install unknown apps".
 2. Open it and tap **Try a demo scan** on Home.
 3. Pick a scan:
    - **Chris's truck** (his real readings: cold engine, fuel trim 27.3 %)
