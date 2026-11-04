@@ -111,3 +111,66 @@ test('stubbed LIVE scan, results screen: one headline, raised by a pending misfi
     screenTexts(ui).forEach((t) => { const lv = levelOf(t); if (lv && !/^Rule level|^AI action/.test(t)) expect({ vm, t, ok: OV.rank(lv) <= OV.rank('DRIVE_SHORT_DISTANCE_ONLY') }).toEqual({ vm, t, ok: true }); });
   }
 });
+
+// ---- r2 (Vera conditions) ----
+import MetaAiCard from '../../../hackathon/mobile-bridge/src/MetaAiCard';
+
+test('C2: lean-fail replay (cold 120 °F, +14 % short-term trim, BANK_1 name) is no longer "Good to drive"', async () => {
+  const f = OV.factsFromResult(FX('prove_lean_fail_synthetic'));
+  expect({ coolantF: f.coolantF, trim: f.trim }).toEqual({ coolantF: 120, trim: 14 });
+  const ui = mount(reply('prove-prove_lean_fail_synthetic'));
+  await act(async () => { fireEvent.press(ui.getByTestId('demo-prove-prove_lean_fail_synthetic')); }); await wait();
+  const h = textOf(ui.getByTestId('one-headline'));
+  expect(h).not.toBe('Good to drive');
+  expect(h).toBe('Get it checked soon');
+});
+
+const metaScan = (det, demoLabel) => ({ demoLabel: demoLabel || null, serverDiagnosis: { source: 'server', result: { safety: { level: 'INSPECT_SOON' }, detective: det } } });
+const allText = (ui) => screenTexts(ui).join(' | ');
+
+test('Meta AI card: flag off renders nothing (unchanged)', () => {
+  const ui = render(<MetaAiCard scan={metaScan({ muse_status: 'ok' })} env={{}} />);
+  expect(ui.queryByTestId('meta-ai-on')).toBeNull(); expect(ui.queryByTestId('meta-ai-off')).toBeNull();
+});
+
+test('Meta AI card: muse_status "off" and missing -> "didn\'t run ... safety rules only"', () => {
+  for (const det of [{ muse_status: 'off' }, {}]) {
+    const ui = render(<MetaAiCard scan={metaScan(det)} env={ON} />);
+    expect(ui.getByTestId('meta-ai-off')).toBeTruthy();
+    expect(allText(ui)).toMatch(/Meta AI didn't run on this scan\. This answer comes from the safety rules only\./);
+    expect(ui.queryByTestId('meta-ai-timeout')).toBeNull();
+  }
+});
+
+test('Meta AI card: muse_status "error..." (incl. TIMEOUT) -> "didn\'t answer in time"', () => {
+  for (const st of ['error', 'error: TIMEOUT', 'ERROR_TIMEOUT']) {
+    const ui = render(<MetaAiCard scan={metaScan({ muse_status: st })} env={ON} />);
+    expect(allText(ui)).toMatch(/Meta AI didn't answer in time, so this is the safety rules' answer\./);
+    expect(allText(ui)).not.toMatch(/didn't run/);
+  }
+});
+
+const OKDET = { muse_status: 'ok', receipt: { model: 'Llama-4-Maverick', latency_ms: 4200 }, explanation: { text: 'Cylinder 3 coil is the likeliest cause.' }, hypotheses: [{}, {}] };
+test('Meta AI card: muse_status "ok" -> model and explanation shown; live says "readings from your car"', () => {
+  const ui = render(<MetaAiCard scan={metaScan(OKDET)} env={ON} />);
+  const t = allText(ui);
+  expect(ui.getByTestId('meta-ai-on')).toBeTruthy();
+  expect(t).toMatch(/Model: Llama-4-Maverick · 4.2s/); expect(t).toMatch(/Cylinder 3 coil is the likeliest cause\./);
+  expect(t).toMatch(/readings from your car/); expect(t).not.toMatch(/saved scan/);
+});
+
+test('Meta AI card: on a replay says "from this saved scan", never "readings from your car"', () => {
+  const ui = render(<MetaAiCard scan={metaScan(OKDET, 'REPLAY: saved scan')} env={ON} />);
+  const t = allText(ui);
+  expect(t).toMatch(/from this saved scan/); expect(t).not.toMatch(/readings from your car/);
+});
+
+test('Meta AI card appears on the results screen only with the flag on', async () => {
+  const scan = metaScan({ muse_status: 'off', ledger: [] });
+  for (const [env, want] of [[ON, true], [{}, false]]) {
+    const store = { getItem: async (k) => (k === 'lylo.viewMode' ? 'mechanic' : null), setItem: async () => {} };
+    const ui = render(<ResultsV2 scan={scan} screen="codes" storage={store} viewEnv={{ EXPO_PUBLIC_LYLO_VIEW_MODE: '1' }} homeEnv={{ EXPO_PUBLIC_LYLO_HOME_V3: '1' }} oneEnv={env} />);
+    await wait();
+    expect({ env, shown: !!ui.queryByTestId('meta-ai-off') }).toEqual({ env, shown: want });
+  }
+});

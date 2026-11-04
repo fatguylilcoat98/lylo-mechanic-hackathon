@@ -20,6 +20,7 @@ import { Fold } from './ModeScreensV3';
 import * as SV from '../sessionV2'; // v0.7.3 flag EXPO_PUBLIC_LYLO_SESSION_V2
 import SessionCard, { StaleNotice } from '../SessionCard';
 const OV = require('../oneVerdict'); // v0.7.5 flag EXPO_PUBLIC_LYLO_ONE_VERDICT=1
+import MetaAiCard from '../MetaAiCard'; // v0.7.5: shows whether Meta AI ran on this scan
 import { ProveCheck } from '../ProvePanel'; // v0.5.1, renders nothing unless EXPO_PUBLIC_LYLO_PROVE=1
 
 export function ResultsV2Body({ m, pinnedReplay = false, expandAll = false, noBanner = false }) {
@@ -109,6 +110,7 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
       {v3 && vm === 'simple' ? (
         <View testID="results-simple-v3">
           <PlainResults p={plain(m)} tone={m.tone} noTech />
+          <MetaAiCard scan={scanIn} env={oneEnv} />
           <Fold title="technical details (codes, readings, evidence)" testID="results-tech">
             <ResultsV2Body m={m} pinnedReplay={!!m.replay} noBanner={one} />
             <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} plainLevel={one} />
@@ -119,6 +121,7 @@ export default function ResultsV2({ scan: scanIn, codes, screen, baselineCleared
       ) : null}
       {v3 && vm !== 'simple' ? (
         <View testID="results-mechanic-v3">
+          <MetaAiCard scan={scanIn} env={oneEnv} />
           <MechanicDeep k={VM.buildMechanic(m, scanIn)} navigation={navigation} plainLevel={one} />
           <ResultsV2Body m={m} pinnedReplay={!!m.replay} expandAll />
           <CodeTimelineCard scan={scanIn} env={timelineEnv} storage={store} />

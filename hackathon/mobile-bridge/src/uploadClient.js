@@ -11,7 +11,7 @@ const EO = require('./engineOverride');
 
 // v0.5.2: 45 s (was 20 s). The server caps Muse at LYLO_HACK_MUSE_TIMEOUT_S (25 s) and then still
 // returns the rules safety result, so the client must wait longer than the server's Muse cap.
-const DEFAULT_TIMEOUT_MS = 45000;
+const DEFAULT_TIMEOUT_MS = 75000; // v0.7.5: server Meta limit is 45 s plus VIN lookups; must exceed it
 
 function defaultOfflineEngine() {
   // Pre-existing offline engine (baseline, unchanged).

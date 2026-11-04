@@ -6,7 +6,8 @@ const path = require('path');
 const { DEFAULT_TIMEOUT_MS } = require('../src/uploadClient');
 
 test('client waits longer than the server Muse cap (25 s) plus VIN lookup (6 s)', () => {
-  assert.strictEqual(DEFAULT_TIMEOUT_MS, 45000);
+  assert.strictEqual(DEFAULT_TIMEOUT_MS, 75000);
+  assert.ok(DEFAULT_TIMEOUT_MS > (45 + 6 + 6 + 5) * 1000); // .env LYLO_HACK_MUSE_TIMEOUT_S=45 + VIN + recalls
   const det = fs.readFileSync(path.join(__dirname, '../../server/lylo_hack/detective.py'), 'utf8');
   const cap = Number(/LYLO_HACK_MUSE_TIMEOUT_S", "(\d+)"/.exec(det)[1]);
   assert.ok(DEFAULT_TIMEOUT_MS > (cap + 6 + 5) * 1000);

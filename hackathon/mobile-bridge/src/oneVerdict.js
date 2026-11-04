@@ -89,7 +89,10 @@ function factsFromResult(r) {
   const ledger = Array.isArray(det.ledger) ? det.ledger : [];
   const pid = {}; ledger.forEach((i) => { if (String(i.id || '').startsWith('pid:')) pid[i.name] = i; });
   const codes = ledger.filter((i) => String(i.id || '').startsWith('dtc:') && i.code).map((i) => ({ code: String(i.code).toUpperCase(), status: i.status }));
-  const st = pid.SHORT_TERM_FUEL_TRIM_B1; const lt = pid.LONG_TERM_FUEL_TRIM_B1;
+  // r2 (Vera C2): the server uses more than one name for the same reading
+  const pick = (...names) => names.map((n) => pid[n]).find(Boolean);
+  const st = pick('SHORT_TERM_FUEL_TRIM_B1', 'SHORT_TERM_FUEL_TRIM_BANK_1', 'STFT_B1');
+  const lt = pick('LONG_TERM_FUEL_TRIM_B1', 'LONG_TERM_FUEL_TRIM_BANK_1', 'LTFT_B1');
   const trim = st || lt ? (Number((st || {}).value) || 0) + (Number((lt || {}).value) || 0) : undefined;
   const incomplete = ledger.filter((i) => String(i.id || '').startsWith('mon:') && (i.complete === false || /incomplete|not/i.test(String(i.status || '')))).map((i) => i.name || i.id);
   return { codes, coolantF: toF(pid.ENGINE_COOLANT_TEMP), trim, recentlyCleared: !!det.recently_cleared, incomplete };
@@ -106,8 +109,9 @@ function scanFromResult(r) {
   f.codes.forEach((c) => { const k = /pend/i.test(c.status || '') ? 'pending' : /perm/i.test(c.status || '') ? 'permanent' : 'stored'; scan[k].push(c.code); });
   const P = scan.pids;
   if (f.coolantF !== undefined) P.coolant_temp_f = Math.round(f.coolantF);
-  if (num('SHORT_TERM_FUEL_TRIM_B1') !== undefined) P.stft_b1 = num('SHORT_TERM_FUEL_TRIM_B1');
-  if (num('LONG_TERM_FUEL_TRIM_B1') !== undefined) P.ltft_b1 = num('LONG_TERM_FUEL_TRIM_B1');
+  const numOf = (...ns) => ns.map(num).find((v) => v !== undefined); // r2 (Vera C2): both name forms
+  const stv = numOf('SHORT_TERM_FUEL_TRIM_B1', 'SHORT_TERM_FUEL_TRIM_BANK_1', 'STFT_B1'); if (stv !== undefined) P.stft_b1 = stv;
+  const ltv = numOf('LONG_TERM_FUEL_TRIM_B1', 'LONG_TERM_FUEL_TRIM_BANK_1', 'LTFT_B1'); if (ltv !== undefined) P.ltft_b1 = ltv;
   if (num('BATTERY_VOLTAGE') !== undefined) P.module_voltage = num('BATTERY_VOLTAGE');
   if (num('ENGINE_RPM') !== undefined) P.rpm = num('ENGINE_RPM');
   const d = pid.DIST_SINCE_CODES_CLEARED; if (d) P.dist_since_clear_km = /mi/i.test(String(d.unit || '')) ? Number(d.value) / 0.621371 : Number(d.value);

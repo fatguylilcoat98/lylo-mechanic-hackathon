@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.stangman1998.lylomechanic",
-      "versionCode": 22,
+      "versionCode": 23,
       "icon": "./assets/app-icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-fg.png",
