@@ -135,7 +135,7 @@ export default function HomeV3({ route, navigation, vmOn, vm, setMode, device, s
           <Card testID="primary-action" icon="engine-outline" tint={C.cyan} title="Check My Car" sub="Scan, read codes, and get a clear answer" onPress={checkCar} />
           {crashOn ? <Card testID="card-crash" icon="shield-car" tint={C.orange} title="Crash Guard" sub="Monitor this drive for a crash or false alarm" onPress={() => go('CrashGuard')} /> : null}
           {colOn ? <Card testID="card-collision" icon="car-multiple" tint={C.purple} title="I Was in a Collision" sub="Step-by-step checklist, photos, and a summary" onPress={() => go('Collision')} /> : null}
-          <Card testID="card-demo" icon="play-box-outline" tint={C.green} title="Try a Demo" sub={tourOn ? '11 short guided tours (no car needed)' : 'See how it works (no car needed)'}
+          <Card testID="card-demo" icon="play-box-outline" tint={C.green} title="Try a Demo" sub={tourOn ? (require('../tours').TOURS.length + ' short guided tours (no car needed)') : 'See how it works (no car needed)'}
             onPress={() => (tourOn ? go('Tours') : demoOn ? go('Demo') : go('Codes', { scan: DEMO_SCANS.checkengine }))} />
         </View>
         {crashOn ? <Text style={st.note}>{CRASH_NOTE}</Text> : null}

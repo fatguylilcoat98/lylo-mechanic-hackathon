@@ -13,4 +13,7 @@ const TOURS = [
   require('./tours/10-noadapter'),
   require('./tours/11-vinprice'),
 ];
+// v0.7.7: tour 12 only when a REAL recorded Meta AI answer fixture is present and valid; otherwise hidden.
+const META_TOUR = require('./tours/12-metaai').tour;
+if (META_TOUR) TOURS.push(META_TOUR);
 module.exports = { TOURS };

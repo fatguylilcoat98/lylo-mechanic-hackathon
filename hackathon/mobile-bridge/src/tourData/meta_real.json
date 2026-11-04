@@ -1,0 +1,392 @@
+{
+ "confidence": {
+  "blocked_outputs": [],
+  "codes_possibly_cleared": false,
+  "connection_valid": true,
+  "limit_reason": null,
+  "manufacturer_specific_unknowns": false,
+  "monitors_incomplete": false,
+  "overall": 1.0,
+  "pid_coverage": "full",
+  "read_complete": true,
+  "symptom_alignment": "no_symptoms",
+  "unstable_session": false
+ },
+ "cost_estimates": [],
+ "detective": {
+  "cleared_codes_warning": {
+   "cites": [
+    "pid:DIST_SINCE_CODES_CLEARED",
+    "pid:WARMUPS_SINCE_CLEAR",
+    "pid:TIME_SINCE_CODES_CLEARED",
+    "mon:evaporative_system_evap"
+   ],
+   "text": "Codes were cleared in the past: 850 km / 9800 min / 255 warmups ago. Recently cleared codes are a red flag because MIL and pending codes can stay hidden until monitors rerun; here all monitors including EVAP show complete, so the current active P04E0 was not masked by a recent clear, but clear history alone does not prove repair."
+  },
+  "cold_engine_note": null,
+  "explanation": {
+   "cites": [
+    "dtc:P04E0:active",
+    "mon:evaporative_system_evap",
+    "pid:LONG_TERM_FUEL_TRIM_B1",
+    "pid:SHORT_TERM_FUEL_TRIM_B1",
+    "pid:ENGINE_COOLANT_TEMP",
+    "pid:ENGINE_RPM"
+   ],
+   "text": "Active P04E0 reports EVAP purge control valve A stuck closed at 984 rpm and ECT 192\u00b0F with EVAP monitor complete. STFT B1 +2.3% and LTFT B1 +6.3% show ~+8.6% total fuel correction, not in ledger as a lean fault. No purge command, purge flow, FTP, canister vent, or freeze-frame data in ledger to isolate valve vs circuit vs control logic."
+  },
+  "final_safety_level": "SAFE_TO_DRIVE",
+  "hypotheses": [
+   {
+    "cause": "P04E0: EVAP System Purge Control Valve A Stuck Closed - unisolated mechanical or electrical cause",
+    "cites": [
+     "dtc:P04E0:active",
+     "rule:hyp:unknown_p04e0",
+     "mon:evaporative_system_evap"
+    ],
+    "confidence": "low",
+    "next_check": "With scan tool at hot idle: command EVAP purge 0% to 50-100%, verify commanded duty follows, listen/feel for valve click, check for manifold vacuum at purge outlet and change in STFT; if no flow change, KOEO test valve resistance and 12V supply/PCM ground control - not in ledger.",
+    "rank": 1,
+    "reasoning": "Only evidence is active generic P04E0 with EVAP monitor complete; no actuator test, voltage drop, or vacuum flow reading in ledger to distinguish stuck valve from driver circuit or PCM command."
+   },
+   {
+    "cause": "LTFT B1 +6.3% with STFT B1 +2.3% lean correction - undetermined relation to EVAP purge fault",
+    "cites": [
+     "pid:LONG_TERM_FUEL_TRIM_B1",
+     "pid:SHORT_TERM_FUEL_TRIM_B1",
+     "dtc:P04E0:active"
+    ],
+    "confidence": "low",
+    "next_check": "Log LTFT B1, STFT B1, purge duty %, and O2S B1 at steady 2500 rpm vs idle with purge commanded on/off; stuck-closed purge should show minimal trim shift - vacuum leak, MAF, or O2 performance not in ledger.",
+    "rank": 2,
+    "reasoning": "Total B1 trim ~+8.6% at 984 rpm is measured, but no B2 trim, MAF/MAP, O2 voltage, fuel pressure, or purge flow in ledger to attribute trim to EVAP vs independent lean cause."
+   }
+  ],
+  "ledger": [
+   {
+    "code": "P04E0",
+    "id": "dtc:P04E0:active",
+    "status": "active",
+    "title": "EVAP System Purge Control Valve A Stuck Closed",
+    "title_note": "generic SAE meaning of this code number; reference text, not evidence of which part failed",
+    "type": "dtc"
+   },
+   {
+    "id": "pid:DIST_SINCE_CODES_CLEARED",
+    "name": "DIST_SINCE_CODES_CLEARED",
+    "type": "codes_cleared_counter",
+    "unit": "km",
+    "value": 850
+   },
+   {
+    "id": "pid:WARMUPS_SINCE_CLEAR",
+    "name": "WARMUPS_SINCE_CLEAR",
+    "type": "codes_cleared_counter",
+    "unit": "",
+    "value": 255
+   },
+   {
+    "id": "pid:TIME_SINCE_CODES_CLEARED",
+    "name": "TIME_SINCE_CODES_CLEARED",
+    "type": "codes_cleared_counter",
+    "unit": "min",
+    "value": 9800
+   },
+   {
+    "id": "pid:BATTERY_VOLTAGE",
+    "name": "BATTERY_VOLTAGE",
+    "type": "pid",
+    "unit": "V",
+    "value": 14.3
+   },
+   {
+    "id": "pid:ENGINE_RPM",
+    "name": "ENGINE_RPM",
+    "type": "pid",
+    "unit": "rpm",
+    "value": 984
+   },
+   {
+    "id": "pid:ENGINE_COOLANT_TEMP",
+    "name": "ENGINE_COOLANT_TEMP",
+    "type": "pid",
+    "unit": "\u00b0F",
+    "value": 192
+   },
+   {
+    "id": "pid:LONG_TERM_FUEL_TRIM_B1",
+    "name": "LONG_TERM_FUEL_TRIM_B1",
+    "type": "pid",
+    "unit": "%",
+    "value": 6.3
+   },
+   {
+    "id": "pid:SHORT_TERM_FUEL_TRIM_B1",
+    "name": "SHORT_TERM_FUEL_TRIM_B1",
+    "type": "pid",
+    "unit": "%",
+    "value": 2.3
+   },
+   {
+    "id": "mon:misfire",
+    "name": "Misfire",
+    "status": "complete",
+    "type": "readiness_monitor"
+   },
+   {
+    "id": "mon:fuel_system",
+    "name": "Fuel system",
+    "status": "complete",
+    "type": "readiness_monitor"
+   },
+   {
+    "id": "mon:comprehensive_components",
+    "name": "Comprehensive components",
+    "status": "complete",
+    "type": "readiness_monitor"
+   },
+   {
+    "id": "mon:catalyst",
+    "name": "Catalyst",
+    "status": "complete",
+    "type": "readiness_monitor"
+   },
+   {
+    "id": "mon:evaporative_system_evap",
+    "name": "Evaporative system (EVAP)",
+    "status": "complete",
+    "type": "readiness_monitor"
+   },
+   {
+    "id": "mon:oxygen_sensor",
+    "name": "Oxygen sensor",
+    "status": "complete",
+    "type": "readiness_monitor"
+   },
+   {
+    "id": "mon:oxygen_sensor_heater",
+    "name": "Oxygen sensor heater",
+    "status": "complete",
+    "type": "readiness_monitor"
+   },
+   {
+    "id": "rule:safety",
+    "level": "SAFE_TO_DRIVE",
+    "triggers": [
+     "No safety-critical fault codes detected",
+     "No drivability symptoms reported"
+    ],
+    "type": "rule_safety"
+   },
+   {
+    "cause": "P04E0: EVAP System Purge Control Valve A Stuck Closed",
+    "confidence": 20,
+    "id": "rule:hyp:unknown_p04e0",
+    "rank": 1,
+    "type": "rule_hypothesis"
+   },
+   {
+    "id": "m06:misfire:not_reported",
+    "source": "car",
+    "type": "mode06_misfire",
+    "value": "not reported by this vehicle"
+   }
+  ],
+  "muse_status": "ok",
+  "prediction": {
+   "measured": null,
+   "status": "LOCKED",
+   "text": "EVAP purge control valve A stuck closed fault P04E0 remains active: P04E0 will be reported within 120 s"
+  },
+  "prove": {
+   "chain_ok": true,
+   "head_sha256": "9c257445cfdb4d28ae7a9849b213ef91fc77fe107377b1e98e994ba470d04927",
+   "ledger": [
+    {
+     "at": 1793757743.3671796,
+     "body": {
+      "prediction": {
+       "condition": "dtc_present",
+       "hypothesis": "EVAP purge control valve A stuck closed fault P04E0 remains active",
+       "if_fails": "If P04E0 does not re-report, stuck-closed condition was intermittent, monitor strategy dependent, or prior valve state changed; re-evaluate purge command and vacuum flow.",
+       "pids": [
+        "P04E0"
+       ],
+       "threshold": [],
+       "window_s": 120
+      },
+      "proposed_by": "model"
+     },
+     "kind": "prediction",
+     "prev": "0000000000000000000000000000000000000000000000000000000000000000",
+     "seq": 0,
+     "sha256": "9c257445cfdb4d28ae7a9849b213ef91fc77fe107377b1e98e994ba470d04927"
+    }
+   ],
+   "lock_sha256": "9c257445cfdb4d28ae7a9849b213ef91fc77fe107377b1e98e994ba470d04927",
+   "locked_at": 1793757743.3671796,
+   "misfire": {
+    "active": false,
+    "codes": [],
+    "per_cylinder_counts": "not reported by this vehicle",
+    "worst_cylinder": null
+   },
+   "prediction": {
+    "condition": "dtc_present",
+    "hypothesis": "EVAP purge control valve A stuck closed fault P04E0 remains active",
+    "if_fails": "If P04E0 does not re-report, stuck-closed condition was intermittent, monitor strategy dependent, or prior valve state changed; re-evaluate purge command and vacuum flow.",
+    "pids": [
+     "P04E0"
+    ],
+    "threshold": [],
+    "window_s": 120
+   },
+   "proposal_rejected": null,
+   "proposed_by": "model",
+   "session_id": "8fd57684ee044eeb"
+  },
+  "receipt": {
+   "cited_ledger_ids": [
+    "dtc:P04E0:active",
+    "mon:evaporative_system_evap",
+    "mon:fuel_system",
+    "mon:misfire",
+    "pid:DIST_SINCE_CODES_CLEARED",
+    "pid:ENGINE_COOLANT_TEMP",
+    "pid:ENGINE_RPM",
+    "pid:LONG_TERM_FUEL_TRIM_B1",
+    "pid:SHORT_TERM_FUEL_TRIM_B1",
+    "pid:TIME_SINCE_CODES_CLEARED",
+    "pid:WARMUPS_SINCE_CLEAR",
+    "rule:hyp:unknown_p04e0",
+    "rule:safety"
+   ],
+   "finish_reason": "stop",
+   "latency_ms": 20339,
+   "ledger_size": 18,
+   "model": "muse-spark-1.3",
+   "prompt_sha256_16": "82d03bc83bf7a234",
+   "usage": {
+    "completion_tokens": 2015,
+    "completion_tokens_details": {
+     "reasoning_tokens": 1093
+    },
+    "prompt_tokens": 1979,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "total_tokens": 3994
+   }
+  },
+  "recently_cleared": false,
+  "rule_safety_level": "SAFE_TO_DRIVE",
+  "safety_action": "agreed",
+  "safety_opinion": {
+   "cites": [
+    "rule:safety",
+    "dtc:P04E0:active",
+    "mon:misfire",
+    "mon:fuel_system"
+   ],
+   "level": "SAFE_TO_DRIVE",
+   "reason": "Rule engine reports SAFE_TO_DRIVE with no safety-critical codes; active fault is limited to EVAP purge control with misfire and fuel system monitors complete. This is scan only, not inspection for fuel vapor odor, MIL status, or drivability - not in ledger."
+  },
+  "unverified_claims": [],
+  "view": "mechanic"
+ },
+ "diy_eligibility": {
+  "failure_mode_catastrophic": false,
+  "hard_stop": false,
+  "hard_stop_reason": "No DIY profile available for this repair type \u2014 professional assessment recommended",
+  "required_tools": [],
+  "requires_programming": false,
+  "requires_recalibration": false,
+  "risk_level": "medium",
+  "skill_level_required": "professional",
+  "special_equipment": [],
+  "verdict": "PROFESSIONAL_ONLY"
+ },
+ "hackathon": {
+  "build": "lylo-mechanic-hackathon",
+  "codes_cleared_evidence": [],
+  "conversion_notes": [],
+  "external_handshake": "stubbed",
+  "vehicle_received": {
+   "model": null,
+   "odometer": null,
+   "vin": null
+  }
+ },
+ "handshake_api": null,
+ "handshake_reason": null,
+ "handshake_required": false,
+ "hypotheses": [
+  {
+   "cause_description": "Unknown code \u2014 cannot interpret without service data",
+   "cause_id": "unknown_p04e0",
+   "cause_name": "P04E0: EVAP System Purge Control Valve A Stuck Closed",
+   "cause_rank": 1,
+   "confidence_basis": "low_confidence",
+   "confidence_score": 20,
+   "is_downstream": false,
+   "probable_root_cause_id": null,
+   "requires_physical_inspection": true,
+   "supporting_evidence": [
+    "Code P04E0 is present but no interpretation rules are available"
+   ],
+   "what_could_make_this_wrong": [
+    "This code requires make/model specific service data to interpret accurately"
+   ]
+  }
+ ],
+ "professional_help_triggers": [
+  "If symptoms worsen or a new warning light appears, stop driving and seek professional inspection"
+ ],
+ "safety": {
+  "level": "SAFE_TO_DRIVE",
+  "reasoning": "No safety-critical conditions detected. Monitor for changes and schedule routine service as needed.",
+  "symptom_overrides_sensor": false,
+  "triggering_conditions": [
+   "No safety-critical fault codes detected",
+   "No drivability symptoms reported"
+  ],
+  "user_must_acknowledge": false
+ },
+ "session_flags": [],
+ "session_id": "1F53279A",
+ "tutorial_available": false,
+ "tutorial_blocked_reason": "This repair requires professional handling: No DIY profile available for this repair type \u2014 professional assessment recommended",
+ "vehicle": {
+  "drive_type": null,
+  "engine": null,
+  "engine_type": null,
+  "enhanced_protocol": false,
+  "is_ev": false,
+  "is_hybrid": false,
+  "make": null,
+  "model": null,
+  "odometer": null,
+  "supported_pids": [],
+  "transmission": null,
+  "trim": null,
+  "vin": null,
+  "year": null
+ },
+ "veracore_flags": [
+  {
+   "flag_type": "weak_evidence",
+   "message": "'P04E0: EVAP System Purge Control Valve A Stuck Closed' involves a manufacturer-specific or unknown code. The interpretation shown is generic \u2014 consult make/model specific service data for accurate diagnosis.",
+   "severity": "caution",
+   "target": "unknown_p04e0"
+  }
+ ],
+ "what_this_might_mean": "Based on high confidence scan data, the most likely cause is 'P04E0: EVAP System Purge Control Valve A Stuck Closed' (20% confidence).",
+ "what_to_check_first": [],
+ "what_we_know": [
+  "Active fault: P04E0 \u2014 Unknown code \u2014 cannot interpret without service data",
+  "Fuel trim Bank 1: +6.3% \u2014 within normal range",
+  "Coolant temperature: 192\u00b0F \u2014 normal",
+  "Battery/charging voltage: 14.3V \u2014 normal"
+ ],
+ "_note": "SYNTHETIC Kia-like scan (P04E0 active, warm engine, no VIN) sent by Ember Nov 4 2026 02:02Z to the public /api/v1/live/live; real Meta answer."
+}

@@ -51,10 +51,12 @@ test('tour 9 renamed; no tour or demo title claims Meta AI ran', () => {
   const list = TOURS.TOURS || TOURS.default || TOURS;
   const t9 = list.find((t) => t.n === 9);
   expect(t9.title).toBe('Locked-guess proof: one holds, one fails');
-  list.forEach((t) => {
+  list.filter((t) => t.id !== 'metaai').forEach((t) => {
     const txt = JSON.stringify([t.title, t.short, t.sub, t.steps, t.parts && t.parts.map((p) => [p.car, p.sub])]);
     expect(txt).not.toMatch(/Meta/);
   });
+  const m = list.find((t) => t.id === 'metaai'); // only tour allowed to say Meta: it replays a REAL recorded answer
+  if (m) { expect(m.sub).toMatch(/^Recorded real Meta AI answer \(/); expect(m.body.detective.muse_status).toBe('ok'); }
   const fs = require('fs'); const src = fs.readFileSync(require.resolve('../../../hackathon/mobile-bridge/src/DemoScreenOne.js'), 'utf8');
   expect(src).not.toMatch(/'Meta AI proof/);
   expect(src).toMatch(/'Locked-guess proof: ' \+ c\.title/);
